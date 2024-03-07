@@ -87,23 +87,22 @@ struct Lexer {
 	i64 current = 0;
 	i64 line = 0;
 
+	[[nodiscard]]
 	Vector<Token> tokenize(String source);
 	bool at_end() const;
 	void push(Token const& tk);
 	char peek(i64 delta) const;
 	bool consume_on_match(char expected);
 	void reset();
-	[[nodiscard]]
-	Token consume_identifier();
-	[[nodiscard]]
-	Token consume_number();
-	[[nodiscard]]
-	Token consume_string();
 
 private:
-	Token consume_number_decimal();
-	Token consume_integer_bin();
-	Token consume_integer_hex();
+	[[nodiscard]] Token tokenize_identifier();
+	[[nodiscard]] Token tokenize_number();
+	[[nodiscard]] Token tokenize_string();
+	[[nodiscard]] Token tokenize_rune_literal();
+	[[nodiscard]] Token tokenize_number_decimal();
+	[[nodiscard]] Token tokenize_integer_bin();
+	[[nodiscard]] Token tokenize_integer_hex();
 };
 
 

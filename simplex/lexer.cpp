@@ -23,7 +23,7 @@ bool is_hex(char c){
 
 
 bool Lexer::at_end() const {
-	return current >= source.size();
+	return current >= i64(source.size());
 }
 
 void Lexer::push(Token const& tk){
@@ -32,7 +32,7 @@ void Lexer::push(Token const& tk){
 
 char Lexer::peek(i64 delta) const {
 	auto pos = current + delta;
-	if(pos >= source.size()){
+	if(pos >= i64(source.size())){
 		return 0;
 	}
 	return source[pos];
@@ -156,13 +156,13 @@ Vector<Token> Lexer::tokenize(String source){
 
 			default: {
 				if(is_alpha(c) || c == '_'){
-					push(consume_identifier());
+					push(tokenize_identifier());
 				}
 				else if(is_decimal(c)){
-					push(consume_number());
+					push(tokenize_number());
 				}
 				else if(c == '"'){
-					push(consume_string());
+					push(tokenize_string());
 				}
 			} break;
 		}
@@ -176,7 +176,7 @@ Vector<Token> Lexer::tokenize(String source){
 	return tks;
 }
 
-Token Lexer::consume_identifier(){
+Token Lexer::tokenize_identifier(){
 	constexpr auto valid_id = [](char c){
 		return is_alpha(c) || is_decimal(c) || (c == '_');
 	};
@@ -206,7 +206,7 @@ Token Lexer::consume_identifier(){
 }
 
 [[nodiscard]]
-Token Lexer::consume_number(){
+Token Lexer::tokenize_number(){
 	int base = 10;
 	{ // Discover int base
 		char c0 = peek(0);
@@ -229,20 +229,20 @@ Token Lexer::consume_number(){
 
 	switch(base){
 		case 2: {
-			return consume_integer_bin();
+			return tokenize_integer_bin();
 		} break;
 		case 16: {
-			return consume_integer_hex();
+			return tokenize_integer_hex();
 		} break;
 		case 10: {
-			return consume_number_decimal();
+			return tokenize_number_decimal();
 		} break;
 	}
 
 	return Token(TokenKind::BadToken);
 }
 
-Token Lexer::consume_number_decimal(){
+Token Lexer::tokenize_number_decimal(){
 	auto valid_digit = [](char c){
 		return is_decimal(c) || (c == '.') ||(c == '_');
 	};
@@ -291,7 +291,7 @@ Token Lexer::consume_number_decimal(){
 	return Token(kind, lexeme, payload);
 }
 
-Token Lexer::consume_integer_hex(){
+Token Lexer::tokenize_integer_hex(){
 	auto valid_digit = [](char c){
 		return is_hex(c) || (c == '_');
 	};
@@ -322,7 +322,7 @@ Token Lexer::consume_integer_hex(){
 	return Token(TokenKind::Integer, lexeme, payload);
 }
 
-Token Lexer::consume_integer_bin(){
+Token Lexer::tokenize_integer_bin(){
 	auto valid_digit = [](char c){
 		return (c == '0') || (c == '1') || (c == '_');
 	};
@@ -354,7 +354,7 @@ Token Lexer::consume_integer_bin(){
 }
 
 [[nodiscard]]
-Token Lexer::consume_string(){
+Token Lexer::tokenize_string(){
 	// TODO: Escaping quotes
 	current += 1;
 	previous = current;
