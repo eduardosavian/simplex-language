@@ -156,9 +156,7 @@ Vector<Token> Lexer::scan(String source){
 
 			default: {
 				if(is_alpha(c) || c == '_'){
-					// std::cout << "CUR: " << c << "\n";
 					push(consume_identifier());
-					// current -= 1;
 				}
 				else if(is_decimal(c)){
 					push(consume_number());
@@ -245,7 +243,52 @@ Token Lexer::consume_number(){
 }
 
 Token Lexer::consume_number_decimal(){
-	return Token(TokenKind::Integer);
+	auto valid_digit = [](char c){
+		return is_decimal(c) || (c == '.') ||(c == '_');
+	};
+
+	previous = current;
+	// Advance to account for 0x prefix
+	// current += 2;
+	auto digits = std::string();
+	while(!at_end()){
+		char c = source[current];
+		if(valid_digit(c)){
+			current += 1;
+			if(c != '_'){
+				digits.push_back(c);
+			}
+		} else {
+			break;
+		}
+	}
+
+
+	auto lexeme = source.substr(previous, current - previous);
+	current -= 1;
+
+	bool is_float = false;
+	for(auto c : lexeme){
+		if(c == '.'){
+			is_float = true;
+			break;
+		}
+	}
+
+	auto payload = Token::Payload{};
+	auto kind = TokenKind::BadToken;
+
+	if(is_float){
+		f64 n = std::stod(digits, 0);
+		payload.real = n;
+		kind = TokenKind::Real;
+	} else {
+		i64 n = std::stoll(digits, 0, 10);
+		payload.integer = n;
+		kind = TokenKind::Integer;
+	}
+
+	return Token(kind, lexeme, payload);
 }
 
 Token Lexer::consume_integer_hex(){
