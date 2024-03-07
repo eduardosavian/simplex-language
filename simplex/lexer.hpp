@@ -65,10 +65,18 @@ struct Token {
 	String lexeme;
 	Payload payload;
 
+	constexpr
 	Token(TokenKind kind, String lexeme = String{}, Payload payload = {})
-	: kind(kind), lexeme(lexeme), payload{payload}
-	{
-		using K = TokenKind;
+		: kind(kind), lexeme(lexeme), payload{payload} {}
+
+	constexpr
+	bool operator==(Token const& tk) const {
+		return (tk.kind == kind);
+	}
+
+	constexpr
+	bool operator!=(Token const& tk) const {
+		return (tk.kind != kind);
 	}
 };
 
@@ -79,7 +87,7 @@ struct Lexer {
 	i64 current = 0;
 	i64 line = 0;
 
-	Vector<Token> scan(String source);
+	Vector<Token> tokenize(String source);
 	bool at_end() const;
 	void push(Token const& tk);
 	char peek(i64 delta) const;

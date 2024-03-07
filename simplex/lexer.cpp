@@ -54,7 +54,7 @@ void Lexer::reset(){
 	tokens.clear();
 }
 
-Vector<Token> Lexer::scan(String source){
+Vector<Token> Lexer::tokenize(String source){
 	using K = TokenKind;
 	this->source = source;
 	while(!at_end()){

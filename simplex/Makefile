@@ -7,9 +7,9 @@ HEADERS := common.hpp file.hpp lexer.hpp types.hpp utils.hpp
 
 .PHONY: clean run
 
-bin/simpcc: bin/main.o bin/parser.o bin/lexer.o bin/file.o
+bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o
 	$(CXX) $(CFLAGS) \
-		bin/main.o bin/parser.o bin/lexer.o bin/file.o $(LDFLAGS) \
+		main.cpp bin/parser.o bin/lexer.o bin/file.o $(LDFLAGS) \
 		-o bin/simpcc
 
 bin/file.o: file.cpp $(HEADERS)
@@ -20,9 +20,6 @@ bin/lexer.o: lexer.cpp $(HEADERS)
 
 bin/parser.o: parser.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c parser.cpp -o bin/parser.o
-
-bin/main.o:
-	$(CXX) $(CFLAGS) -c main.cpp -o bin/main.o
 
 run: bin/simpcc
 	@./bin/simpcc
