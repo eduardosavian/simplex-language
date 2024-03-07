@@ -3,7 +3,7 @@
 ## Building
 
 ```sh
-make -c simplex -j$(nproc)
+make
 ```
 Binary can be found in: `simplex/bin/simpcc`
 
