@@ -73,9 +73,29 @@ Vector<Token> Lexer::scan(String source){
 			case ';': { push(Token(K::Semicolon)); } break;
 			case ',': { push(Token(K::Comma)); } break;
 
-			case '&': { push(Token(K::And)); } break;
-			case '|': { push(Token(K::Or)); } break;
-			case '~': { push(Token(K::Xor)); } break;
+			case '&': {
+				if(consume_on_match('&')){
+					push(Token(K::LogicAnd));
+				} else {
+					push(Token(K::And));
+				}
+			} break;
+
+			case '|': {
+				if(consume_on_match('|')){
+					push(Token(K::LogicOr));
+				} else {
+					push(Token(K::Or));
+				}
+			} break;
+
+			case '~': {
+				if(consume_on_match('~')){
+					push(Token(K::LogicXor));
+				} else {
+					push(Token(K::Xor));
+				}
+			} break;
 
 			case '+': { push(Token(K::Plus)); } break;
 			case '-': { push(Token(K::Minus)); } break;
@@ -127,7 +147,7 @@ Vector<Token> Lexer::scan(String source){
 					push(Token(K::NotEqual));
 				}
 				else {
-					push(Token(K::BoolNot));
+					push(Token(K::LogicNot));
 				}
 			} break;
 
@@ -260,7 +280,34 @@ Token Lexer::consume_integer_hex(){
 }
 
 Token Lexer::consume_integer_bin(){
-	return Token(TokenKind::Integer);
+	auto valid_digit = [](char c){
+		return (c == '0') || (c == '1') || (c == '_');
+	};
+
+	previous = current;
+	// Advance to account for 0b prefix
+	current += 2;
+	auto digits = std::string();
+	while(!at_end()){
+		char c = source[current];
+		if(valid_digit(c)){
+			current += 1;
+			if(c != '_'){
+				digits.push_back(c);
+			}
+		} else {
+			break;
+		}
+	}
+
+	auto lexeme = source.substr(previous, current - previous);
+	current -= 1;
+
+	i64 n = std::stoll(digits, 0, 2);
+
+	auto payload = Token::Payload{};
+	payload.integer = n;
+	return Token(TokenKind::Integer, lexeme, payload);
 }
 
 [[nodiscard]]

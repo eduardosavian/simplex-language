@@ -33,7 +33,7 @@ enum struct TokenKind : i32 {
 	And, Or, Xor, ShiftLeft, ShiftRight,
 
 	// Logic
-	BoolNot,
+	LogicNot, LogicAnd, LogicOr, LogicXor,
 
 	// Errors
 	EndOfFile = -1,

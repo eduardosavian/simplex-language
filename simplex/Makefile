@@ -5,7 +5,7 @@ LDFLAGS := -fuse-ld=mold
 SOURCES := file.cpp lexer.cpp
 HEADERS := common.hpp file.hpp lexer.hpp types.hpp utils.hpp
 
-.PHONY: clean dir-setup
+.PHONY: clean run
 
 bin/simpcc: bin/main.o bin/parser.o bin/lexer.o bin/file.o
 	$(CXX) $(CFLAGS) \
@@ -23,6 +23,9 @@ bin/parser.o: parser.cpp $(HEADERS)
 
 bin/main.o:
 	$(CXX) $(CFLAGS) -c main.cpp -o bin/main.o
+
+run: bin/simpcc
+	@./bin/simpcc
 
 clean:
 	rm -f bin/*

@@ -81,7 +81,11 @@ std::string token_name(Token const& tk) {
 		case K::Xor:        n = "~"; break;
 		case K::ShiftLeft:  n = "<<"; break;
 		case K::ShiftRight: n = ">>"; break;
-		case K::BoolNot:    n = "!"; break;
+
+		case K::LogicNot: n = "!"; break;
+		case K::LogicAnd: n = "&&"; break;
+		case K::LogicOr:  n = "||"; break;
+		case K::LogicXor: n = "~~"; break;
 
 		case K::EndOfFile: n = "<EOF>"; break;
 		case K::BadToken:  n = "<BAD TOKEN>"; break;
