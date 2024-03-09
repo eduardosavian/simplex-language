@@ -47,14 +47,15 @@ bool Lexer::consume_on_match(char expected){
 }
 
 void Lexer::reset(){
+	tokens.clear();
 	current = 0;
 	previous = 0;
 	line = 0;
+	error_count = 0;
 	source = "";
-	tokens.clear();
 }
 
-Vector<Token> Lexer::tokenize(String source){
+Pair<Vector<Token>, bool> Lexer::tokenize(String source){
 	using K = TokenKind;
 	this->source = source;
 	while(!at_end()){
@@ -100,6 +101,7 @@ Vector<Token> Lexer::tokenize(String source){
 			case '+': { push(Token(K::Plus)); } break;
 			case '-': { push(Token(K::Minus)); } break;
 			case '*': { push(Token(K::Star)); } break;
+			case '%': { push(Token(K::Mod)); } break;
 
 			case '/': {
 				if(peek(1) == '*'){
@@ -155,8 +157,12 @@ Vector<Token> Lexer::tokenize(String source){
 				}
 			} break;
 
+			case '\'': {
+				push(tokenize_char_literal());
+			} break;
+
 			// Ignore whitespace
-			case '\n': case '\r': case ' ': break ;
+			case '\n': case '\t': case '\r': case ' ': break ;
 
 			default: {
 				if(is_alpha(c) || c == '_'){
@@ -167,6 +173,8 @@ Vector<Token> Lexer::tokenize(String source){
 				}
 				else if(c == '"'){
 					push(tokenize_string());
+				} else {
+					push(Token(K::BadToken));
 				}
 			} break;
 		}
@@ -176,8 +184,11 @@ Vector<Token> Lexer::tokenize(String source){
 	}
 
 	auto tks = std::move(tokens);
+	auto ok = error_count == 0;
+
 	reset();
-	return tks;
+
+	return {tks, ok};
 }
 
 Token Lexer::tokenize_identifier(){
@@ -224,7 +235,6 @@ Token Lexer::tokenize_number(){
 			}
 			// Invalid base prefix
 			else {
-				std::printf("Prefix:%c%c\n", c0,c1);
 				panic("Invalid base prefix");
 				base = -1;
 			}
@@ -293,6 +303,39 @@ Token Lexer::tokenize_number_decimal(){
 	}
 
 	return Token(kind, lexeme, payload);
+}
+
+Token Lexer::tokenize_char_literal(){
+	previous = current;
+	current += 1;
+
+	char c = peek(0);
+	if(c == '\\'){
+		char c2 = peek(1);
+		switch(c2){
+			case '\\': c = '\\'; break;
+			case '\'': c = '\''; break;
+			case 'n':  c = '\n'; break;
+			case 't':  c = '\t'; break;
+			case 'r':  c = '\r'; break;
+			case 'e':  c = '\e'; break;
+			default: {
+				return Token(TokenKind::BadToken, "Invalid escape sequence");
+			}; break;
+		}
+		current += 1; // Account for backslash
+	}
+	else if(peek(1) != '\''){
+		return Token(TokenKind::BadToken, "Unterminated char literal.");
+	}
+
+	current += 2;
+	auto lexeme = source.substr(previous, current - previous);
+	auto payload = Token::Payload{};
+
+	payload.character = c;
+	return Token(TokenKind::Char, lexeme, payload);
+
 }
 
 Token Lexer::tokenize_integer_hex(){
@@ -404,4 +447,10 @@ Token Lexer::tokenize_comment_multi_line(){
 	auto lexeme = source.substr(previous, current - previous);
 
 	return Token(TokenKind::Comment, lexeme);
+}
+
+void Lexer::emit_error(String msg){
+	error_count += 1;
+	auto tmp = std::string(msg);
+	std::fprintf(stderr, "Lexing error: %s\n", tmp.c_str());
 }

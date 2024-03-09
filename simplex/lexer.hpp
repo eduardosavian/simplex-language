@@ -24,10 +24,10 @@ enum struct TokenKind : i32 {
 	GreaterEqual, LesserEqual,
 
 	// Literals
-	String, Real, Integer, True, False, Nil,
+	String, Real, Integer, Char, True, False, Nil,
 
 	// Arithmetic
-	Plus, Minus, Star, Slash,
+	Plus, Minus, Star, Slash, Mod,
 
 	// Bitwise
 	And, Or, Xor, ShiftLeft, ShiftRight,
@@ -61,6 +61,7 @@ struct Token {
 		i64 integer;
 		f64 real;
 		String str;
+		char character;
 	};
 
 	TokenKind kind;
@@ -115,9 +116,10 @@ struct Lexer {
 	i64 previous = 0;
 	i64 current = 0;
 	i64 line = 0;
+	i32 error_count = 0;
 
 	[[nodiscard]]
-	Vector<Token> tokenize(String source);
+	Pair<Vector<Token>, bool> tokenize(String source);
 
 private:
 	char peek(i64 delta) const;
@@ -125,11 +127,12 @@ private:
 	void reset();
 	bool at_end() const;
 	bool consume_on_match(char expected);
+	void emit_error(String msg);
 
 	[[nodiscard]] Token tokenize_identifier();
 	[[nodiscard]] Token tokenize_number();
 	[[nodiscard]] Token tokenize_string();
-	[[nodiscard]] Token tokenize_rune_literal();
+	[[nodiscard]] Token tokenize_char_literal();
 	[[nodiscard]] Token tokenize_number_decimal();
 	[[nodiscard]] Token tokenize_integer_bin();
 	[[nodiscard]] Token tokenize_integer_hex();

@@ -55,7 +55,8 @@ bool test_lexer(){
 			Token(K::Lesser),
 		};
 
-		auto tokens = lexer.tokenize(source);
+		auto [tokens, ok] = lexer.tokenize(source);
+		Expect(t, ok);
 		auto expect = Vector<Token>();
 		for(auto e : tklist){ expect.push_back(e); }
 
@@ -93,7 +94,8 @@ bool test_lexer(){
 		};
 
 		auto lexer = Lexer();
-		auto tokens = lexer.tokenize(source);
+		auto [tokens, ok] = lexer.tokenize(source);
+		Expect(t, ok);
 		auto expect = x::DynamicArray<Token>(x::std_heap_allocator());
 		for(auto const& e : idlist){ expect.append(e); }
 
@@ -135,7 +137,8 @@ bool test_lexer(){
 		;
 
 		auto lexer = Lexer();
-		auto tokens = lexer.tokenize(source);
+		auto [tokens, ok] = lexer.tokenize(source);
+		Expect(t, ok);
 
 		for(auto tk : tokens){
 			// std::printf("%s\n", token_name(tk).c_str());

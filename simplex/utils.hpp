@@ -27,6 +27,14 @@ std::string token_name(Token const& tk) {
 				s += ", ";
 				s += std::to_string(payload.integer);
 			} break;
+			case TokenKind::Real: {
+				s += ", ";
+				s += std::to_string(payload.real);
+			} break;
+			case TokenKind::Char: {
+				s += ", ";
+				s += std::to_string(i32(payload.character));
+			} break;
 			default: break;
 		}
 
@@ -65,7 +73,8 @@ std::string token_name(Token const& tk) {
 		case K::LesserEqual:  n = "<="; break;
 
 		case K::String:  n = wrap("String", tk.lexeme); break;
-		case K::Real:    n = wrap("Real", tk.lexeme); break;
+		case K::Char:    n = wrap_with_payload("Char", tk.lexeme, K::Char, tk.payload); break;
+		case K::Real:    n = wrap_with_payload("Real", tk.lexeme, K::Real, tk.payload); break;
 		case K::Integer: n = wrap_with_payload("Int", tk.lexeme, K::Integer, tk.payload); break;
 
 		case K::True:  n = "true"; break;
@@ -76,6 +85,7 @@ std::string token_name(Token const& tk) {
 		case K::Minus:      n = "-"; break;
 		case K::Star:       n = "*"; break;
 		case K::Slash:      n = "/"; break;
+		case K::Mod:        n = "%"; break;
 		case K::And:        n = "&"; break;
 		case K::Or:         n = "|"; break;
 		case K::Xor:        n = "~"; break;

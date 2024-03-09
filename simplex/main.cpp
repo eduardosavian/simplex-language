@@ -7,8 +7,9 @@
 
 using x::panic;
 
-int main(){
-	auto [filedata, ok] = read_file("source.txt");
+int main(int argc, char** argv){
+	if(argc < 2){ return 1; }
+	auto [filedata, ok] = read_file(argv[1]);
 	Defer(delete[] filedata.data());
 
 	if(!ok){
@@ -16,14 +17,16 @@ int main(){
 	}
 
 	auto lex = Lexer();
-	auto tokens = lex.tokenize(filedata);
+	auto [tokens, _] = lex.tokenize(filedata);
+	for(auto tk : tokens){
+		std::printf("%s ", token_name(tk).c_str());
+	}
+	return 0;
 
-
-	auto b = true 
-		&& test_lexer()
-
-	;
-
-	return int(!b);
+	// auto b = true 
+	// 	&& test_lexer()
+	// ;
+	//
+	// return int(!b);
 }
 

@@ -1,23 +1,44 @@
-proc foo(a: int, b: int) int {
-	return a - 3 + abs(b);
+proc print_list(list: []int) {
+    i: int = 0;
+    while i < len(list) {
+        println(i, ": ", list[i]);
+    }
 }
 
-proc main() {
-	x: int = 0x420;
-	y: int = -1;
+proc is_alpha(c: char) bool {
+    return (c >= 'a') && (c <= 'z') ||
+           (c >= 'A') && (c <= 'Z');
+}
 
-	big: int = 69 + (x / 2) << ( 3 * x );
-	msg: string = "bye";
+proc is_ws(c: char) bool {
+	return c == ' '|| (c == '\t') || (c == '\n') || (c == '\e');
+}
 
-	if x > 0 {
-		for x > 0 {
-			x = foo(x - 1, y);
-			print(x);
-		}
-	}
-	else {
-		print("Vai da nao");
-	}
+proc say_hello(name: string){
+    println("Hello ", name);
+}
 
-	print(msg);
+proc is_pow_of_2(n: int) int {
+    pow2: bool = (n & (n - 1)) == 0;
+    return pow2;
+}
+
+proc fizzbuzz(n: int){
+    i : int = 0;
+
+    while i < n {
+        div3:bool=i%3==0;
+        div5: bool = i % 5 == 0;
+
+        if div3 {
+            print("fizz");
+        }
+        if div5 {
+            print("buzz");
+        }
+        if !div3 && !div5 {
+            print(i);
+        }
+        println();
+    }
 }
