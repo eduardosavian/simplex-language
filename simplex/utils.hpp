@@ -99,7 +99,7 @@ std::string token_name(Token const& tk) {
 
 		case K::Comment: n = wrap("Comment", tk.lexeme); break;
 		case K::EndOfFile: n = "<EOF>"; break;
-		case K::BadToken:  n = "<BAD TOKEN>"; break;
+		case K::BadToken:  n = "[[BAD TOKEN: " + std::string(tk.lexeme) + " ]]"; break;
 	}
 
 	return n;

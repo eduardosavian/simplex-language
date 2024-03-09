@@ -305,6 +305,23 @@ Token Lexer::tokenize_number_decimal(){
 	return Token(kind, lexeme, payload);
 }
 
+static constexpr
+char parse_escape_sequence(char escaped){
+	char c = 0;
+	switch(escaped){
+		case 'e':  c = '\e'; break;
+		case 'n':  c = '\n'; break;
+		case 'r':  c = '\r'; break;
+		case 't':  c = '\t'; break;
+		case 'b':  c = '\b'; break;
+		case '\\': c = '\\'; break;
+		case '\'': c = '\''; break;
+		case '\"': c = '\"'; break;
+	}
+
+	return c;
+}
+
 Token Lexer::tokenize_char_literal(){
 	previous = current;
 	current += 1;
@@ -312,18 +329,11 @@ Token Lexer::tokenize_char_literal(){
 	char c = peek(0);
 	if(c == '\\'){
 		char c2 = peek(1);
-		switch(c2){
-			case '\\': c = '\\'; break;
-			case '\'': c = '\''; break;
-			case 'n':  c = '\n'; break;
-			case 't':  c = '\t'; break;
-			case 'r':  c = '\r'; break;
-			case 'e':  c = '\e'; break;
-			default: {
-				return Token(TokenKind::BadToken, "Invalid escape sequence");
-			}; break;
-		}
+		c = parse_escape_sequence(c2);
 		current += 1; // Account for backslash
+		if (c == 0 || c == '"'){
+			return Token(TokenKind::BadToken, "Invalid escape sequence");
+		}
 	}
 	else if(peek(1) != '\''){
 		return Token(TokenKind::BadToken, "Unterminated char literal.");

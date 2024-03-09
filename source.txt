@@ -2,6 +2,7 @@ proc print_list(list: []int) {
     i: int = 0;
     while i < len(list) {
         println(i, ": ", list[i]);
+		i = i + 1;
     }
 }
 
@@ -25,6 +26,8 @@ proc is_pow_of_2(n: int) int {
 
 proc fizzbuzz(n: int){
     i : int = 0;
+	backslash : char = '\\';
+	quote : char = '\'';
 
     while i < n {
         div3:bool=i%3==0;
