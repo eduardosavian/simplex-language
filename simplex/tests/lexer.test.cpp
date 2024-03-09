@@ -111,6 +111,7 @@ bool test_lexer(){
 		}
 	}
 	{
+		// TODO: add Expect's here
 		constexpr String source =
 			"// Takes the factorial of a number\n"
 			"proc fact(n: int) int {"
@@ -125,8 +126,8 @@ bool test_lexer(){
 			"    println(\"Hello world\");"
 			"    /* Multi line  "
 			"         comment  */"
-			"    x : int = fact(10);"
-			"    ok : bool = x > 0b10_01;"
+			"    x : int = fact(/* Number 10 */10);"
+			"    ok : bool = x>0b10_01;"
 			"    if ok {"
 			"        println(\"10! = \", x);"
 			"    }"
@@ -137,13 +138,7 @@ bool test_lexer(){
 		auto tokens = lexer.tokenize(source);
 
 		for(auto tk : tokens){
-			std::printf("%s\n", token_name(tk).c_str());
-			// if(tk.kind == K::SquirlyOpen
-			// 	|| tk.kind == K::SquirlyClose
-			// 	|| tk.kind == K::Semicolon)
-			// {
-			// 	std::printf("\n");
-			// }
+			// std::printf("%s\n", token_name(tk).c_str());
 		}
 	}
 

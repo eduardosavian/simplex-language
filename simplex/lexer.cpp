@@ -400,8 +400,8 @@ Token Lexer::tokenize_comment_multi_line(){
 		current += 1;
 	}
 
+	current += 1; // Account for comment closing
 	auto lexeme = source.substr(previous, current - previous);
-	current += 2;
 
 	return Token(TokenKind::Comment, lexeme);
 }
