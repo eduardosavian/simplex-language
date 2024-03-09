@@ -37,7 +37,7 @@ enum struct TokenKind : i32 {
 
 	// Errors
 	EndOfFile = -1,
-	BadToken,
+	BadToken = -2,
 };
 
 constexpr auto reserved_words = Array<Pair<String, TokenKind>, 9>({
@@ -61,24 +61,64 @@ struct Token {
 		String str;
 	};
 
+
 	TokenKind kind;
 	String lexeme;
 	Payload payload;
+
+	constexpr
+	Token()
+		: kind{TokenKind::BadToken}, lexeme(""), payload{0} {}
 
 	constexpr
 	Token(TokenKind kind, String lexeme = String{}, Payload payload = {})
 		: kind(kind), lexeme(lexeme), payload{payload} {}
 
 	constexpr
-	bool operator==(Token const& tk) const {
-		return (tk.kind == kind);
-	}
+	Token(Token const& tk)
+		: kind(tk.kind), lexeme(tk.lexeme), payload{tk.payload} {}
 
 	constexpr
-	bool operator!=(Token const& tk) const {
-		return (tk.kind != kind);
+	void operator=(Token const& tk) {
+		kind = tk.kind;
+		lexeme = tk.lexeme;
+		payload = tk.payload;
+
 	}
+
+	// TODO: improve Comparison
+	// constexpr
+	// bool operator==(Token const& tk) const {
+	// 	return (tk.kind == kind);
+	// }
+	//
+	// constexpr
+	// bool operator!=(Token const& tk) const {
+	// 	return (tk.kind != kind);
+	// }
+
 };
+
+// Check if token is some reserved Identifier, this includes builtins and keywords
+static constexpr
+bool is_reserved_identifier(Token tk){
+	switch (tk.kind) {
+		case TokenKind::If:
+		case TokenKind::Else:
+		case TokenKind::For:
+		case TokenKind::Proc:
+		case TokenKind::Type:
+		case TokenKind::Return:
+		case TokenKind::True:
+		case TokenKind::False:
+		case TokenKind::Nil: {
+			return true;
+		}break;
+
+		default: break;
+	}
+	return false;
+}
 
 struct Lexer {
 	String source;

@@ -1,11 +1,14 @@
 CXX ?= clang++
-CFLAGS := -std=c++20 -O1 -g -pipe -fno-strict-aliasing -Wall -Wextra
+CFLAGS := -std=c++20 -O1 -g -pipe -fno-strict-aliasing -Wall -Wextra -fsanitize=address
 LDFLAGS := -fuse-ld=mold
 
 SOURCES := file.cpp lexer.cpp
 HEADERS := common.hpp file.hpp lexer.hpp types.hpp utils.hpp
 
 .PHONY: clean run
+
+run: bin/simpcc
+	@./bin/simpcc
 
 bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o
 	$(CXX) $(CFLAGS) \
@@ -21,8 +24,6 @@ bin/lexer.o: lexer.cpp $(HEADERS)
 bin/parser.o: parser.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c parser.cpp -o bin/parser.o
 
-run: bin/simpcc
-	@./bin/simpcc
 
 clean:
 	rm -f bin/*

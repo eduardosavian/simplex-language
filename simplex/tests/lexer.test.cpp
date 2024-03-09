@@ -2,8 +2,19 @@
 #include "../lexer.hpp"
 #include "../utils.hpp"
 
+#include "../core.hpp"
+
 constexpr
 void print_arr(Vector<Token> const& arr){
+	std::printf("( ");
+	for(auto const& e : arr){
+		std::printf("%s ", token_name(e).c_str());
+	}
+	std::printf(")\n");
+};
+
+constexpr
+void print_arr(x::DynamicArray<Token> const& arr){
 	std::printf("( ");
 	for(auto const& e : arr){
 		std::printf("%s ", token_name(e).c_str());
@@ -51,11 +62,59 @@ bool test_lexer(){
 
 		for(usize i = 0; i < tokens.size(); i += 1){
 			auto correct = tklist[i];
-			Expect(t, tokens[i] == correct);
+			Expect(t, tokens[i].kind == correct.kind);
 		}
 	}
 
 	{ // Identifiers
+		constexpr String source =
+			"if;else.for,proc(type)return true\tfalse:nil\n"
+			"x: int = 1;"
+			"y:bool=true;"
+			"proc fib_rec()"
+		;
+
+		constexpr auto idlist = Array<Token, 16>{
+			Token(K::If),
+			Token(K::Else),
+			Token(K::For),
+			Token(K::Proc),
+			Token(K::Type),
+			Token(K::Return),
+			Token(K::True),
+			Token(K::False),
+			Token(K::Nil),
+			Token(K::Identifier, "x"),
+			Token(K::Identifier, "int"),
+			Token(K::Identifier, "y"),
+			Token(K::Identifier, "bool"),
+			Token(K::True),
+			Token(K::Proc),
+			Token(K::Identifier, "fib_rec"),
+		};
+
+		auto lexer = Lexer();
+		auto tokens = lexer.tokenize(source);
+		auto expect = x::DynamicArray<Token>(x::std_heap_allocator());
+		for(auto const& e : idlist){ expect.append(e); }
+
+		auto filtered = x::DynamicArray<Token>(x::std_heap_allocator());
+
+		for(auto const& tk : tokens){
+			if(is_reserved_identifier(tk) || (tk.kind == TokenKind::Identifier)){
+				filtered.append(tk);
+			}
+		}
+
+		// print_arr(tokens);
+		// print_arr(expect);
+		// print_arr(filtered);
+
+		Expect(t, expect.size() == filtered.size());
+		for(usize i = 0; i < filtered.size(); i += 1){
+			Expect(t, expect[i].kind == filtered[i].kind);
+		}
+
 	}
 
 
