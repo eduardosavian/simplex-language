@@ -3,13 +3,13 @@ CFLAGS := -std=c++20 -O1 -g -pipe -fno-strict-aliasing -Wall -Wextra -fsanitize=
 LDFLAGS := -fuse-ld=mold
 
 SOURCES := file.cpp lexer.cpp
-HEADERS := common.hpp file.hpp lexer.hpp types.hpp utils.hpp
+HEADERS := common.hpp file.hpp lexer.hpp utils.hpp
 TESTS := tests/lexer.test.cpp
 
 .PHONY: clean run
 
 run: bin/simpcc
-	@./bin/simpcc
+	@ ./bin/simpcc
 
 bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o $(TESTS)
 	$(CXX) $(CFLAGS) \

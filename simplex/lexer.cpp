@@ -2,6 +2,10 @@
 #include "lexer.hpp"
 
 #include <string>
+
+#define TERM_RED "\e[1;31m"
+#define TERM_RESET "\e[0m"
+
 using x::panic;
 
 static
@@ -75,6 +79,7 @@ Pair<Vector<Token>, i32> Lexer::tokenize(String source){
 			case ',': { push(Token(K::Comma)); } break;
 
 			case '&': {
+
 				if(consume_on_match('&')){
 					push(Token(K::LogicAnd));
 				} else {
@@ -331,6 +336,7 @@ Token Lexer::tokenize_char_literal(){
 	char c = peek(0);
 	if(c == '\\'){
 		char c2 = peek(1);
+		char end = peek(2);
 		c = parse_escape_sequence(c2);
 		current += 1; // Account for backslash
 		if (c == 0 || c == '"'){
@@ -338,7 +344,12 @@ Token Lexer::tokenize_char_literal(){
 			return Token(TokenKind::BadToken);
 		}
 	}
-	else if(peek(1) != '\''){
+	else if(c == '\''){
+		emit_error("Empty char literal is not allowed");
+		return Token(TokenKind::BadToken);
+	}
+
+	if(peek(1) != '\''){
 		emit_error("Unterminated char literal.");
 		return Token(TokenKind::BadToken);
 	}
@@ -457,7 +468,7 @@ Token Lexer::tokenize_comment_multi_line(){
 		current += 1;
 	}
 
-	current += 1; // Account for comment closing
+	current += 2; // Account for comment closing
 	auto lexeme = source.substr(previous, current - previous);
 
 	return Token(TokenKind::Comment, lexeme);
@@ -466,5 +477,5 @@ Token Lexer::tokenize_comment_multi_line(){
 void Lexer::emit_error(String msg){
 	error_count += 1;
 	auto tmp = std::string(msg);
-	std::fprintf(stderr, "Lexing error at line %d: %s\n", line, tmp.c_str());
+	std::fprintf(stderr, "[" TERM_RED "Lexing Error" TERM_RESET "] at line %d: %s\n", line, tmp.c_str());
 }

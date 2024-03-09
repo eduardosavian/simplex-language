@@ -7,7 +7,7 @@ proc print_list(list: []int) {
 }
 
 proc is_alpha(c: char) bool {
-    return (c >= 'a') && (c <= 'z') ||
+    return (c >= '\e') && (c <= 'z') ||
            (c >= 'A') && (c <= 'Z');
 }
 
@@ -20,10 +20,13 @@ proc say_hello(name: string){
 }
 
 proc is_pow_of_2(n: int) int {
-    pow2: bool = (n & (n - 1)) == 0;
+    pow2: bool = (n & (n - 0xff)) == 0;
     return pow2;
 }
 
+/*
+	Drinking game
+*/
 proc fizzbuzz(n: int){
     i : int = 0;
 	backslash : char = '\\';

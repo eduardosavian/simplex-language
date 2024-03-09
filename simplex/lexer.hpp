@@ -67,7 +67,6 @@ struct Token {
 	TokenKind kind;
 	String lexeme;
 	Payload payload;
-	bool panic_mode = false;
 
 	constexpr
 	Token()

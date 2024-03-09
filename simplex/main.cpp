@@ -23,7 +23,8 @@ int main(int argc, char** argv){
 	}
 	std::printf("\n");
 
-	std::printf("Processed %zu tokens, %d errors encountered\n", tokens.size(), errors);
+	std::printf("Tokens processed: %zu\n"
+		        "Errors Encountered: %d\n", tokens.size(), errors);
 
 	return 0;
 }

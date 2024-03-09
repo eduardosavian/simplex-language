@@ -11,15 +11,15 @@ std::string token_name(Token const& tk) {
 	using K = TokenKind;
 	auto wrap = [](String prefix, String contents){
 		auto s = std::string(prefix);
-		s += "<";
+		s += "(";
 		s += contents;
-		s += ">";
+		s += ")";
 		return s;
 	};
 
 	auto wrap_with_payload = [](String prefix, String contents, TokenKind kind, Token::Payload payload){
 		auto s = std::string(prefix);
-		s += "<";
+		s += "(";
 		s += contents;
 
 		switch(kind){
@@ -38,7 +38,7 @@ std::string token_name(Token const& tk) {
 			default: break;
 		}
 
-		s += ">";
+		s += ")";
 		return s;
 	};
 
@@ -99,7 +99,7 @@ std::string token_name(Token const& tk) {
 
 		case K::Comment: n = wrap("Comment", tk.lexeme); break;
 		case K::EndOfFile: n = "<EOF>"; break;
-		case K::BadToken:  n = "[[BAD TOKEN: " + std::string(tk.lexeme) + " ]]"; break;
+		case K::BadToken:  n = "<BAD TOKEN>"; break;
 	}
 
 	return n;
