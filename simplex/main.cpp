@@ -17,16 +17,14 @@ int main(int argc, char** argv){
 	}
 
 	auto lex = Lexer();
-	auto [tokens, _] = lex.tokenize(filedata);
+	auto [tokens, errors] = lex.tokenize(filedata);
 	for(auto tk : tokens){
 		std::printf("%s ", token_name(tk).c_str());
 	}
-	return 0;
+	std::printf("\n");
 
-	// auto b = true 
-	// 	&& test_lexer()
-	// ;
-	//
-	// return int(!b);
+	std::printf("Processed %zu tokens, %d errors encountered\n", tokens.size(), errors);
+
+	return 0;
 }
 

@@ -115,11 +115,11 @@ struct Lexer {
 	Vector<Token> tokens;
 	i64 previous = 0;
 	i64 current = 0;
-	i64 line = 0;
+	i32 line = 1;
 	i32 error_count = 0;
 
 	[[nodiscard]]
-	Pair<Vector<Token>, bool> tokenize(String source);
+	Pair<Vector<Token>, i32> tokenize(String source);
 
 private:
 	char peek(i64 delta) const;

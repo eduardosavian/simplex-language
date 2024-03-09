@@ -50,12 +50,12 @@ void Lexer::reset(){
 	tokens.clear();
 	current = 0;
 	previous = 0;
-	line = 0;
+	line = 1;
 	error_count = 0;
 	source = "";
 }
 
-Pair<Vector<Token>, bool> Lexer::tokenize(String source){
+Pair<Vector<Token>, i32> Lexer::tokenize(String source){
 	using K = TokenKind;
 	this->source = source;
 	while(!at_end()){
@@ -162,7 +162,8 @@ Pair<Vector<Token>, bool> Lexer::tokenize(String source){
 			} break;
 
 			// Ignore whitespace
-			case '\n': case '\t': case '\r': case ' ': break ;
+			case '\n': line += 1;
+			case '\t': case '\r': case ' ': break ;
 
 			default: {
 				if(is_alpha(c) || c == '_'){
@@ -174,6 +175,7 @@ Pair<Vector<Token>, bool> Lexer::tokenize(String source){
 				else if(c == '"'){
 					push(tokenize_string());
 				} else {
+					emit_error("Unrecognized Token");
 					push(Token(K::BadToken));
 				}
 			} break;
@@ -183,12 +185,12 @@ Pair<Vector<Token>, bool> Lexer::tokenize(String source){
 		current += 1;
 	}
 
-	auto tks = std::move(tokens);
-	auto ok = error_count == 0;
+	auto result = std::move(tokens);
+	auto errors = error_count;
 
 	reset();
 
-	return {tks, ok};
+	return {result, errors};
 }
 
 Token Lexer::tokenize_identifier(){
@@ -332,11 +334,13 @@ Token Lexer::tokenize_char_literal(){
 		c = parse_escape_sequence(c2);
 		current += 1; // Account for backslash
 		if (c == 0 || c == '"'){
-			return Token(TokenKind::BadToken, "Invalid escape sequence");
+			emit_error("Invalid escape sequence");
+			return Token(TokenKind::BadToken);
 		}
 	}
 	else if(peek(1) != '\''){
-		return Token(TokenKind::BadToken, "Unterminated char literal.");
+		emit_error("Unterminated char literal.");
+		return Token(TokenKind::BadToken);
 	}
 
 	current += 2;
@@ -462,5 +466,5 @@ Token Lexer::tokenize_comment_multi_line(){
 void Lexer::emit_error(String msg){
 	error_count += 1;
 	auto tmp = std::string(msg);
-	std::fprintf(stderr, "Lexing error: %s\n", tmp.c_str());
+	std::fprintf(stderr, "Lexing error at line %d: %s\n", line, tmp.c_str());
 }

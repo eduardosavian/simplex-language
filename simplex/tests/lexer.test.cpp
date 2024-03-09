@@ -140,9 +140,8 @@ bool test_lexer(){
 		auto [tokens, ok] = lexer.tokenize(source);
 		Expect(t, ok);
 
-		for(auto tk : tokens){
-			// std::printf("%s\n", token_name(tk).c_str());
-		}
+		// for(auto tk : tokens){
+		// }
 	}
 
 
