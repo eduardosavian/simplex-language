@@ -4,13 +4,14 @@ LDFLAGS := -fuse-ld=mold
 
 SOURCES := file.cpp lexer.cpp
 HEADERS := common.hpp file.hpp lexer.hpp types.hpp utils.hpp
+TESTS := tests/lexer.test.cpp
 
 .PHONY: clean run
 
 run: bin/simpcc
 	@./bin/simpcc
 
-bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o
+bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o $(TESTS)
 	$(CXX) $(CFLAGS) \
 		main.cpp bin/parser.o bin/lexer.o bin/file.o $(LDFLAGS) \
 		-o bin/simpcc

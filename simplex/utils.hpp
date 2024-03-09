@@ -87,6 +87,7 @@ std::string token_name(Token const& tk) {
 		case K::LogicOr:  n = "||"; break;
 		case K::LogicXor: n = "~~"; break;
 
+		case K::Comment: n = wrap("Comment", tk.lexeme); break;
 		case K::EndOfFile: n = "<EOF>"; break;
 		case K::BadToken:  n = "<BAD TOKEN>"; break;
 	}

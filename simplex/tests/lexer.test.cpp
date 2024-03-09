@@ -1,7 +1,6 @@
 #include "test.hpp"
 #include "../lexer.hpp"
 #include "../utils.hpp"
-
 #include "../core.hpp"
 
 constexpr
@@ -106,15 +105,46 @@ bool test_lexer(){
 			}
 		}
 
-		// print_arr(tokens);
-		// print_arr(expect);
-		// print_arr(filtered);
-
 		Expect(t, expect.size() == filtered.size());
 		for(usize i = 0; i < filtered.size(); i += 1){
 			Expect(t, expect[i].kind == filtered[i].kind);
 		}
+	}
+	{
+		constexpr String source =
+			"// Takes the factorial of a number\n"
+			"proc fact(n: int) int {"
+			"    if n < 0x2 {"
+			"        return 1;"
+			"    }"
+			"    else {"
+			"        return fact(n - 1) * n;"
+			"    }"
+			"}"
+			"proc main(){"
+			"    println(\"Hello world\");"
+			"    /* Multi line  "
+			"         comment  */"
+			"    x : int = fact(10);"
+			"    ok : bool = x > 0b10_01;"
+			"    if ok {"
+			"        println(\"10! = \", x);"
+			"    }"
+			"}"
+		;
 
+		auto lexer = Lexer();
+		auto tokens = lexer.tokenize(source);
+
+		for(auto tk : tokens){
+			std::printf("%s\n", token_name(tk).c_str());
+			// if(tk.kind == K::SquirlyOpen
+			// 	|| tk.kind == K::SquirlyClose
+			// 	|| tk.kind == K::Semicolon)
+			// {
+			// 	std::printf("\n");
+			// }
+		}
 	}
 
 

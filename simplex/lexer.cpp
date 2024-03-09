@@ -2,6 +2,7 @@
 #include "lexer.hpp"
 
 #include <string>
+using x::panic;
 
 static
 bool is_alpha(char c){
@@ -20,7 +21,6 @@ bool is_hex(char c){
 	auto hex_upper = (c >= 'A') && (c <= 'F');
 	return is_decimal(c) || hex_lower || hex_upper;
 }
-
 
 bool Lexer::at_end() const {
 	return current >= i64(source.size());
@@ -103,8 +103,12 @@ Vector<Token> Lexer::tokenize(String source){
 
 			case '/': {
 				if(peek(1) == '*'){
-					panic("TODO: Implement comment");
-				} else {
+					push(tokenize_comment_multi_line());
+				}
+				else if (peek(1) == '/'){
+					push(tokenize_comment_single_line());
+				}
+				else {
 					push(Token(K::Slash));
 				}
 			} break;
@@ -166,9 +170,9 @@ Vector<Token> Lexer::tokenize(String source){
 				}
 			} break;
 		}
+
 		// Regular advance
 		current += 1;
-
 	}
 
 	auto tks = std::move(tokens);
@@ -353,6 +357,7 @@ Token Lexer::tokenize_integer_bin(){
 	return Token(TokenKind::Integer, lexeme, payload);
 }
 
+// TODO: Handle escaped sequences
 [[nodiscard]]
 Token Lexer::tokenize_string(){
 	// TODO: Escaping quotes
@@ -362,4 +367,41 @@ Token Lexer::tokenize_string(){
 		current += 1;
 	}
 	return Token(TokenKind::String, source.substr(previous, current - previous));
+}
+
+[[nodiscard]]
+Token Lexer::tokenize_comment_single_line(){
+	previous = current;
+
+	while(!at_end()){
+		if(peek(0) == '\n'){
+			break;
+		}
+		current += 1;
+	}
+
+	auto lexeme = source.substr(previous, current - previous);
+
+	return Token(TokenKind::Comment, lexeme);
+}
+
+[[nodiscard]]
+Token Lexer::tokenize_comment_multi_line(){
+	previous = current;
+
+	while(!at_end()){
+		auto c0 = peek(0) == '*';
+		auto c1 = peek(1) == '/';
+
+		if(c0 && c1){
+			break;
+		}
+
+		current += 1;
+	}
+
+	auto lexeme = source.substr(previous, current - previous);
+	current += 2;
+
+	return Token(TokenKind::Comment, lexeme);
 }

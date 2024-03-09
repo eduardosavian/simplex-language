@@ -35,6 +35,9 @@ enum struct TokenKind : i32 {
 	// Logic
 	LogicNot, LogicAnd, LogicOr, LogicXor,
 
+	// Comments, still processed as tokens for convenience
+	Comment,
+
 	// Errors
 	EndOfFile = -1,
 	BadToken = -2,
@@ -53,7 +56,6 @@ constexpr auto reserved_words = Array<Pair<String, TokenKind>, 9>({
 	{"nil", TokenKind::Nil},
 });
 
-
 struct Token {
 	union Payload {
 		i64 integer;
@@ -61,14 +63,14 @@ struct Token {
 		String str;
 	};
 
-
 	TokenKind kind;
 	String lexeme;
 	Payload payload;
+	bool panic_mode = false;
 
 	constexpr
 	Token()
-		: kind{TokenKind::BadToken}, lexeme(""), payload{0} {}
+		: kind{TokenKind::EndOfFile}, lexeme{}, payload{0} {}
 
 	constexpr
 	Token(TokenKind kind, String lexeme = String{}, Payload payload = {})
@@ -83,20 +85,7 @@ struct Token {
 		kind = tk.kind;
 		lexeme = tk.lexeme;
 		payload = tk.payload;
-
 	}
-
-	// TODO: improve Comparison
-	// constexpr
-	// bool operator==(Token const& tk) const {
-	// 	return (tk.kind == kind);
-	// }
-	//
-	// constexpr
-	// bool operator!=(Token const& tk) const {
-	// 	return (tk.kind != kind);
-	// }
-
 };
 
 // Check if token is some reserved Identifier, this includes builtins and keywords
@@ -129,13 +118,14 @@ struct Lexer {
 
 	[[nodiscard]]
 	Vector<Token> tokenize(String source);
-	bool at_end() const;
-	void push(Token const& tk);
-	char peek(i64 delta) const;
-	bool consume_on_match(char expected);
-	void reset();
 
 private:
+	char peek(i64 delta) const;
+	void push(Token const& tk);
+	void reset();
+	bool at_end() const;
+	bool consume_on_match(char expected);
+
 	[[nodiscard]] Token tokenize_identifier();
 	[[nodiscard]] Token tokenize_number();
 	[[nodiscard]] Token tokenize_string();
@@ -143,6 +133,8 @@ private:
 	[[nodiscard]] Token tokenize_number_decimal();
 	[[nodiscard]] Token tokenize_integer_bin();
 	[[nodiscard]] Token tokenize_integer_hex();
+	[[nodiscard]] Token tokenize_comment_single_line();
+	[[nodiscard]] Token tokenize_comment_multi_line();
 };
 
 

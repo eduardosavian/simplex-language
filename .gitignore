@@ -1,4 +1,5 @@
 bin/*
+simplex/bin/*
 
 # Prerequisites
 *.d
