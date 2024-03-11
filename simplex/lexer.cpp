@@ -336,7 +336,6 @@ Token Lexer::tokenize_char_literal(){
 	char c = peek(0);
 	if(c == '\\'){
 		char c2 = peek(1);
-		char end = peek(2);
 		c = parse_escape_sequence(c2);
 		current += 1; // Account for backslash
 		if (c == 0 || c == '"'){
