@@ -8,8 +8,6 @@ TESTS := tests/lexer.test.cpp
 
 .PHONY: clean run
 
-run: bin/simpcc
-	@ ./bin/simpcc
 
 bin/simpcc: main.cpp bin/parser.o bin/lexer.o bin/file.o $(TESTS)
 	$(CXX) $(CFLAGS) \

@@ -6,7 +6,7 @@
 #include "common.hpp"
 #include "lexer.hpp"
 
-constexpr
+[[maybe_unused]] constexpr 
 std::string token_name(Token const& tk) {
 	using K = TokenKind;
 	auto wrap = [](String prefix, String contents){
@@ -103,6 +103,28 @@ std::string token_name(Token const& tk) {
 	}
 
 	return n;
+}
+
+
+[[maybe_unused]] static
+void pretty_print_tokens(Vector<Token> const& tokens){
+	using K = TokenKind;
+	for(usize i = 0; i < tokens.size(); i += 1){
+		auto tk = tokens[i];
+		auto next = ((i + 1) < tokens.size()) ? tokens[i+1] : Token(K::EndOfFile);
+
+		std::printf("%s ", token_name(tk).c_str());
+
+		if(tk.kind == K::SquirlyClose){
+			std::printf("\n");
+		}
+		if(tk.kind == K::Semicolon){
+			std::printf("\n");
+		}
+		else if(tk.kind == K::SquirlyOpen){
+			std::printf("\n");
+		}
+	}
 }
 
 

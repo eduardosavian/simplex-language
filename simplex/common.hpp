@@ -8,6 +8,8 @@
 #define USE_CORE_BUILTIN_TYPES
 #include "core.hpp"
 
+using x::panic, x::min, x::max;
+
 template<typename T>
 using Vector = std::vector<T>;
 

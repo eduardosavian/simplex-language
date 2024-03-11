@@ -105,8 +105,16 @@ Pair<Vector<Token>, i32> Lexer::tokenize(String source){
 
 			case '+': { push(Token(K::Plus)); } break;
 			case '-': { push(Token(K::Minus)); } break;
-			case '*': { push(Token(K::Star)); } break;
 			case '%': { push(Token(K::Mod)); } break;
+			case '*': {
+				if(peek(1) == '/'){
+					emit_error("Unpaired multi-line comment closing");
+					push(Token(K::BadToken));
+				}
+				else {
+					push(Token(K::Star));
+				}
+			} break;
 
 			case '/': {
 				if(peek(1) == '*'){
@@ -242,7 +250,8 @@ Token Lexer::tokenize_number(){
 			}
 			// Invalid base prefix
 			else {
-				panic("Invalid base prefix");
+				emit_error("Invalid integer base prefix");
+				return Token(TokenKind::BadToken);
 				base = -1;
 			}
 		}
@@ -456,15 +465,22 @@ Token Lexer::tokenize_comment_single_line(){
 Token Lexer::tokenize_comment_multi_line(){
 	previous = current;
 
+	bool closed = false;
 	while(!at_end()){
 		auto c0 = peek(0) == '*';
 		auto c1 = peek(1) == '/';
 
 		if(c0 && c1){
+			closed = true;
 			break;
 		}
 
 		current += 1;
+	}
+
+	if(!closed){
+		emit_error("Unclosed multi line comment");
+		return Token(TokenKind::BadToken);
 	}
 
 	current += 2; // Account for comment closing
