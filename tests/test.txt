@@ -1,0 +1,54 @@
+// teste
+//T
+//
+
+/**/
+/*A*/
+/* A */
+
+/*
+
+ASDASD
+
+*/
+
+
+0x10
+0bA5
+1.0
+"teste"
+'A'
+'5'
+~
+
+nome_funcao
+
+
+x: float
+
+i: int = 10;
+
+name: string = "galo";
+
+i = 69;
+
+{
+  i = 100;
+}
+
+if i > 9 {
+  i = -1;
+}
+
+for i < 100 {
+  i = i + 8;
+}
+
+proc square(i: int) int {
+  return i * i;
+}
+
+type Person struct {
+  name: string,
+  age: int,
+}
