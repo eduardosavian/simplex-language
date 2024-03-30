@@ -2,28 +2,40 @@
 
 ## Setup on Unix
 
-```bash
-chmod +x antlr4.sh grun.sh
-```
-
-```bash
-./antlr4.sh src/Simplex.g4
-```
-
-```bash
-javac src/*.java
-```
+### Change directory to src/
 
 ```bash
 cd src/
 ```
 
-```bash
-./grun Simplex r -tokens
-``.sh`
+### Give permitions to the bash scripts
 
 ```bash
-./antlr4.sh src/Simplex.g4 && javac src/*.java && cd src/ && ./grun.sh Simplex r -tokens && cd ..
+chmod +x antlr4.sh grun.sh
+```
+
+### Generate Parser
+
+```bash
+./antlr4.sh Simplex.g4
+```
+
+### Compiler the Simplex .java files
+
+```bash
+javac *.java
+```
+
+### Run the ANTLR Test
+
+```bash
+./grun Simplex r -tokens
+```
+
+### All the commands
+
+```bash
+cd src/ && ./antlr4.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
 ```
 
 ## Reference
