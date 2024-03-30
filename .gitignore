@@ -34,3 +34,5 @@ bin/*
 *.app
 
 .venv/
+
+*.class

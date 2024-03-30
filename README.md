@@ -5,11 +5,19 @@
 C
 
 ```bash
-alias antlr='/home/eduardo/Documents/Softwares/antlr'
+chmod +x antlr4.sh grun.sh
+```
 
-alias antlr4='java -jar /home/eduardo/Documents/Softwares/antlr4.jar'
+```bash
+./antlr4.sh src/Simplex.g4
+```
 
-alias grun='java org.antlr.v4.gui.TestRig'
+```bash
+javac src/*.java
+```
+
+```bash
+./grun Simplex r -tokens
 ```
 
 ## Reference
