@@ -11,13 +11,13 @@ cd src/
 ### Give permitions to the bash scripts
 
 ```bash
-chmod +x antlr4.sh grun.sh
+chmod +x antlr.sh grun.sh
 ```
 
 ### Generate Parser
 
 ```bash
-./antlr4.sh Simplex.g4
+./antlr.sh Simplex.g4
 ```
 
 ### Compiler the Simplex .java files
@@ -41,7 +41,7 @@ cd ..
 ### All the commands
 
 ```bash
-./antlr4.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
+./antlr.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
 ```
 
 ## Reference
