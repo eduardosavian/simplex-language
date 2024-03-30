@@ -1,13 +1,15 @@
 # Simple Language
 
+## Setup on Unix
 
-
-```bash
-java -cp antlr.jar org.antlr.v4.runtime.misc.TestRig Hello.g4
-```
+C
 
 ```bash
-java -cp antlr.jar org.antlr.v4.gui.TestRig Hello.g4
+alias antlr='/home/eduardo/Documents/Softwares/antlr'
+
+alias antlr4='java -jar /home/eduardo/Documents/Softwares/antlr4.jar'
+
+alias grun='java org.antlr.v4.gui.TestRig'
 ```
 
 ## Reference
