@@ -32,10 +32,16 @@ javac *.java
 ./grun Simplex r -tokens
 ```
 
+### Back to the root directory
+
+```bash
+cd ..
+```
+
 ### All the commands
 
 ```bash
-cd src/ && ./antlr4.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
+cd src/ && ./antlr4.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens cd ..
 ```
 
 ## Reference
