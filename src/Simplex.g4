@@ -3,7 +3,7 @@ r : 'hello' ; // match keyword hello followed by an identifier
 
 // Tokens
 // WS : [\s\t\r\n]+ -> skip;
-WS : [\t\r\n]+ -> skip;
+WS : [ \t\r\n]+ -> skip;
 
 ID : [a-zA-Z][a-zA-Z0-9_]*;
 
