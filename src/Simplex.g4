@@ -1,5 +1,5 @@
 grammar Simplex; // Define a grammar called Simplex
-r : 'hello' ID ; // match keyword hello followed by an identifier
+r : 'hello' ; // match keyword hello followed by an identifier
 
 // Tokens
 // WS : [\s\t\r\n]+ -> skip;
