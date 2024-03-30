@@ -2,8 +2,6 @@
 
 ## Setup on Unix
 
-C
-
 ```bash
 chmod +x antlr4.sh grun.sh
 ```
@@ -30,8 +28,8 @@ cd src/
 
 ## Reference
 
-- https://www.antlr.org/index.html
+- [https://www.antlr.org/index.html](ANTLR)
 
-- https://www.antlr.org/download.html
+- [https://www.antlr.org/download.html] (ANTLR Dowloads)
 
-- https://github.com/antlr/antlr4/blob/master/doc/index.md
+- [https://github.com/antlr/antlr4/blob/master/doc/index.md] (ANTLR Tutorial)
