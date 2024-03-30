@@ -17,7 +17,15 @@ javac src/*.java
 ```
 
 ```bash
+cd src/
+```
+
+```bash
 ./grun Simplex r -tokens
+```
+
+```bash
+./grun Simplex r -tokens && cd ..
 ```
 
 ## Reference
