@@ -1,12 +1,18 @@
 #!/bin/sh
 
-# Get the full path to the antlr4.jar file
+# ANTLR4.jar Relative path
 antlr4_path="tools/antlr4.jar"
 
+# ANTLR4.jar Full path
 antlr4_full_path=$(realpath "$antlr4_path")
 
+# Source path
+src_path="src/"
 
-simplex_path="src/Simplex.g4"
+# Language path, always will be Simplex
+simplex_path="$src_path/Simplex.g4"
 
 # Run the ANTLR 4 tool
 java -cp "$antlr4_full_path:$CLASSPATH" org.antlr.v4.Tool $simplex_path
+
+javac "$src_path*.java"
