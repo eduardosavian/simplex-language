@@ -9,7 +9,8 @@ antlr4_full_path=$(realpath "$antlr4_path")
 # Language name, always will be Simplex
 simplex_path="Simplex"
 
-echo antlr4_full_path
+echo $antlr4_full_path
 
 # Run Test
-#java org.antlr.v4.gui.TestRig "$simplex_path" $*
+java -cp "$antlr4_full_path:$CLASSPATH" org.antlr.v4.gui.TestRig "$simplex_path" $*
+

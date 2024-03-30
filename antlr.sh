@@ -13,6 +13,7 @@ src_path="src/"
 simplex_path="$src_path/Simplex.g4"
 
 # Run the ANTLR 4 tool
-java -cp "$antlr4_full_path:$CLASSPATH" org.antlr.v4.Tool $simplex_path
+java -cp "$antlr4_full_path:$CLASSPATH" org.antlr.v4.Tool "$simplex_path"
 
-javac "$src_path*.java"
+# Compile the generated Java files
+javac -cp "$antlr4_full_path:$CLASSPATH" "$src_path"*.java

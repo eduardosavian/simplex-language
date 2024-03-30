@@ -17,13 +17,7 @@ chmod +x antlr.sh grun.sh
 ### Generate Parser
 
 ```bash
-./antlr.sh Simplex.g4
-```
-
-### Compiler the Simplex .java files
-
-```bash
-javac *.java
+./antlr.sh
 ```
 
 ### Run the ANTLR Test
