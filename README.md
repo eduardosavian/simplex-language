@@ -46,8 +46,8 @@ cd src/ && ./antlr4.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
 
 ## Reference
 
-- [https://www.antlr.org/index.html](ANTLR)
+- [ANTLR](https://www.antlr.org/index.html)
 
-- [https://www.antlr.org/download.html] (ANTLR Dowloads)
+- [ANTLR Donwloads](https://www.antlr.org/download.html)
 
-- [https://github.com/antlr/antlr4/blob/master/doc/index.md] (ANTLR Tutorial)
+- [ANTLR Tutorial](https://github.com/antlr/antlr4/blob/master/doc/index.md)
