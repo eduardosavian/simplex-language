@@ -2,7 +2,4 @@
 *.tokens
 *.interp
 
-# Maybe remove from .gitignore
-*.java
-
 .~*

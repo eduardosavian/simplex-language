@@ -2,16 +2,10 @@
 
 ## Setup on Unix
 
-### Change directory to src/
-
-```bash
-cd src/
-```
-
 ### Give permitions to the bash scripts
 
 ```bash
-chmod +x antlr.sh grun.sh
+chmod +x antlr.sh src/grun.sh
 ```
 
 ### Generate Parser
@@ -20,22 +14,22 @@ chmod +x antlr.sh grun.sh
 ./antlr.sh
 ```
 
+### Change directory to source
+
+```bash
+cd src/
+```
+
 ### Run the ANTLR Test
 
 ```bash
-./grun Simplex r -tokens
+./test Simplex <flags>
 ```
 
 ### Back to the root directory
 
 ```bash
 cd ..
-```
-
-### All the commands
-
-```bash
-./antlr.sh Simplex.g4 && javac *.java && ./grun.sh Simplex r -tokens
 ```
 
 ## Reference
