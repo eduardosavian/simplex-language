@@ -5,31 +5,31 @@
 ### Give permitions to the bash scripts
 
 ```bash
-chmod +x antlr.sh src/grun.sh
+chmod +x generate.sh compile.sh run.sh
 ```
 
 ### Generate Parser
 
 ```bash
-./antlr.sh
+./generate.sh
+```
+
+### Copy the template Main.java from template/ to src/
+
+```bash
+-
 ```
 
 ### Change directory to source
 
 ```bash
-cd src/
+./compile.sh
 ```
 
 ### Run the ANTLR Test
 
 ```bash
-./test Simplex <flags>
-```
-
-### Back to the root directory
-
-```bash
-cd ..
+./run.sh
 ```
 
 ## Reference
