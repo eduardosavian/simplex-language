@@ -5,4 +5,4 @@
 # Maybe remove from .gitignore
 *.java
 
-*.~
+.~*
