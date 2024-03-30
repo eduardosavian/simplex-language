@@ -84,4 +84,4 @@ BIT_NOT : ~
 
 
 SL_COMMENT : [/][/].*
-ML_COMMENT : /\*([^/\*]|\n)*\*/
+ML_COMMENT : /\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/
