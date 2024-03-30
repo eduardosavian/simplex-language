@@ -1,7 +1,9 @@
 grammar Simplex; // Define a grammar called Simplex
 r : 'hello' ID ; // match keyword hello followed by an identifier
+
 // Tokens
-WS : [\s\t\r\n]+ -> skip;
+// WS : [\s\t\r\n]+ -> skip;
+WS : [\t\r\n]+ -> skip;
 
 ID : [a-zA-Z][a-zA-Z0-9_]*;
 
@@ -28,7 +30,7 @@ LITERAL_BIN : '0b'[0-1]+;
 LITERAL_INT : [0-9]+;
 LITERAL_FLOAT : [0-9]+'.'[0-9]+;
 LITERAL_STRING : '".*?"';
-LITERAL_CHAR : '\''(\\'|\\\"|\\\\|\\t|\\b|\\n|\\e|\\r|.)'\'';
+// LITERAL_CHAR : '\''(\\'|\\\"|\\\\|\\t|\\b|\\n|\\e|\\r|.)'\'';
 
 
 DOT : '.';
