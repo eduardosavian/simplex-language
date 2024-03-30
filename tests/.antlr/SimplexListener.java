@@ -1,4 +1,4 @@
-// Generated from src//Simplex.g4 by ANTLR 4.13.1
+// Generated from /home/eduardo/Documents/Projects/simplex-language/tests/Simplex.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -16,14 +16,4 @@ public interface SimplexListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitInit(SimplexParser.InitContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void enterValue(SimplexParser.ValueContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void exitValue(SimplexParser.ValueContext ctx);
 }

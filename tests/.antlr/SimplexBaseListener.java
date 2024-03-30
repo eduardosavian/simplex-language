@@ -1,4 +1,4 @@
-// Generated from src//Simplex.g4 by ANTLR 4.13.1
+// Generated from /home/eduardo/Documents/Projects/simplex-language/tests/Simplex.g4 by ANTLR 4.13.1
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -23,18 +23,6 @@ public class SimplexBaseListener implements SimplexListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitInit(SimplexParser.InitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValue(SimplexParser.ValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValue(SimplexParser.ValueContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

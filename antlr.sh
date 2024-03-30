@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Remove existing .java and class files in src/
+find src/ -type f -name "*.java" -delete
+find src/ -type f -name "*.class" -delete
+find src/ -type f -name "*.tokens" -delete
+find src/ -type f -name "*.interp" -delete
+
 # ANTLR4.jar Relative path
 antlr4_path="tools/antlr4.jar"
 
