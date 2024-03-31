@@ -14,7 +14,7 @@
     </path>
 
     <!-- Compile task -->
-    <target name="compile" depends="init">
+    <target name="compile" depends="init, antlr">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" nowarn="true" fork="true">
             <compilerarg value="-Xlint:-deprecation"/>
@@ -40,6 +40,17 @@
 
     <!-- Build task -->
     <target name="build" depends="clean, compile">
+    </target>
+
+    <!-- ANTLR task -->
+    <target name="antlr">
+        <exec executable="java">
+            <arg value="-cp"/>
+            <arg path="${antlr4_path}:${CLASSPATH}"/>
+            <arg value="org.antlr.v4.Tool"/>
+            <arg value="${src.dir}/SimplexLexer.g4"/>
+            <arg value="${src.dir}/SimplexParser.g4"/>
+        </exec>
     </target>
 
 </project>
