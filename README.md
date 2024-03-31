@@ -7,7 +7,7 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 ### Give permitions to the bash scripts
 
 ```bash
-chmod +x generate.sh compile.sh run.sh src/test.sh
+chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh src/test.sh
 ```
 
 ### Go to the script directory
