@@ -7,7 +7,7 @@ find ../src/ -type f -name "*.tokens" -delete
 find ../src/ -type f -name "*.interp" -delete
 
 # ANTLR4.jar Relative path
-antlr4_path="../tools/antlr4.jar"
+antlr4_path="../libs/antlr4.jar"
 
 # ANTLR4.jar Full path
 antlr4_full_path=$(realpath "$antlr4_path")
