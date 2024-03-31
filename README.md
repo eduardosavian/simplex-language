@@ -10,6 +10,12 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 chmod +x generate.sh compile.sh run.sh src/test.sh
 ```
 
+### Go to the script directory
+
+```bash
+cd scripts/
+```
+
 ### Generate ANTLR files
 
 ```bash
@@ -30,6 +36,11 @@ chmod +x generate.sh compile.sh run.sh src/test.sh
 ```
 
 ### Go to the source directory
+
+```bash
+cd ..
+```
+### Go to the root directory
 
 ```bash
 cd src/
