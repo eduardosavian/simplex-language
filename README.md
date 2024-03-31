@@ -9,11 +9,6 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 ### Ant build
 
 ```bash
-ant build
-```
-### Ant run
-
-```bash
 ant -Darg="tests/<input_file>.expr" run
 ```
 
