@@ -13,29 +13,17 @@ public class Main {
         }
 
         String inputFilePath = args[0];
+        // create a CharStream that reads from standard input
         InputStream inputStream = new FileInputStream(inputFilePath);
+        // create a lexer that feeds off of input CharStream
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
         SimplexLexer lexer = new SimplexLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
+        // create a buffer of tokens pulled from the lexer
         SimplexParser parser = new SimplexParser(tokens);
 
         ParseTree tree = parser.init();
 
         System.out.println(tree.toStringTree(parser));
-    
-    // InputStream inputStream = new FileInputStream("input.txt");
-
-    // // create a CharStream that reads from standard input
-    // ANTLRInputStream input = new ANTLRInputStream(System.in);
-    // // create a lexer that feeds off of input CharStream
-    // SimplexLexer lexer = new SimplexLexer(input);
-    // // create a buffer of tokens pulled from the lexer
-    // CommonTokenStream tokens = new CommonTokenStream(lexer);
-    // // create a parser that feeds off the tokens buffer
-    // SimplexParser parser = new SimplexParser(tokens);
-
-    // ParseTree tree = parser.init(); // begin parsing at init rule
-    
-    // System.out.println(tree.toStringTree(parser)); // print LISP-style tree
     }
 }
