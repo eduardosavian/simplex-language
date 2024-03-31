@@ -10,13 +10,13 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 chmod +x generate.sh compile.sh run.sh src/test.sh
 ```
 
-### Generate Parser
+### Generate ANTLR files
 
 ```bash
 ./generate.sh
 ```
 
-### Change directory to source
+### Compile the files
 
 ```bash
 ./compile.sh
@@ -29,15 +29,19 @@ chmod +x generate.sh compile.sh run.sh src/test.sh
 ./run.sh
 ```
 
-### Test the ANTLR
+### Go to the source directory
 
 ```bash
-cd src/ && ./test.sh
+cd src/
 ```
+
+### Test the ANTLR
 
 ```bash
 ./test.sh
 ```
+
+### Back to root directory
 
 ```bash
 cd ..
