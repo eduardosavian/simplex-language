@@ -18,7 +18,7 @@ statement : variable_declaration
           | RETURN SEMICOLON;
 
 // Variable Declaration
-variable_declaration : type ID (COMMA ID)* SEMICOLON;
+variable_declaration : type ID (COMMA ID)* (ASSIGN expression)? SEMICOLON;
 
 // Function Declaration
 function_declaration : PROC type ID PARENTHESES_BEGIN parameter_list? PARENTHESES_END block;

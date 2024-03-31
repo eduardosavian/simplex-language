@@ -19,9 +19,6 @@ find $src_path -type f -name "*.class" -delete
 find $src_path -type f -name "*.tokens" -delete
 find $src_path -type f -name "*.interp" -delete
 
-echo "Simplex Path: $simplex_path"
-
-
 # Run the ANTLR 4 tool
 java -cp "$antlr4_full_path:$CLASSPATH" org.antlr.v4.Tool "$simplex_lexer_path"
 
