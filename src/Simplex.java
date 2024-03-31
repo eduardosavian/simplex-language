@@ -4,7 +4,7 @@ import java.io.InputStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-public class Main {
+public class Simplex {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.err.println("Usage: java Main <input_file>");

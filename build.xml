@@ -4,7 +4,7 @@
     <property name="antlr4_path" location="libs/antlr4.jar"/>
     <property name="src.dir" location="src"/>
     <property name="build.dir" location="build"/>
-    <property name="main.class" value="Main"/>
+    <property name="main.class" value="Simplex"/> <!-- Updated to Simplex -->
 
     <!-- Define classpath -->
     <path id="classpath">
