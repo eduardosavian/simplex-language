@@ -24,7 +24,7 @@ public class Main {
 
         SimplexParser parser = new SimplexParser(tokens);
 
-        ParseTree tree = parser.prog();
+        ParseTree tree = parser.program();
 
         System.out.println(tree.toStringTree(parser));
     }

@@ -21,6 +21,7 @@ WHILE : 'while';
 FOR : 'for';
 BREAK : 'break';
 RETURN : 'return';
+DO : 'do' ;
 
 // Function and type declaration keywords
 PROC : 'proc';
@@ -34,6 +35,8 @@ LITERAL_BIN : '0b'[0-1]+;
 LITERAL_INT : [0-9]+;
 LITERAL_FLOAT : [0-9]+'.'[0-9]+;
 LITERAL_STRING : '".*?"';
+LITERAL_CHAR : '\\' ('\\' | 't' | 'b' | 'n' | '\u001B' | 'r' | .) ;
+// LITERAL_CHAR : '(\\'|\\\"|\\\\|\\t|\\b|\\n|\\e|\\r|.)'
 
 // Delimiters
 DOT : '.';
@@ -82,3 +85,7 @@ ML_COMMENT : '/*' .*? '*/' -> skip; // Multi-line comments
 
 // Rule for identifying identifiers (variable names, function names, etc.)
 ID : [a-zA-Z][a-zA-Z0-9_]*;
+
+// Input and output keywords
+READ : 'read';
+WRITE : 'write';
