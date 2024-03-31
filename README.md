@@ -4,20 +4,6 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
 **Only works on Linux and with Java and JDK 17**
 
-## Setup
-
-### Give permition to the bash script
-
-```bash
-chmod +x generate.sh
-```
-
-### Generate ANTLR files
-
-```bash
-./generate.sh
-```
-
 ## Compile and run wit **Ant**
 
 ### Ant build
