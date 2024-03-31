@@ -16,6 +16,7 @@ public class Main {
         // create a CharStream that reads from standard input
         InputStream inputStream = new FileInputStream(inputFilePath);
         // create a lexer that feeds off of input CharStream
+        @SuppressWarnings("deprecation")
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
         SimplexLexer lexer = new SimplexLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
