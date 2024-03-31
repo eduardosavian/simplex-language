@@ -4,6 +4,7 @@ grammar Simplex; // The Simplex Language or SLANG
 init : 'hello';
 
 // Whitespace rule to skip spaces, tabs, and line breaks
+// : [\s\t\r\n\b]*
 WS : [ \t\r\n]+ -> skip;
 
 // Rule for identifying identifiers (variable names, function names, etc.)
@@ -40,6 +41,7 @@ LITERAL_BIN : '0b'[0-1]+;
 LITERAL_INT : [0-9]+;
 LITERAL_FLOAT : [0-9]+'.'[0-9]+;
 LITERAL_STRING : '".*?"';
+// LITERAL_CHAR : '(\\'|\\\"|\\\\|\\t|\\b|\\n|\\e|\\r|.)'
 
 // Delimiters
 DOT : '.';
