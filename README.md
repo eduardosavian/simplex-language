@@ -46,7 +46,7 @@ cd scripts/
 ### Run the ANTLR
 
 ```bash
-./run.sh
+./run.sh ../tests/<input_file>.txt 
 ```
 
 ### Ant build
@@ -57,7 +57,7 @@ ant build
 ### Ant run
 
 ```bash
-ant run
+ant -Darg="tests/<input_file>.txt" run
 ```
 
 ## Reference
