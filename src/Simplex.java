@@ -12,7 +12,7 @@ public class Simplex {
 
         Utils utils = new Utils();
 
-        String inputFilePath = "tests/" + args[0];
+        String inputFilePath = args[0];
         String printType = args[1];
         String antlrArges = args[2];
 
