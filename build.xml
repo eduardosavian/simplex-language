@@ -25,7 +25,7 @@
     <!-- Run task -->
     <target name="run" depends="build">
         <java classname="${simplex.class}" classpathref="classpath">
-            <arg value="${arg}"/> <!-- Pass the argument dynamically -->
+            <arg line="${arg1} ${arg2}"/>
         </java>
     </target>
 
