@@ -13,4 +13,4 @@ package_dir="../src/"
 main_class="Main"
 
 # Run Main.class
-java -cp "$antlr4_full_path:$package_dir" "$main_class"
+java -cp "$antlr4_full_path:$package_dir" "$main_class" $*

@@ -1,0 +1,41 @@
+<project name="Simplex" basedir="." default="build">
+
+    <!-- Define properties -->
+    <property name="antlr4_path" location="tools/antlr4.jar"/>
+    <property name="src.dir" location="src"/>
+    <property name="build.dir" location="build"/>
+    <property name="main.class" value="Main"/>
+
+    <!-- Define classpath -->
+    <path id="classpath">
+        <pathelement location="${antlr4_path}"/>
+        <pathelement path="${java.class.path}"/>
+        <pathelement location="${build.dir}"/>
+    </path>
+
+    <!-- Compile task -->
+    <target name="compile" depends="init">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" />
+    </target>
+
+    <!-- Run task -->
+    <target name="run" depends="compile">
+        <java classname="${main.class}" classpathref="classpath"/>
+    </target>
+
+    <!-- Clean task -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Initialize task -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <!-- Build task -->
+    <target name="build" depends="clean, compile, run">
+    </target>
+
+</project>

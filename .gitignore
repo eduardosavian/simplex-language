@@ -3,7 +3,6 @@
 *.interp
 
 # Ignore all Java normal and compiled files
-*.java
 *.class
 
 # Unignore Main.java
