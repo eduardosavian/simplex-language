@@ -25,7 +25,7 @@ chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh
 ### Back to root project directory
 
 ```bash
-cd cd ..
+cd ..
 ```
 
 ## Compile and run
@@ -49,12 +49,14 @@ cd scripts/
 ./run.sh ../tests/<input_file>.txt 
 ```
 
-### Ant build
+### Ant
+
+#### Ant build
 
 ```bash
 ant build
 ```
-### Ant run
+#### Ant run
 
 ```bash
 ant -Darg="tests/<input_file>.txt" run
