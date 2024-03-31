@@ -1,5 +1,10 @@
-*.class
+# Ignore generic ANTLR files
 *.tokens
 *.interp
-.antlr/
-.~*
+
+# Ignore all Java normal and compiled files
+*.java
+*.class
+
+# Unignore Main.java
+!Main.java
