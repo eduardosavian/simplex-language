@@ -2,7 +2,9 @@
 
 Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
-## Setup on Unix
+**Only works on Linux**
+
+## Setup
 
 ### Give permition to the bash script
 
