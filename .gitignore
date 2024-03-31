@@ -1,6 +1,7 @@
 # Ignore generic ANTLR files
 *.tokens
 *.interp
+.~*
 
 # Ignore all Java normal and compiled files
 *.class

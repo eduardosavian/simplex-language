@@ -6,14 +6,10 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
 ### Go to the script directory
 
-```bash
-cd scripts/
-```
-
-### Give permitions to the bash scripts
+### Give permition to the bash script
 
 ```bash
-chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh
+chmod +x generate.sh
 ```
 
 ### Generate ANTLR files
@@ -22,34 +18,7 @@ chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh
 ./generate.sh
 ```
 
-### Back to root project directory
-
-```bash
-cd ..
-```
-
-## Compile and run
-
-### Scripts
-
-#### Go to the script directory
-
-```bash
-cd scripts/
-```
-
-#### Compile
-
-```bash
-./compile.sh
-```
-#### Run the ANTLR
-
-```bash
-./run.sh ../tests/<input_file>.txt 
-```
-
-### Ant
+## Compile and run wit **Ant**
 
 #### Ant build
 
