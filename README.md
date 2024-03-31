@@ -4,8 +4,6 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
 ## Setup on Unix
 
-### Go to the script directory
-
 ### Give permition to the bash script
 
 ```bash
@@ -20,12 +18,12 @@ chmod +x generate.sh
 
 ## Compile and run wit **Ant**
 
-#### Ant build
+### Ant build
 
 ```bash
 ant build
 ```
-#### Ant run
+### Ant run
 
 ```bash
 ant -Darg="tests/<input_file>.txt" run
