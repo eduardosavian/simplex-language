@@ -1,39 +1,32 @@
-grammar Simplex; // The Simplex Language or SLANG
-
-// Entry point for a Simplex program
-init : 'hello';
+lexer grammar SimplexLexer;
 
 // Whitespace rule to skip spaces, tabs, and line breaks
-// : [\s\t\r\n\b]*
 WS : [ \t\r\n]+ -> skip;
 
-// Rule for identifying identifiers (variable names, function names, etc.)
-ID : [a-zA-Z][a-zA-Z0-9_]*;
-
 // Primitive data types
-INT : ID 'int';
-LONG : ID 'long';
-FLOAT : ID 'float';
-DOUBLE : ID 'double';
-CHAR : ID 'char';
+INT : 'int';
+LONG : 'long';
+FLOAT : 'float';
+DOUBLE : 'double';
+CHAR : 'char';
 
 // Branching keywords
-IF : ID 'if';
-ELSE : ID 'else';
-SWITCH : ID 'switch';
-CASE : ID 'case';
+IF : 'if';
+ELSE : 'else';
+SWITCH : 'switch';
+CASE : 'case';
 
 // Looping keywords
-WHILE : ID 'while';
-FOR : ID 'for';
-BREAK : ID 'break';
-RETURN : ID 'return';
+WHILE : 'while';
+FOR : 'for';
+BREAK : 'break';
+RETURN : 'return';
 
 // Function and type declaration keywords
-PROC : ID 'proc';
-TYPE : ID 'type';
-STRUCT : ID 'struct';
-STRING : ID 'string';
+PROC : 'proc';
+TYPE : 'type';
+STRUCT : 'struct';
+STRING : 'string';
 
 // Numeric literal representations
 LITERAL_HEX : '0x'[0-9a-fA-F]+;
@@ -41,7 +34,6 @@ LITERAL_BIN : '0b'[0-1]+;
 LITERAL_INT : [0-9]+;
 LITERAL_FLOAT : [0-9]+'.'[0-9]+;
 LITERAL_STRING : '".*?"';
-// LITERAL_CHAR : '(\\'|\\\"|\\\\|\\t|\\b|\\n|\\e|\\r|.)'
 
 // Delimiters
 DOT : '.';
@@ -87,3 +79,6 @@ BIT_NOT : '~';
 // Comments
 SL_COMMENT : '//' ~[\r\n]* -> skip; // Single-line comments
 ML_COMMENT : '/*' .*? '*/' -> skip; // Multi-line comments
+
+// Rule for identifying identifiers (variable names, function names, etc.)
+ID : [a-zA-Z][a-zA-Z0-9_]*;

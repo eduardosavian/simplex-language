@@ -1,4 +1,4 @@
-// Generated from src//Simplex.g4 by ANTLR 4.13.1
+// Generated from src/SimplexParser.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -16,45 +16,46 @@ public class SimplexParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, WS=2, ID=3, INT=4, LONG=5, FLOAT=6, DOUBLE=7, CHAR=8, IF=9, ELSE=10, 
-		SWITCH=11, CASE=12, WHILE=13, FOR=14, BREAK=15, RETURN=16, PROC=17, TYPE=18, 
-		STRUCT=19, STRING=20, LITERAL_HEX=21, LITERAL_BIN=22, LITERAL_INT=23, 
-		LITERAL_FLOAT=24, LITERAL_STRING=25, DOT=26, COMMA=27, COLON=28, SEMICOLON=29, 
-		BRACKET_BEGIN=30, BRACKET_END=31, BRACES_BEGIN=32, BRACES_END=33, PARENTHESES_BEGIN=34, 
-		PARENTHESES_END=35, MINUS=36, PLUS=37, DIV=38, MUL=39, MOD=40, LT=41, 
-		GT=42, LT_EQ=43, GT_EQ=44, EQ=45, DIFF=46, ASSIGN=47, AND=48, OR=49, NOT=50, 
-		BIT_SHL=51, BIT_SHR=52, BIT_AND=53, BIT_OR=54, BIT_XOR=55, BIT_NOT=56, 
-		SL_COMMENT=57, ML_COMMENT=58;
+		WS=1, INT=2, LONG=3, FLOAT=4, DOUBLE=5, CHAR=6, IF=7, ELSE=8, SWITCH=9, 
+		CASE=10, WHILE=11, FOR=12, BREAK=13, RETURN=14, PROC=15, TYPE=16, STRUCT=17, 
+		STRING=18, LITERAL_HEX=19, LITERAL_BIN=20, LITERAL_INT=21, LITERAL_FLOAT=22, 
+		LITERAL_STRING=23, DOT=24, COMMA=25, COLON=26, SEMICOLON=27, BRACKET_BEGIN=28, 
+		BRACKET_END=29, BRACES_BEGIN=30, BRACES_END=31, PARENTHESES_BEGIN=32, 
+		PARENTHESES_END=33, MINUS=34, PLUS=35, DIV=36, MUL=37, MOD=38, LT=39, 
+		GT=40, LT_EQ=41, GT_EQ=42, EQ=43, DIFF=44, ASSIGN=45, AND=46, OR=47, NOT=48, 
+		BIT_SHL=49, BIT_SHR=50, BIT_AND=51, BIT_OR=52, BIT_XOR=53, BIT_NOT=54, 
+		SL_COMMENT=55, ML_COMMENT=56, ID=57;
 	public static final int
-		RULE_init = 0;
+		RULE_prog = 0;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"init"
+			"prog"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'hello'", null, null, null, null, null, null, null, null, null, 
-			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, "'\".*?\"'", "'.'", "','", "':'", "';'", "'['", "']'", "'{'", 
-			"'}'", "'('", "')'", "'-'", "'+'", "'/'", "'*'", "'%'", "'<'", "'>'", 
-			"'>='", "'<='", "'=='", "'!='", "'='", "'&&'", "'||'", "'!'", "'<<'", 
-			"'>>'", "'&'", "'|'", "'^'", "'~'"
+			null, null, "'int'", "'long'", "'float'", "'double'", "'char'", "'if'", 
+			"'else'", "'switch'", "'case'", "'while'", "'for'", "'break'", "'return'", 
+			"'proc'", "'type'", "'struct'", "'string'", null, null, null, null, "'\".*?\"'", 
+			"'.'", "','", "':'", "';'", "'['", "']'", "'{'", "'}'", "'('", "')'", 
+			"'-'", "'+'", "'/'", "'*'", "'%'", "'<'", "'>'", "'>='", "'<='", "'=='", 
+			"'!='", "'='", "'&&'", "'||'", "'!'", "'<<'", "'>>'", "'&'", "'|'", "'^'", 
+			"'~'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, "WS", "ID", "INT", "LONG", "FLOAT", "DOUBLE", "CHAR", "IF", 
-			"ELSE", "SWITCH", "CASE", "WHILE", "FOR", "BREAK", "RETURN", "PROC", 
-			"TYPE", "STRUCT", "STRING", "LITERAL_HEX", "LITERAL_BIN", "LITERAL_INT", 
-			"LITERAL_FLOAT", "LITERAL_STRING", "DOT", "COMMA", "COLON", "SEMICOLON", 
-			"BRACKET_BEGIN", "BRACKET_END", "BRACES_BEGIN", "BRACES_END", "PARENTHESES_BEGIN", 
-			"PARENTHESES_END", "MINUS", "PLUS", "DIV", "MUL", "MOD", "LT", "GT", 
-			"LT_EQ", "GT_EQ", "EQ", "DIFF", "ASSIGN", "AND", "OR", "NOT", "BIT_SHL", 
-			"BIT_SHR", "BIT_AND", "BIT_OR", "BIT_XOR", "BIT_NOT", "SL_COMMENT", "ML_COMMENT"
+			null, "WS", "INT", "LONG", "FLOAT", "DOUBLE", "CHAR", "IF", "ELSE", "SWITCH", 
+			"CASE", "WHILE", "FOR", "BREAK", "RETURN", "PROC", "TYPE", "STRUCT", 
+			"STRING", "LITERAL_HEX", "LITERAL_BIN", "LITERAL_INT", "LITERAL_FLOAT", 
+			"LITERAL_STRING", "DOT", "COMMA", "COLON", "SEMICOLON", "BRACKET_BEGIN", 
+			"BRACKET_END", "BRACES_BEGIN", "BRACES_END", "PARENTHESES_BEGIN", "PARENTHESES_END", 
+			"MINUS", "PLUS", "DIV", "MUL", "MOD", "LT", "GT", "LT_EQ", "GT_EQ", "EQ", 
+			"DIFF", "ASSIGN", "AND", "OR", "NOT", "BIT_SHL", "BIT_SHR", "BIT_AND", 
+			"BIT_OR", "BIT_XOR", "BIT_NOT", "SL_COMMENT", "ML_COMMENT", "ID"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -92,7 +93,7 @@ public class SimplexParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "Simplex.g4"; }
+	public String getGrammarFileName() { return "SimplexParser.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -109,29 +110,30 @@ public class SimplexParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class InitContext extends ParserRuleContext {
-		public InitContext(ParserRuleContext parent, int invokingState) {
+	public static class ProgContext extends ParserRuleContext {
+		public TerminalNode ID() { return getToken(SimplexParser.ID, 0); }
+		public ProgContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_init; }
+		@Override public int getRuleIndex() { return RULE_prog; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof SimplexListener ) ((SimplexListener)listener).enterInit(this);
+			if ( listener instanceof SimplexParserListener ) ((SimplexParserListener)listener).enterProg(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof SimplexListener ) ((SimplexListener)listener).exitInit(this);
+			if ( listener instanceof SimplexParserListener ) ((SimplexParserListener)listener).exitProg(this);
 		}
 	}
 
-	public final InitContext init() throws RecognitionException {
-		InitContext _localctx = new InitContext(_ctx, getState());
-		enterRule(_localctx, 0, RULE_init);
+	public final ProgContext prog() throws RecognitionException {
+		ProgContext _localctx = new ProgContext(_ctx, getState());
+		enterRule(_localctx, 0, RULE_prog);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(2);
-			match(T__0);
+			match(ID);
 			}
 		}
 		catch (RecognitionException re) {
@@ -146,10 +148,10 @@ public class SimplexParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001:\u0005\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0004\u00019\u0005\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0003\u0000\u0002\u0001\u0000"+
-		"\u0000\u0000\u0002\u0003\u0005\u0001\u0000\u0000\u0003\u0001\u0001\u0000"+
-		"\u0000\u0000\u0000";
+		"\u0000\u0000\u0002\u0003\u00059\u0000\u0000\u0003\u0001\u0001\u0000\u0000"+
+		"\u0000\u0000";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

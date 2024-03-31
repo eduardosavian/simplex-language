@@ -1,4 +1,3 @@
-// import ANTLR's runtime libraries
 import java.io.FileInputStream;
 import java.io.InputStream;
 
@@ -13,17 +12,19 @@ public class Main {
         }
 
         String inputFilePath = args[0];
-        // create a CharStream that reads from standard input
+
         InputStream inputStream = new FileInputStream(inputFilePath);
-        // create a lexer that feeds off of input CharStream
+
         @SuppressWarnings("deprecation")
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
+
         SimplexLexer lexer = new SimplexLexer(input);
+
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        // create a buffer of tokens pulled from the lexer
+
         SimplexParser parser = new SimplexParser(tokens);
 
-        ParseTree tree = parser.init();
+        ParseTree tree = parser.prog();
 
         System.out.println(tree.toStringTree(parser));
     }

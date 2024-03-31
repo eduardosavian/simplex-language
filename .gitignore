@@ -2,6 +2,7 @@
 *.tokens
 *.interp
 .~*
+.antlr/
 
 # Ignore all Java normal and compiled files
 *.class
