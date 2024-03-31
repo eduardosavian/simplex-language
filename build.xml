@@ -16,12 +16,16 @@
     <!-- Compile task -->
     <target name="compile" depends="init">
         <mkdir dir="${build.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" />
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" nowarn="true" fork="true">
+            <compilerarg value="-Xlint:-deprecation"/>
+        </javac>
     </target>
 
     <!-- Run task -->
     <target name="run" depends="compile">
-        <java classname="${main.class}" classpathref="classpath"/>
+        <java classname="${main.class}" classpathref="classpath">
+            <arg value="${arg}"/> <!-- Pass the argument dynamically -->
+        </java>
     </target>
 
     <!-- Clean task -->
@@ -35,7 +39,7 @@
     </target>
 
     <!-- Build task -->
-    <target name="build" depends="clean, compile, run">
+    <target name="build" depends="clean, compile">
     </target>
 
 </project>
