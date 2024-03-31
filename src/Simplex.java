@@ -1,20 +1,25 @@
 public class Simplex {
     public static void main(String[] args) throws Exception {
-        if (args.length != 3) {
+        if (args.length != 1) {
             System.out.println("Number of arguments: " + args.length);
             for (String arg : args) {
                 System.out.println(arg);
             }
-
-            System.err.println("Usage: java Main <input_file> <print_type> <antlr_args>");
+            
+            System.err.println("Usage: java Main <input_file>");
+            // System.err.println("Usage: java Main <input_file> <print_type> <antlr_args>");
             System.exit(1);
         }
 
         Utils utils = new Utils();
 
         String inputFilePath = args[0];
-        String printType = args[1];
-        String antlrArges = args[2];
+        // String printType = args[1];
+        // String antlrArges = args[2];
+        
+        // Remove this line and uncomment the following lines to use default values
+        String printType = "generic";
+        String antlrArges = "r -tokens";
 
         switch (printType) {
             case "normal":

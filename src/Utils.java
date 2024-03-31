@@ -43,7 +43,7 @@ public class Utils {
             Method mainMethod = testRigClass.getMethod("main", String[].class);
             mainMethod.invoke(null, new Object[]{fullArgs});
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("");
         }
     }
     
