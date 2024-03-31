@@ -47,7 +47,7 @@ public class Utils {
         }
     }
     
-    public void printTreeGUI(String inputFilePath) {
+    public void printTree(String inputFilePath) {
         try {
             Class<?> testRigClass = Class.forName("org.antlr.v4.gui.TestRig");
             Method mainMethod = testRigClass.getMethod("main", String[].class);

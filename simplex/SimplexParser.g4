@@ -13,8 +13,6 @@ statement : variable_declaration
           | if_else_statement
           | loop_statement
           | assignment_statement
-          | input_statement
-          | output_statement
           | RETURN SEMICOLON;
 
 // Variable Declaration
@@ -39,6 +37,13 @@ if_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block;
 // If Else Statement
 if_else_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block ELSE block;
 
+switch_cases : (switch_case)+;
+
+switch_case : CASE literal COLON statement
+            | DEFAULT COLON statement
+            ;
+
+
 // Loop Statements
 loop_statement : while_loop | for_loop | do_while_loop;
 
@@ -54,12 +59,6 @@ do_while_loop : DO block WHILE PARENTHESES_BEGIN expression PARENTHESES_END SEMI
 
 // Assignment Statement
 assignment_statement : ID ASSIGN expression SEMICOLON;
-
-// Input Statement
-input_statement : READ ID SEMICOLON;
-
-// Output Statement
-output_statement : WRITE expression SEMICOLON;
 
 // Expression
 expression : ID

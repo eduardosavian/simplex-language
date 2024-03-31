@@ -15,7 +15,7 @@
     </path>
 
     <!-- Compile task -->
-    <target name="compile" depends="init, generate">
+    <target name="compile">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" nowarn="true" fork="true">
             <compilerarg value="-Xlint:-deprecation"/>
@@ -23,7 +23,7 @@
     </target>
 
     <!-- Run task -->
-    <target name="run" depends="build">
+    <target name="run">
         <java classname="${simplex.class}" classpathref="classpath">
             <arg line="${arg1} ${arg2} ${arg3}"/>
         </java>
@@ -40,11 +40,13 @@
     </target>
 
     <!-- Build task -->
-    <target name="build" depends="clean, compile">
+    <target name="build" depends="clean, init, generate, compile">
+        <echo message="build"/>
     </target>
 
     <!-- ANTLR task -->
     <target name="generate">
+        <echo message="antlr generate"/>
         <java classname="org.antlr.v4.Tool" fork="true" classpath="${antlr4_path}:${CLASSPATH}">
             <arg value="${simplex.dir}/SimplexLexer.g4"/>
             <arg value="${simplex.dir}/SimplexParser.g4"/>

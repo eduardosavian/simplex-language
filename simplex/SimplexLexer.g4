@@ -15,6 +15,7 @@ IF : 'if';
 ELSE : 'else';
 SWITCH : 'switch';
 CASE : 'case';
+DEFAULT : 'default';
 
 // Looping keywords
 WHILE : 'while';
@@ -85,7 +86,3 @@ ML_COMMENT : '/*' .*? '*/' -> skip; // Multi-line comments
 
 // Rule for identifying identifiers (variable names, function names, etc.)
 ID : [a-zA-Z][a-zA-Z0-9_]*;
-
-// Input and output keywords
-READ : 'read';
-WRITE : 'write';

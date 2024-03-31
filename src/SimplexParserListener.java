@@ -97,6 +97,26 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitIf_else_statement(SimplexParser.If_else_statementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#switch_cases}.
+	 * @param ctx the parse tree
+	 */
+	void enterSwitch_cases(SimplexParser.Switch_casesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#switch_cases}.
+	 * @param ctx the parse tree
+	 */
+	void exitSwitch_cases(SimplexParser.Switch_casesContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#switch_case}.
+	 * @param ctx the parse tree
+	 */
+	void enterSwitch_case(SimplexParser.Switch_caseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#switch_case}.
+	 * @param ctx the parse tree
+	 */
+	void exitSwitch_case(SimplexParser.Switch_caseContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#loop_statement}.
 	 * @param ctx the parse tree
 	 */
@@ -166,26 +186,6 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAssignment_statement(SimplexParser.Assignment_statementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#input_statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterInput_statement(SimplexParser.Input_statementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#input_statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitInput_statement(SimplexParser.Input_statementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#output_statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterOutput_statement(SimplexParser.Output_statementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#output_statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitOutput_statement(SimplexParser.Output_statementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimplexParser#expression}.
 	 * @param ctx the parse tree

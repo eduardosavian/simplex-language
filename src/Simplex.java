@@ -21,7 +21,7 @@ public class Simplex {
                 utils.printNormal(inputFilePath);
                 break;
             case "tree":
-                utils.printTreeGUI(inputFilePath);
+                utils.printTree(inputFilePath);
                 break;
             case "generic":
                 utils.printGeneric("Simplex", "Program", inputFilePath, antlrArges);
