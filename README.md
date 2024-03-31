@@ -2,7 +2,7 @@
 
 Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
-**Only works on Linux**
+**Only works on Linux and with Java and JDK 17**
 
 ## Setup
 
@@ -28,7 +28,7 @@ ant build
 ### Ant run
 
 ```bash
-ant -Darg="tests/<input_file>.txt" run
+ant -Darg="tests/<input_file>.expr" run
 ```
 
 ## Reference
