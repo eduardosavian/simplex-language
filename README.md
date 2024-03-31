@@ -1,11 +1,13 @@
-# Simple Language
+# The Simplex Language or Slang
+
+Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
 ## Setup on Unix
 
 ### Give permitions to the bash scripts
 
 ```bash
-chmod +x generate.sh compile.sh run.sh
+chmod +x generate.sh compile.sh run.sh src/test.sh
 ```
 
 ### Generate Parser
@@ -14,22 +16,31 @@ chmod +x generate.sh compile.sh run.sh
 ./generate.sh
 ```
 
-### Copy the template Main.java from template/ to src/
-
-```bash
--
-```
-
 ### Change directory to source
 
 ```bash
 ./compile.sh
 ```
+## Run or test
 
-### Run the ANTLR Test
+### Run the ANTLR
 
 ```bash
 ./run.sh
+```
+
+### Test the ANTLR
+
+```bash
+cd src/ && ./test.sh
+```
+
+```bash
+./test.sh
+```
+
+```bash
+cd ..
 ```
 
 ## Reference
