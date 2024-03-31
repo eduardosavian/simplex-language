@@ -4,16 +4,16 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 
 ## Setup on Unix
 
-### Give permitions to the bash scripts
-
-```bash
-chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh src/test.sh
-```
-
 ### Go to the script directory
 
 ```bash
 cd scripts/
+```
+
+### Give permitions to the bash scripts
+
+```bash
+chmod +x scripts/generate.sh scripts/compile.sh scripts/run.sh
 ```
 
 ### Generate ANTLR files
@@ -22,40 +22,42 @@ cd scripts/
 ./generate.sh
 ```
 
-### Compile the files
+### Back to root project directory
+
+```bash
+cd cd ..
+```
+
+## Compile and run
+
+### Scripts
+
+#### Go to the script directory
+
+```bash
+cd scripts/
+```
+
+#### Compile
 
 ```bash
 ./compile.sh
 ```
-## Run or test
-
 ### Run the ANTLR
 
 ```bash
 ./run.sh
 ```
 
-### Go to the source directory
+### Ant build
 
 ```bash
-cd ..
+ant build
 ```
-### Go to the root directory
+### Ant run
 
 ```bash
-cd src/
-```
-
-### Test the ANTLR
-
-```bash
-./test.sh
-```
-
-### Back to root directory
-
-```bash
-cd ..
+ant run
 ```
 
 ## Reference

@@ -7,7 +7,7 @@ antlr4_path="../tools/antlr4.jar"
 antlr4_full_path=$(realpath "$antlr4_path")
 
 # Package directory
-package_dir="../src/"
+package_dir="../build/"
 
 # Main class name
 main_class="Main"
