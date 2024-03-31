@@ -43,7 +43,7 @@ cd scripts/
 ```bash
 ./compile.sh
 ```
-### Run the ANTLR
+#### Run the ANTLR
 
 ```bash
 ./run.sh ../tests/<input_file>.txt 
