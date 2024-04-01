@@ -12,10 +12,10 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
  ant build
 ```
 
-### Ant Run
+### Java Run
 
 ```bash
- ant -Darg1="<file_name>.expr" -Darg2="<print_type>" -Darg3="<print_flag>" run
+java -jar simplex.jar -parse tests/1.expr -gui
 ```
 
 ## Reference

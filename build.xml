@@ -21,13 +21,6 @@
         <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" nowarn="true"/>
     </target>
 
-    <!-- Run task -->
-    <target name="run">
-        <java classname="${main.class}" classpathref="classpath">
-            <arg line="${arg1} ${arg2} ${arg3}"/>
-        </java>
-    </target>
-
     <!-- Clean task -->
     <target name="clean">
         <delete dir="${build.dir}"/>
