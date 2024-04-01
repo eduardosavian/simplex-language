@@ -3,13 +3,6 @@ lexer grammar SimplexLexer;
 // Whitespace rule to skip spaces, tabs, and line breaks
 WS : [ \t\r\n]+ -> skip;
 
-// Primitive data types
-INT : 'int';
-LONG : 'long';
-FLOAT : 'float';
-DOUBLE : 'double';
-CHAR : 'char';
-
 // Branching keywords
 IF : 'if';
 ELSE : 'else';
@@ -25,7 +18,8 @@ RETURN : 'return';
 DO : 'do' ;
 
 // Function and type declaration keywords
-PROC : 'proc';
+FUNCTION : 'fn';
+ARROY : '->';
 TYPE : 'type';
 STRUCT : 'struct';
 STRING : 'string';
@@ -50,6 +44,7 @@ BRACES_BEGIN : '{';
 BRACES_END : '}';
 PARENTHESES_BEGIN : '(';
 PARENTHESES_END : ')';
+CARET : '^';
 
 // Arithmetic operators
 MINUS : '-';

@@ -1,1 +1,11 @@
-a : int = 0;
+a : int = 10;
+
+fn fun (int : x) -> int {
+
+};
+
+fn fun (int : x, float : y) -> int {
+
+};
+
+for x=0;x < 10;x++

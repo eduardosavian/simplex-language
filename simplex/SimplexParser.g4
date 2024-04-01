@@ -15,18 +15,26 @@ statement : variable_declaration
           | assignment_statement
           | RETURN SEMICOLON;
 
+// ARRAY
+type_expression : ID
+                | type_prefix ID;
+
+type_prefix : slice_prefix type_prefix*
+            | CARET type_prefix*;
+
+slice_prefix : BRACKET_BEGIN BRACKET_END;
+
 // Variable Declaration
-// X : int = 2 + 2;
-variable_declaration : ID COLON type (ASSIGN expression) SEMICOLON;
+variable_declaration : ID COLON type_expression (ASSIGN expression)? SEMICOLON;
 
 // Function Declaration
-function_declaration : PROC type ID PARENTHESES_BEGIN parameter_list? PARENTHESES_END block;
+function_declaration : FUNCTION ID PARENTHESES_BEGIN parameter_list? PARENTHESES_END ARROY ID block;
 
 // Parameter List
-parameter_list : parameter (COMMA parameter)*;
+parameter_list : parameter (COMMA parameter_list)*;
 
 // Parameter
-parameter : type ID;
+parameter : ID COLON ID;
 
 // Block
 block : BRACES_BEGIN statement* BRACES_END;
@@ -37,25 +45,18 @@ if_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block;
 // If Else Statement
 if_else_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block ELSE block;
 
-switch_cases : (switch_case)+;
-
-switch_case : CASE literal COLON statement
-            | DEFAULT COLON statement
-            ;
-
-
 // Loop Statements
 loop_statement : while_loop | for_loop | do_while_loop;
 
-while_loop : WHILE PARENTHESES_BEGIN expression PARENTHESES_END block;
+while_loop : WHILE expression block;
 
-for_loop : FOR PARENTHESES_BEGIN for_initializer? SEMICOLON expression? SEMICOLON for_update? PARENTHESES_END block;
+for_loop : FOR for_initializer? SEMICOLON expression? SEMICOLON for_update? block;
 
 for_initializer : variable_declaration | assignment_statement;
 
 for_update : assignment_statement;
 
-do_while_loop : DO block WHILE PARENTHESES_BEGIN expression PARENTHESES_END SEMICOLON;
+do_while_loop : DO block WHILE expression SEMICOLON;
 
 // Assignment Statement
 assignment_statement : ID ASSIGN expression SEMICOLON;
@@ -76,8 +77,6 @@ literal : LITERAL_HEX
         | LITERAL_STRING
         | LITERAL_CHAR;
 
-// Type
-type : INT | LONG | FLOAT | DOUBLE | CHAR;
 
 // Arithmetic Operators
 arithmetic_operator : PLUS | MINUS | MUL | DIV | MOD;

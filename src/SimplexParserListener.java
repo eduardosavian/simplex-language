@@ -27,6 +27,26 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitStatement(SimplexParser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#type_expression}.
+	 * @param ctx the parse tree
+	 */
+	void enterType_expression(SimplexParser.Type_expressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#type_expression}.
+	 * @param ctx the parse tree
+	 */
+	void exitType_expression(SimplexParser.Type_expressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#type_prefix}.
+	 * @param ctx the parse tree
+	 */
+	void enterType_prefix(SimplexParser.Type_prefixContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#type_prefix}.
+	 * @param ctx the parse tree
+	 */
+	void exitType_prefix(SimplexParser.Type_prefixContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#variable_declaration}.
 	 * @param ctx the parse tree
 	 */
@@ -96,26 +116,6 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIf_else_statement(SimplexParser.If_else_statementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#switch_cases}.
-	 * @param ctx the parse tree
-	 */
-	void enterSwitch_cases(SimplexParser.Switch_casesContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#switch_cases}.
-	 * @param ctx the parse tree
-	 */
-	void exitSwitch_cases(SimplexParser.Switch_casesContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#switch_case}.
-	 * @param ctx the parse tree
-	 */
-	void enterSwitch_case(SimplexParser.Switch_caseContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#switch_case}.
-	 * @param ctx the parse tree
-	 */
-	void exitSwitch_case(SimplexParser.Switch_caseContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimplexParser#loop_statement}.
 	 * @param ctx the parse tree
@@ -206,16 +206,6 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitLiteral(SimplexParser.LiteralContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#type}.
-	 * @param ctx the parse tree
-	 */
-	void enterType(SimplexParser.TypeContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#type}.
-	 * @param ctx the parse tree
-	 */
-	void exitType(SimplexParser.TypeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimplexParser#arithmetic_operator}.
 	 * @param ctx the parse tree

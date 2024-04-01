@@ -40,6 +40,30 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterType_expression(SimplexParser.Type_expressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitType_expression(SimplexParser.Type_expressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterType_prefix(SimplexParser.Type_prefixContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitType_prefix(SimplexParser.Type_prefixContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterVariable_declaration(SimplexParser.Variable_declarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -119,30 +143,6 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIf_else_statement(SimplexParser.If_else_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSwitch_cases(SimplexParser.Switch_casesContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSwitch_cases(SimplexParser.Switch_casesContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterSwitch_case(SimplexParser.Switch_caseContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitSwitch_case(SimplexParser.Switch_caseContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -251,18 +251,6 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitLiteral(SimplexParser.LiteralContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterType(SimplexParser.TypeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitType(SimplexParser.TypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
