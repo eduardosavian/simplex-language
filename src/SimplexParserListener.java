@@ -37,6 +37,16 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitStatement(SimplexParser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#inline_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterInline_statement(SimplexParser.Inline_statementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#inline_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitInline_statement(SimplexParser.Inline_statementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#type_definition}.
 	 * @param ctx the parse tree
 	 */
@@ -157,15 +167,25 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitParameter(SimplexParser.ParameterContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SimplexParser#block}.
+	 * Enter a parse tree produced by {@link SimplexParser#scope}.
 	 * @param ctx the parse tree
 	 */
-	void enterBlock(SimplexParser.BlockContext ctx);
+	void enterScope(SimplexParser.ScopeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SimplexParser#block}.
+	 * Exit a parse tree produced by {@link SimplexParser#scope}.
 	 * @param ctx the parse tree
 	 */
-	void exitBlock(SimplexParser.BlockContext ctx);
+	void exitScope(SimplexParser.ScopeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#if_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterIf_statement(SimplexParser.If_statementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#if_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitIf_statement(SimplexParser.If_statementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimplexParser#expression}.
 	 * @param ctx the parse tree
@@ -176,6 +196,26 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExpression(SimplexParser.ExpressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#expression_list}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpression_list(SimplexParser.Expression_listContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#expression_list}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpression_list(SimplexParser.Expression_listContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#function_call}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunction_call(SimplexParser.Function_callContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#function_call}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunction_call(SimplexParser.Function_callContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SimplexParser#grouped_expression}.
 	 * @param ctx the parse tree

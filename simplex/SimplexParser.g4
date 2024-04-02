@@ -10,10 +10,13 @@ top_level : function_definition
           | type_definition;
 
 // Statement can be either a variable declaration, function declaration, or other statements
-statement : (variable_declaration
-          | assignment_statement
-          | BREAK
-          | RETURN expression?) SEMICOLON;
+statement : inline_statement SEMICOLON
+          | if_statement;
+
+inline_statement : variable_declaration
+                | assignment_statement
+                | BREAK
+                | RETURN expression?;
 
 type_definition : TYPE ID (type_expression SEMICOLON
                 | struct_definition);
@@ -37,19 +40,20 @@ assignment_statement : ID ASSIGN expression;
 
 struct_definition : STRUCT BRACES_BEGIN record_list? BRACES_END;
 
-record_list : variable_declaration (COMMA variable_declaration)+
-            | variable_declaration COMMA?;
+record_list : variable_declaration (COMMA variable_declaration)*;
 
 // Function Declaration
 function_declaration : FUNCTION ID PARENTHESES_BEGIN record_list PARENTHESES_END ARROW ID;
 
-function_definition : function_declaration block;
+function_definition : function_declaration scope;
 
 // Parameter
 parameter : ID COLON type_expression;
 
 // Block
-block : BRACES_BEGIN statement* BRACES_END;
+scope : BRACES_BEGIN statement* BRACES_END;
+
+if_statement : IF expression scope (ELSE (IF expression)? scope)?;
 
 // Expression
 expression : ID
@@ -57,7 +61,12 @@ expression : ID
            | expression arithmetic_operator expression
            | expression comparison_operator expression
            | expression logical_operator expression
-           | grouped_expression;
+           | grouped_expression
+           | function_call;
+
+expression_list : expression (COMMA expression)*;
+
+function_call : ID PARENTHESES_BEGIN expression_list PARENTHESES_END;
 
 grouped_expression : PARENTHESES_BEGIN expression PARENTHESES_END;
 
