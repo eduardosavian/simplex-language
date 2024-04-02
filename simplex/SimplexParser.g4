@@ -3,18 +3,21 @@ parser grammar SimplexParser;
 options { tokenVocab=SimplexLexer; }
 
 // Entry point for a Simplex program
-program : statement+;
+program : top_level*;
+
+top_level : function_definition
+          | variable_declaration
+          | type_definition;
 
 // Statement can be either a variable declaration, function declaration, or other statements
-statement : variable_declaration
-          | function_declaration
-          | block
-          | if_statement
-          | if_else_statement
-          | loop_statement
+statement : (variable_declaration
           | assignment_statement
-          | RETURN SEMICOLON;
+          | BREAK
+          | RETURN expression?) SEMICOLON;
 
+type_definition : TYPE ID (type_expression SEMICOLON
+                | struct_definition);
+                
 // ARRAY
 type_expression : ID
                 | type_prefix ID;
@@ -25,41 +28,28 @@ type_prefix : slice_prefix type_prefix*
 slice_prefix : BRACKET_BEGIN BRACKET_END;
 
 // Variable Declaration
-variable_declaration : ID COLON type_expression (ASSIGN expression)? SEMICOLON;
+
+variable_declaration : ID COLON type_expression;
+
+variable_definition : variable_declaration (ASSIGN expression)?;
+
+assignment_statement : ID ASSIGN expression;
+
+struct_definition : STRUCT BRACES_BEGIN record_list? BRACES_END;
+
+record_list : variable_declaration (COMMA variable_declaration)+
+            | variable_declaration COMMA?;
 
 // Function Declaration
-function_declaration : FUNCTION ID PARENTHESES_BEGIN parameter_list? PARENTHESES_END ARROY ID block;
+function_declaration : FUNCTION ID PARENTHESES_BEGIN record_list PARENTHESES_END ARROW ID;
 
-// Parameter List
-parameter_list : parameter (COMMA parameter_list)*;
+function_definition : function_declaration block;
 
 // Parameter
-parameter : ID COLON ID;
+parameter : ID COLON type_expression;
 
 // Block
 block : BRACES_BEGIN statement* BRACES_END;
-
-// If Statement
-if_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block;
-
-// If Else Statement
-if_else_statement : IF PARENTHESES_BEGIN expression PARENTHESES_END block ELSE block;
-
-// Loop Statements
-loop_statement : while_loop | for_loop | do_while_loop;
-
-while_loop : WHILE expression block;
-
-for_loop : FOR for_initializer? SEMICOLON expression? SEMICOLON for_update? block;
-
-for_initializer : variable_declaration | assignment_statement;
-
-for_update : assignment_statement;
-
-do_while_loop : DO block WHILE expression SEMICOLON;
-
-// Assignment Statement
-assignment_statement : ID ASSIGN expression SEMICOLON;
 
 // Expression
 expression : ID
@@ -67,7 +57,9 @@ expression : ID
            | expression arithmetic_operator expression
            | expression comparison_operator expression
            | expression logical_operator expression
-           | PARENTHESES_BEGIN expression PARENTHESES_END;
+           | grouped_expression;
+
+grouped_expression : PARENTHESES_BEGIN expression PARENTHESES_END;
 
 // Literal
 literal : LITERAL_HEX

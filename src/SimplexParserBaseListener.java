@@ -28,6 +28,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterTop_level(SimplexParser.Top_levelContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTop_level(SimplexParser.Top_levelContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterStatement(SimplexParser.StatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -35,6 +47,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitStatement(SimplexParser.StatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterType_definition(SimplexParser.Type_definitionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitType_definition(SimplexParser.Type_definitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -64,6 +88,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSlice_prefix(SimplexParser.Slice_prefixContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSlice_prefix(SimplexParser.Slice_prefixContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterVariable_declaration(SimplexParser.Variable_declarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -71,6 +107,54 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVariable_declaration(SimplexParser.Variable_declarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVariable_definition(SimplexParser.Variable_definitionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVariable_definition(SimplexParser.Variable_definitionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAssignment_statement(SimplexParser.Assignment_statementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAssignment_statement(SimplexParser.Assignment_statementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterStruct_definition(SimplexParser.Struct_definitionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStruct_definition(SimplexParser.Struct_definitionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRecord_list(SimplexParser.Record_listContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRecord_list(SimplexParser.Record_listContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -88,13 +172,13 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterParameter_list(SimplexParser.Parameter_listContext ctx) { }
+	@Override public void enterFunction_definition(SimplexParser.Function_definitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitParameter_list(SimplexParser.Parameter_listContext ctx) { }
+	@Override public void exitFunction_definition(SimplexParser.Function_definitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -124,114 +208,6 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIf_statement(SimplexParser.If_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitIf_statement(SimplexParser.If_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterIf_else_statement(SimplexParser.If_else_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitIf_else_statement(SimplexParser.If_else_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterLoop_statement(SimplexParser.Loop_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitLoop_statement(SimplexParser.Loop_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterWhile_loop(SimplexParser.While_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitWhile_loop(SimplexParser.While_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterFor_loop(SimplexParser.For_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFor_loop(SimplexParser.For_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterFor_initializer(SimplexParser.For_initializerContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFor_initializer(SimplexParser.For_initializerContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterFor_update(SimplexParser.For_updateContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFor_update(SimplexParser.For_updateContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterDo_while_loop(SimplexParser.Do_while_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitDo_while_loop(SimplexParser.Do_while_loopContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAssignment_statement(SimplexParser.Assignment_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAssignment_statement(SimplexParser.Assignment_statementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterExpression(SimplexParser.ExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -239,6 +215,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExpression(SimplexParser.ExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterGrouped_expression(SimplexParser.Grouped_expressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGrouped_expression(SimplexParser.Grouped_expressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

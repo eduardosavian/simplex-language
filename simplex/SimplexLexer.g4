@@ -18,11 +18,10 @@ RETURN : 'return';
 DO : 'do' ;
 
 // Function and type declaration keywords
-FUNCTION : 'fn';
-ARROY : '->';
+FUNCTION : 'func';
+ARROW : '->';
 TYPE : 'type';
 STRUCT : 'struct';
-STRING : 'string';
 
 // Numeric literal representations
 LITERAL_HEX : '0x'[0-9a-fA-F]+;
@@ -72,7 +71,6 @@ BIT_SHL : '<<';
 BIT_SHR : '>>';
 BIT_AND : '&';
 BIT_OR : '|';
-BIT_XOR : '^';
 BIT_NOT : '~';
 
 // Comments
@@ -80,4 +78,4 @@ SL_COMMENT : '//' ~[\r\n]* -> skip; // Single-line comments
 ML_COMMENT : '/*' .*? '*/' -> skip; // Multi-line comments
 
 // Rule for identifying identifiers (variable names, function names, etc.)
-ID : [a-zA-Z][a-zA-Z0-9_]*;
+ID : [_a-zA-Z][a-zA-Z0-9_]*;
