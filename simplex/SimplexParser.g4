@@ -14,6 +14,7 @@ statement : inline_statement SEMICOLON
           | if_statement;
 
 inline_statement : variable_declaration
+                | function_call
                 | assignment_statement
                 | BREAK
                 | RETURN expression?;
@@ -53,7 +54,12 @@ parameter : ID COLON type_expression;
 // Block
 scope : BRACES_BEGIN statement* BRACES_END;
 
-if_statement : IF expression scope (ELSE (IF expression)? scope)?;
+if_statement : if else?
+             | if elif+ else?;
+
+if: IF expression scope;
+else: ELSE scope;
+elif : ELSE IF expression scope;
 
 // Expression
 expression : ID
@@ -69,6 +75,7 @@ expression_list : expression (COMMA expression)*;
 function_call : ID PARENTHESES_BEGIN expression_list PARENTHESES_END;
 
 grouped_expression : PARENTHESES_BEGIN expression PARENTHESES_END;
+
 
 // Literal
 literal : LITERAL_HEX

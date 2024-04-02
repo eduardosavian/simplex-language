@@ -6,6 +6,7 @@ WS : [ \t\r\n]+ -> skip;
 // Branching keywords
 IF : 'if';
 ELSE : 'else';
+ELIF : 'elif';
 SWITCH : 'switch';
 CASE : 'case';
 DEFAULT : 'default';

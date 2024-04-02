@@ -187,6 +187,36 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitIf_statement(SimplexParser.If_statementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#if}.
+	 * @param ctx the parse tree
+	 */
+	void enterIf(SimplexParser.IfContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#if}.
+	 * @param ctx the parse tree
+	 */
+	void exitIf(SimplexParser.IfContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#else}.
+	 * @param ctx the parse tree
+	 */
+	void enterElse(SimplexParser.ElseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#else}.
+	 * @param ctx the parse tree
+	 */
+	void exitElse(SimplexParser.ElseContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#elif}.
+	 * @param ctx the parse tree
+	 */
+	void enterElif(SimplexParser.ElifContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#elif}.
+	 * @param ctx the parse tree
+	 */
+	void exitElif(SimplexParser.ElifContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#expression}.
 	 * @param ctx the parse tree
 	 */

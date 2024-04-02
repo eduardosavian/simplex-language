@@ -1,6 +1,16 @@
-func fibonatti (n : int, a : string) -> int {
-    if n < 2 {
-        return 1;
-    }
-    return fib(n - 2) + fib(n - 1, 6969);
-};
+func fizzbuzz(limit: int) -> void {
+    //for i: int = 0; i < limit; i = i + 1 {
+        if i % 3 == 0 && i % 5 == 0 {
+            print(fizzbuzz);
+        }
+        elif i % 3 == 0 {
+            print(fizz);
+        }
+        else if i % 5 == 0 {
+            print(fizz);
+        }
+        else {
+            print(i);
+        }
+    //}
+}
