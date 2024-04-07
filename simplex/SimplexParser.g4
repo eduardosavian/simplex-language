@@ -2,95 +2,157 @@ parser grammar SimplexParser;
 
 options { tokenVocab=SimplexLexer; }
 
-// Entry point for a Simplex program
-program : top_level*;
+program
+        : statement*
+;
 
-top_level : function_definition
-          | variable_declaration
-          | type_definition;
+inlineStatement
+	: returnStatement
+	| breakStatement
+	| continueStatement
+	| exprStatement
+	| varDeclaration
+	| varAssignment
+;
 
-// Statement can be either a variable declaration, function declaration, or other statements
-statement : inline_statement SEMICOLON
-          | if_statement;
+returnStatement
+	: RETURN expression
+;
 
-inline_statement : variable_declaration
-                | function_call
-                | assignment_statement
-                | BREAK
-                | RETURN expression?;
+breakStatement
+	: BREAK
+;
 
-type_definition : TYPE ID (type_expression SEMICOLON
-                | struct_definition);
-                
-// ARRAY
-type_expression : ID
-                | type_prefix ID;
+continueStatement
+	: CONTINUE
+;
 
-type_prefix : slice_prefix type_prefix*
-            | CARET type_prefix*;
+statement
+	: inlineStatement EOS
+	| simpleFor
+	| tripleFor
+	| doFor
+	| ifStatement
+	| funcDeclaration
+	| scope
+;
 
-slice_prefix : BRACKET_BEGIN BRACKET_END;
+varDeclaration
+	: ID+ COLON typeExpression (EQ expressionList)
+;
 
-// Variable Declaration
-
-variable_declaration : ID COLON type_expression;
-
-variable_definition : variable_declaration (ASSIGN expression)?;
-
-assignment_statement : ID ASSIGN expression;
-
-struct_definition : STRUCT BRACES_BEGIN record_list? BRACES_END;
-
-record_list : variable_declaration (COMMA variable_declaration)*;
-
-// Function Declaration
-function_declaration : FUNCTION ID PARENTHESES_BEGIN record_list PARENTHESES_END ARROW ID;
-
-function_definition : function_declaration scope;
-
-// Parameter
-parameter : ID COLON type_expression;
-
-// Block
-scope : BRACES_BEGIN statement* BRACES_END;
-
-if_statement : if else?
-             | if elif+ else?;
-
-if: IF expression scope;
-else: ELSE scope;
-elif : ELSE IF expression scope;
-
-// Expression
-expression : ID
-           | literal
-           | expression arithmetic_operator expression
-           | expression comparison_operator expression
-           | expression logical_operator expression
-           | grouped_expression
-           | function_call;
-
-expression_list : expression (COMMA expression)*;
-
-function_call : ID PARENTHESES_BEGIN expression_list PARENTHESES_END;
-
-grouped_expression : PARENTHESES_BEGIN expression PARENTHESES_END;
+varAssignment
+	: expressionList EQ expressionList
+;
 
 
-// Literal
-literal : LITERAL_HEX
-        | LITERAL_BIN
-        | LITERAL_INT
-        | LITERAL_FLOAT
-        | LITERAL_STRING
-        | LITERAL_CHAR;
+typeExpression
+	: SQUARE_OPEN SQUARE_CLOSE typeExpression
+	| CARET typeExpression
+	| ID
+;
 
+funcDeclaration
+	: FUN ID PAREN_OPEN fieldList PAREN_CLOSE (RIGHT_ARROW typeExpression) scope
+;
 
-// Arithmetic Operators
-arithmetic_operator : PLUS | MINUS | MUL | DIV | MOD;
+field
+	: ID COLON typeExpression
+;
 
-// Comparison Operators
-comparison_operator : LT | GT | LT_EQ | GT_EQ | EQ | DIFF;
+fieldList
+	: field (COMMA field)*
+;
 
-// Logical Operators
-logical_operator : AND | OR | NOT;
+scope
+	: CURLY_OPEN statement CURLY_CLOSE
+;
+
+simpleFor
+	: FOR expression scope
+;
+
+tripleFor
+	: FOR inlineStatement EOS expression EOS inlineStatement scope
+;
+	
+doFor
+	: DO scope FOR inlineStatement EOS
+;
+
+ifStatement
+	: IF expression scope (ELSE ifStatement)* (ELSE scope)?
+;
+
+exprStatement
+	: expression
+;
+
+expression
+	: logicDisjunction
+;
+
+logicDisjunction
+	: logicConjunction ((LOGIC_OR | LOGIC_XOR) logicConjunction)*
+;
+
+logicConjunction
+	: comparison ((LOGIC_AND) comparison)*
+;
+
+comparison
+	: term ((EQ_EQ | NOT_EQ | GT | GT_EQ | LT | LT_EQ) term)*
+;
+
+term
+	: factor ((PLUS | MINUS | OR | XOR) factor)*
+;
+
+factor
+	: bitShift ((STAR | SLASH | MOD | AND) bitShift)*
+;
+
+bitShift
+	: unary ((SHIFT_LEFT | SHIFT_RIGHT) unary)*
+;
+
+unary
+	: ((MINUS | PLUS | XOR | LOGIC_NOT) unary)
+	| primary
+;
+
+primary
+	: ID
+	| integer
+	| real
+	| LITERAL_STRING
+	| LITERAL_RUNE
+	| TRUE
+	| FALSE
+	| NIL
+	| group
+	| functionCall
+;
+
+group
+	: PAREN_OPEN expression PAREN_CLOSE
+;
+
+functionCall
+	: ID PAREN_OPEN expressionList PAREN_CLOSE
+	| ID PAREN_OPEN PAREN_CLOSE
+;
+
+expressionList
+	: expression (COMMA expression)*
+;
+
+integer
+	: LITERAL_HEX
+	| LITERAL_BIN
+	| LITERAL_INT
+;
+
+real
+	: LITERAL_FLOAT
+;

@@ -1,21 +1,14 @@
-int fibonacci(int n) {
-    if (n <= 1)
-        return n;
-    else
-        return fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-double power(double base, int exponent) {
-    // Base case: exponent is 0
-    if (exponent == 0) {
-        return 1;
+fun fillArray(
+    arr: []int,
+    n: int,
+    loc: SourceLocation
+) -> bool {
+    for i: int = 0; i < 100; i = i + 1 {
+        arr[i] = i;
+        echo arr[i] * 2;
+        if i % 50 == 0 {
+            return false;
+        }
     }
-    // If exponent is negative, return reciprocal of power
-    else if (exponent < 0) {
-        return 1 / power(base, -exponent);
-    }
-    // Recursive case: exponent is positive
-    else {
-        return base * power(base, exponent - 1);
-    }
+    return true;
 }
