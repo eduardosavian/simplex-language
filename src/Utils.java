@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 
-import org.antlr.v4.gui.TestRig;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 

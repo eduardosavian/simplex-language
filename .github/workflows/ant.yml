@@ -24,5 +24,5 @@ jobs:
     - name: Build with Ant
       run: ant -noinput -buildfile build.xml
 
-    - name: Run with Ant
-      run: ant -Darg="tests/principal.txt" run -buildfile build.xml
+    - name: Run with Java
+      run: java -jar simplex.jar -parse tests/principal.expr -gui
