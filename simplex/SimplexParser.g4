@@ -16,7 +16,7 @@ inlineStatement
 ;
 
 returnStatement
-	: RETURN expression
+	: RETURN expression?
 ;
 
 breakStatement
@@ -36,7 +36,7 @@ statement
 	| funcDeclaration
 	| scope
 	| echoStatement // TODO: Remove
-    | readStatement
+	| readStatement
 ;
 
 varDeclaration
@@ -51,18 +51,18 @@ varAssignment
 	: expressionList EQ expressionList
 ;
 
-
 sliceIndicator
-    : SQUARE_OPEN SQUARE_CLOSE
+	: SQUARE_OPEN SQUARE_CLOSE
 ;
 
 typeExpression
-    : sliceIndicator typeExpression
-    | CARET typeExpression
-    | ID
+	: sliceIndicator typeExpression
+	| CARET typeExpression
+	| ID
 ;
+
 funcDeclaration
-	: FUN ID PAREN_OPEN fieldList PAREN_CLOSE (RIGHT_ARROW typeExpression) scope
+	: FUN ID PAREN_OPEN fieldList? PAREN_CLOSE (RIGHT_ARROW typeExpression)? scope
 ;
 
 field
@@ -177,5 +177,5 @@ echoStatement
 ;
 
 readStatement
-    : READ expression EOS
+	: READ ID EOS
 ;
