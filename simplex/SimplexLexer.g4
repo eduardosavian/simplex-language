@@ -89,3 +89,5 @@ SL_COMMENT : '//' ~[\r\n]* -> skip; // Single-line comments
 
 // Rule for identifying identifiers (variable names, function names, etc.)
 ID : [_a-zA-Z][a-zA-Z0-9_]*;
+
+READ : 'read';

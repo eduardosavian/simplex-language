@@ -36,6 +36,7 @@ statement
 	| funcDeclaration
 	| scope
 	| echoStatement // TODO: Remove
+        | readStatement
 ;
 
 varDeclaration
@@ -170,4 +171,8 @@ indexing
 // TODO: Remove this later
 echoStatement
 	: ECHO expression EOS
+;
+
+readStatement
+    : READ expression EOS
 ;

@@ -3,6 +3,7 @@ fun fillArray(
     n: int,
     loc: SourceLocation
 ) -> bool {
+    read (a);
     for i: int = 0; i < 100; i = i + 1 {
         arr[i] = i;
         echo (arr[i] * 2);
