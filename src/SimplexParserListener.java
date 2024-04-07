@@ -77,6 +77,16 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitVarDeclaration(SimplexParser.VarDeclarationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#identifierList}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdentifierList(SimplexParser.IdentifierListContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#identifierList}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdentifierList(SimplexParser.IdentifierListContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#varAssignment}.
 	 * @param ctx the parse tree
 	 */
@@ -326,4 +336,24 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitReal(SimplexParser.RealContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#indexing}.
+	 * @param ctx the parse tree
+	 */
+	void enterIndexing(SimplexParser.IndexingContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#indexing}.
+	 * @param ctx the parse tree
+	 */
+	void exitIndexing(SimplexParser.IndexingContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SimplexParser#echoStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterEchoStatement(SimplexParser.EchoStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#echoStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitEchoStatement(SimplexParser.EchoStatementContext ctx);
 }

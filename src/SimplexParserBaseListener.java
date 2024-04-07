@@ -100,6 +100,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterIdentifierList(SimplexParser.IdentifierListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIdentifierList(SimplexParser.IdentifierListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterVarAssignment(SimplexParser.VarAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -395,6 +407,30 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitReal(SimplexParser.RealContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIndexing(SimplexParser.IndexingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIndexing(SimplexParser.IndexingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterEchoStatement(SimplexParser.EchoStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitEchoStatement(SimplexParser.EchoStatementContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

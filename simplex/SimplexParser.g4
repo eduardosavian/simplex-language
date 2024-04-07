@@ -3,7 +3,7 @@ parser grammar SimplexParser;
 options { tokenVocab=SimplexLexer; }
 
 program
-        : statement*
+	: statement*
 ;
 
 inlineStatement
@@ -35,10 +35,15 @@ statement
 	| ifStatement
 	| funcDeclaration
 	| scope
+	| echoStatement // TODO: Remove
 ;
 
 varDeclaration
-	: ID+ COLON typeExpression (EQ expressionList)
+	: identifierList COLON typeExpression (EQ expressionList)
+;
+
+identifierList
+	: ID (COMMA ID)*
 ;
 
 varAssignment
@@ -65,7 +70,7 @@ fieldList
 ;
 
 scope
-	: CURLY_OPEN statement CURLY_CLOSE
+	: CURLY_OPEN statement* CURLY_CLOSE
 ;
 
 simpleFor
@@ -122,7 +127,8 @@ unary
 ;
 
 primary
-	: ID
+	: indexing
+	| ID
 	| integer
 	| real
 	| LITERAL_STRING
@@ -155,4 +161,13 @@ integer
 
 real
 	: LITERAL_FLOAT
+;
+
+indexing
+	: ID SQUARE_OPEN expression SQUARE_CLOSE
+;
+
+// TODO: Remove this later
+echoStatement
+	: ECHO expression EOS
 ;

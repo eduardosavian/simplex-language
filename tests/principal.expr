@@ -5,7 +5,7 @@ fun fillArray(
 ) -> bool {
     for i: int = 0; i < 100; i = i + 1 {
         arr[i] = i;
-        echo arr[i] * 2;
+        echo (arr[i] * 2);
         if i % 50 == 0 {
             return false;
         }
