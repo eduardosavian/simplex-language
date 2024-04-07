@@ -1,3 +1,4 @@
+
 fun fillArray(
     arr: []int,
     n: int,
@@ -13,3 +14,7 @@ fun fillArray(
     }
     return true;
 }
+/*
+n: int = 10;
+gsdgsdgsdgsgd
+*/

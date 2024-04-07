@@ -24,7 +24,7 @@ public class SimplexParser extends Parser {
 		TRUE=35, FALSE=36, NIL=37, MINUS=38, PLUS=39, SLASH=40, STAR=41, MOD=42, 
 		LT=43, GT=44, LT_EQ=45, GT_EQ=46, EQ_EQ=47, NOT_EQ=48, LOGIC_AND=49, LOGIC_OR=50, 
 		LOGIC_NOT=51, LOGIC_XOR=52, OR=53, EQ=54, AND=55, XOR=56, SHIFT_LEFT=57, 
-		SHIFT_RIGHT=58, SL_COMMENT=59, ID=60, READ=61;
+		SHIFT_RIGHT=58, SL_COMMENT=59, ML_COMMENT=60, ID=61, READ=62;
 	public static final int
 		RULE_program = 0, RULE_inlineStatement = 1, RULE_returnStatement = 2, 
 		RULE_breakStatement = 3, RULE_continueStatement = 4, RULE_statement = 5, 
@@ -58,7 +58,8 @@ public class SimplexParser extends Parser {
 			"'.'", "','", "':'", "';'", "'['", "']'", "'{'", "'}'", "'('", "')'", 
 			"'^'", "'true'", "'false'", "'nil'", "'-'", "'+'", "'/'", "'*'", "'%'", 
 			"'<'", "'>'", "'>='", "'<='", "'=='", "'!='", "'&&'", "'||'", "'!'", 
-			"'~~'", "'|'", "'='", "'&'", "'~'", "'<<'", "'>>'", null, null, "'read'"
+			"'~~'", "'|'", "'='", "'&'", "'~'", "'<<'", "'>>'", null, null, null, 
+			"'read'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -72,7 +73,7 @@ public class SimplexParser extends Parser {
 			"CARET", "TRUE", "FALSE", "NIL", "MINUS", "PLUS", "SLASH", "STAR", "MOD", 
 			"LT", "GT", "LT_EQ", "GT_EQ", "EQ_EQ", "NOT_EQ", "LOGIC_AND", "LOGIC_OR", 
 			"LOGIC_NOT", "LOGIC_XOR", "OR", "EQ", "AND", "XOR", "SHIFT_LEFT", "SHIFT_RIGHT", 
-			"SL_COMMENT", "ID", "READ"
+			"SL_COMMENT", "ML_COMMENT", "ID", "READ"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -158,7 +159,7 @@ public class SimplexParser extends Parser {
 			setState(75);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3533074978209299980L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 6991839492029840908L) != 0)) {
 				{
 				{
 				setState(72);
@@ -979,7 +980,7 @@ public class SimplexParser extends Parser {
 			setState(158);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3533074978209299980L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 6991839492029840908L) != 0)) {
 				{
 				{
 				setState(155);
@@ -2450,7 +2451,7 @@ public class SimplexParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001=\u0131\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001>\u0131\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -2534,20 +2535,20 @@ public class SimplexParser extends Parser {
 		"hf\u0001\u0000\u0000\u0000hg\u0001\u0000\u0000\u0000i\u000b\u0001\u0000"+
 		"\u0000\u0000jk\u0003\u000e\u0007\u0000kl\u0005\u001a\u0000\u0000lm\u0003"+
 		"\u0012\t\u0000mn\u00056\u0000\u0000no\u0003<\u001e\u0000o\r\u0001\u0000"+
-		"\u0000\u0000pu\u0005<\u0000\u0000qr\u0005\u0019\u0000\u0000rt\u0005<\u0000"+
+		"\u0000\u0000pu\u0005=\u0000\u0000qr\u0005\u0019\u0000\u0000rt\u0005=\u0000"+
 		"\u0000sq\u0001\u0000\u0000\u0000tw\u0001\u0000\u0000\u0000us\u0001\u0000"+
 		"\u0000\u0000uv\u0001\u0000\u0000\u0000v\u000f\u0001\u0000\u0000\u0000"+
 		"wu\u0001\u0000\u0000\u0000xy\u0003<\u001e\u0000yz\u00056\u0000\u0000z"+
 		"{\u0003<\u001e\u0000{\u0011\u0001\u0000\u0000\u0000|}\u0005\u001c\u0000"+
 		"\u0000}~\u0005\u001d\u0000\u0000~\u0083\u0003\u0012\t\u0000\u007f\u0080"+
 		"\u0005\"\u0000\u0000\u0080\u0083\u0003\u0012\t\u0000\u0081\u0083\u0005"+
-		"<\u0000\u0000\u0082|\u0001\u0000\u0000\u0000\u0082\u007f\u0001\u0000\u0000"+
+		"=\u0000\u0000\u0082|\u0001\u0000\u0000\u0000\u0082\u007f\u0001\u0000\u0000"+
 		"\u0000\u0082\u0081\u0001\u0000\u0000\u0000\u0083\u0013\u0001\u0000\u0000"+
-		"\u0000\u0084\u0085\u0005\u000e\u0000\u0000\u0085\u0086\u0005<\u0000\u0000"+
+		"\u0000\u0084\u0085\u0005\u000e\u0000\u0000\u0085\u0086\u0005=\u0000\u0000"+
 		"\u0086\u0087\u0005 \u0000\u0000\u0087\u0088\u0003\u0018\f\u0000\u0088"+
 		"\u0089\u0005!\u0000\u0000\u0089\u008a\u0005\u000f\u0000\u0000\u008a\u008b"+
 		"\u0003\u0012\t\u0000\u008b\u008c\u0001\u0000\u0000\u0000\u008c\u008d\u0003"+
-		"\u001a\r\u0000\u008d\u0015\u0001\u0000\u0000\u0000\u008e\u008f\u0005<"+
+		"\u001a\r\u0000\u008d\u0015\u0001\u0000\u0000\u0000\u008e\u008f\u0005="+
 		"\u0000\u0000\u008f\u0090\u0005\u001a\u0000\u0000\u0090\u0091\u0003\u0012"+
 		"\t\u0000\u0091\u0017\u0001\u0000\u0000\u0000\u0092\u0097\u0003\u0016\u000b"+
 		"\u0000\u0093\u0094\u0005\u0019\u0000\u0000\u0094\u0096\u0003\u0016\u000b"+
@@ -2605,7 +2606,7 @@ public class SimplexParser extends Parser {
 		"\u0000\u0000\u0000\u00f7\u00f8\u0007\u0005\u0000\u0000\u00f8\u00fb\u0003"+
 		"4\u001a\u0000\u00f9\u00fb\u00036\u001b\u0000\u00fa\u00f7\u0001\u0000\u0000"+
 		"\u0000\u00fa\u00f9\u0001\u0000\u0000\u0000\u00fb5\u0001\u0000\u0000\u0000"+
-		"\u00fc\u0108\u0003B!\u0000\u00fd\u0108\u0005<\u0000\u0000\u00fe\u0108"+
+		"\u00fc\u0108\u0003B!\u0000\u00fd\u0108\u0005=\u0000\u0000\u00fe\u0108"+
 		"\u0003>\u001f\u0000\u00ff\u0108\u0003@ \u0000\u0100\u0108\u0005\u0016"+
 		"\u0000\u0000\u0101\u0108\u0005\u0017\u0000\u0000\u0102\u0108\u0005#\u0000"+
 		"\u0000\u0103\u0108\u0005$\u0000\u0000\u0104\u0108\u0005%\u0000\u0000\u0105"+
@@ -2617,9 +2618,9 @@ public class SimplexParser extends Parser {
 		"\u0000\u0000\u0000\u0107\u0105\u0001\u0000\u0000\u0000\u0107\u0106\u0001"+
 		"\u0000\u0000\u0000\u01087\u0001\u0000\u0000\u0000\u0109\u010a\u0005 \u0000"+
 		"\u0000\u010a\u010b\u0003&\u0013\u0000\u010b\u010c\u0005!\u0000\u0000\u010c"+
-		"9\u0001\u0000\u0000\u0000\u010d\u010e\u0005<\u0000\u0000\u010e\u010f\u0005"+
+		"9\u0001\u0000\u0000\u0000\u010d\u010e\u0005=\u0000\u0000\u010e\u010f\u0005"+
 		" \u0000\u0000\u010f\u0110\u0003<\u001e\u0000\u0110\u0111\u0005!\u0000"+
-		"\u0000\u0111\u0116\u0001\u0000\u0000\u0000\u0112\u0113\u0005<\u0000\u0000"+
+		"\u0000\u0111\u0116\u0001\u0000\u0000\u0000\u0112\u0113\u0005=\u0000\u0000"+
 		"\u0113\u0114\u0005 \u0000\u0000\u0114\u0116\u0005!\u0000\u0000\u0115\u010d"+
 		"\u0001\u0000\u0000\u0000\u0115\u0112\u0001\u0000\u0000\u0000\u0116;\u0001"+
 		"\u0000\u0000\u0000\u0117\u011c\u0003&\u0013\u0000\u0118\u0119\u0005\u0019"+
@@ -2628,11 +2629,11 @@ public class SimplexParser extends Parser {
 		"\u0000\u011c\u011d\u0001\u0000\u0000\u0000\u011d=\u0001\u0000\u0000\u0000"+
 		"\u011e\u011c\u0001\u0000\u0000\u0000\u011f\u0120\u0007\u0006\u0000\u0000"+
 		"\u0120?\u0001\u0000\u0000\u0000\u0121\u0122\u0005\u0015\u0000\u0000\u0122"+
-		"A\u0001\u0000\u0000\u0000\u0123\u0124\u0005<\u0000\u0000\u0124\u0125\u0005"+
+		"A\u0001\u0000\u0000\u0000\u0123\u0124\u0005=\u0000\u0000\u0124\u0125\u0005"+
 		"\u001c\u0000\u0000\u0125\u0126\u0003&\u0013\u0000\u0126\u0127\u0005\u001d"+
 		"\u0000\u0000\u0127C\u0001\u0000\u0000\u0000\u0128\u0129\u0005\u0002\u0000"+
 		"\u0000\u0129\u012a\u0003&\u0013\u0000\u012a\u012b\u0005\u001b\u0000\u0000"+
-		"\u012bE\u0001\u0000\u0000\u0000\u012c\u012d\u0005=\u0000\u0000\u012d\u012e"+
+		"\u012bE\u0001\u0000\u0000\u0000\u012c\u012d\u0005>\u0000\u0000\u012d\u012e"+
 		"\u0003&\u0013\u0000\u012e\u012f\u0005\u001b\u0000\u0000\u012fG\u0001\u0000"+
 		"\u0000\u0000\u0013KThu\u0082\u0097\u009e\u00bc\u00c1\u00cc\u00d4\u00dc"+
 		"\u00e4\u00ec\u00f4\u00fa\u0107\u0115\u011c";
