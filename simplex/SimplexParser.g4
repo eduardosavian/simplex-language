@@ -36,11 +36,11 @@ statement
 	| funcDeclaration
 	| scope
 	| echoStatement // TODO: Remove
-        | readStatement
+    | readStatement
 ;
 
 varDeclaration
-	: identifierList COLON typeExpression (EQ expressionList)
+	: identifierList COLON typeExpression (EQ expressionList)?
 ;
 
 identifierList
@@ -52,12 +52,15 @@ varAssignment
 ;
 
 
-typeExpression
-	: SQUARE_OPEN SQUARE_CLOSE typeExpression
-	| CARET typeExpression
-	| ID
+sliceIndicator
+    : SQUARE_OPEN SQUARE_CLOSE
 ;
 
+typeExpression
+    : sliceIndicator typeExpression
+    | CARET typeExpression
+    | ID
+;
 funcDeclaration
 	: FUN ID PAREN_OPEN fieldList PAREN_CLOSE (RIGHT_ARROW typeExpression) scope
 ;

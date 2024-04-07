@@ -124,6 +124,18 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSliceIndicator(SimplexParser.SliceIndicatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSliceIndicator(SimplexParser.SliceIndicatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterTypeExpression(SimplexParser.TypeExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
