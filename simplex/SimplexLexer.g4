@@ -32,7 +32,7 @@ LITERAL_HEX : '0x'[0-9a-fA-F]+;
 LITERAL_BIN : '0b'[0-1]+;
 LITERAL_INT : [0-9]+;
 LITERAL_FLOAT : [0-9]+'.'[0-9]+;
-LITERAL_STRING : '"'.*?'"';
+LITERAL_STRING : '"' (~["])* '"';
 LITERAL_RUNE : '\\' ('\\' | 't' | 'b' | 'n' | '\u001B' | 'r' | .) ;
 
 // Delimiters

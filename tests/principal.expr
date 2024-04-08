@@ -1,20 +1,12 @@
-
-fun fillArray(
-    arr: []int,
-    n: int,
-    loc: SourceLocation
-) -> bool {
-    read (a);
-    for i: int = 0; i < 100; i = i + 1 {
-        arr[i] = i;
-        echo (arr[i] * 2);
-        if i % 50 == 0 {
-            return false;
-        }
-    }
-    return true;
-}
 /*
-n: int = 10;
-gsdgsdgsdgsgd
+
+
+fdafafsafasasasf
+
+/
+
+/*
+
+*
+
 */
