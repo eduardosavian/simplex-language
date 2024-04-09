@@ -232,6 +232,8 @@ escape_sequence :: proc(r: rune) -> (rune, bool) {
 
 	switch r {
 	case 'e':  val, ok = '\e', true
+	case 'b':  val, ok = '\b', true
+	case 'v':  val, ok = '\v', true
 	case 'n':  val, ok = '\n', true
 	case 't':  val, ok = '\t', true
 	case 'r':  val, ok = '\r', true
