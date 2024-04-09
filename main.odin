@@ -1,0 +1,4 @@
+package lang
+
+main :: proc(){
+}

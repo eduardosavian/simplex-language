@@ -1,0 +1,5 @@
+*.exe
+*.o
+*.pdb
+*.bin
+unnamed-language
