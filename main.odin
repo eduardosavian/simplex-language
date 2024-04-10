@@ -2,11 +2,10 @@ package lang
 
 import "core:fmt"
 
-SRC :: `fun main(){`+
-       `println("\tHello, \"World\"")`+
-       `}`
+SRC : string : #load("example.em")
 
 main :: proc(){
 	tokens := tokenize(SRC)
-	fmt.println(tokens)
+	// fmt.print(tokens)
+	print_tokens(tokens)
 }

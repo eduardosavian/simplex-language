@@ -1,8 +1,8 @@
 package lang
 
-import unicode "core:unicode"
+import "core:unicode"
+import "core:strconv"
 import utf "core:unicode/utf8"
-
 
 Lexer :: struct {
 	current: int,
@@ -25,13 +25,12 @@ Token :: struct {
 	kind: TokenKind,
 	lexeme: string,
 	payload: TokenPayload,
-	loc: Location,
 }
 
 TokenKind :: enum i8 {
 	Identifier = 1,
 	// Reserved
-	If, For, Fun, Type, Struct, Break, Continue, Return, 
+	If, Else, For, Fun, Type, Struct, Break, Continue, Return, 
 
 	// Binary and unary operators
 	Plus, Minus, Star, Slash, Modulo,
@@ -46,13 +45,25 @@ TokenKind :: enum i8 {
 	ParenOpen, ParenClose,
 	CurlyOpen, CurlyClose,
 	SquareOpen, SquareClose,
-	Dot, Comma, Colon, Equal,
+	Dot, Comma, Colon, Equal, Semicolon,
 
 	// Literals
 	True, False, Int, Real, String, Nil,
 
 	// Error
 	BadToken = -1,
+}
+
+keywords := map[string]TokenKind {
+	"if"       = .If,
+	"else"     = .Else,
+	"for"      = .For,
+	"fun"      = .Fun,
+	"type"     = .Type,
+	"struct"   = .Struct,
+	"break"    = .Break,
+	"continue" = .Continue,
+	"return"   = .Return,
 }
 
 lexer_advance :: proc(using lex: ^Lexer) -> (rune, int) {
@@ -119,6 +130,18 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		switch r {
 		// Ignore whitespace
 		case '\n', '\t', ' ', '\r': continue
+
+		case '(': append(&tokens, Token{kind = .ParenOpen})
+		case ')': append(&tokens, Token{kind = .ParenClose})
+		case '[': append(&tokens, Token{kind = .SquareOpen})
+		case ']': append(&tokens, Token{kind = .SquareClose})
+		case '{': append(&tokens, Token{kind = .CurlyOpen})
+		case '}': append(&tokens, Token{kind = .CurlyClose})
+
+		case ':': append(&tokens, Token{kind = .Colon})
+		case ';': append(&tokens, Token{kind = .Semicolon})
+		case '.': append(&tokens, Token{kind = .Dot})
+		case ',': append(&tokens, Token{kind = .Comma})
 
 		case '+': append(&tokens, Token{kind = .Plus})
 		case '-': append(&tokens, Token{kind = .Minus})
@@ -210,6 +233,9 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 			case is_identifier(r):
 				lex.current -= n
 				append(&tokens, tokenize_identifier(lex))
+			case:
+				fmt.println(r)
+				panic("Unknown token")
 			}
 		}
 	}
@@ -219,11 +245,119 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 }
 
 tokenize_number :: proc(using lex: ^Lexer) -> Token {
-	unimplemented()
+	r, n := lexer_advance(lex)
+	next, _ := lexer_peek(lex)
+	if r == '0' && is_letter(next){
+		base := 0
+		switch next {
+		case 'b': base = 2
+		case 'o': base = 8
+		case 'x': base = 16
+		}
+		lexer_advance(lex)
+		return tokenize_prefixed_int(lex, base)
+	}
+
+	// Number is non prefixed, retract
+	current -= n
+
+	digits := make([dynamic]byte)
+	defer delete(digits)
+	
+	found_decimal := false
+
+	for !lexer_end(lex) {
+		r, n := lexer_advance(lex)
+		fmt.println("RUNE: ", r, is_digit_of_base(r, 10))
+
+		if is_digit_of_base(r, 10){
+			append_encoded(&digits, r)
+		}
+		else if r == '.' && !found_decimal {
+			append_encoded(&digits, r)
+			found_decimal := true
+		}
+		else if r == '_' {
+			continue
+		}
+		else {
+			current -= n
+			break
+		}
+	}
+	fmt.println("NUM: ", digits)
+
+	if found_decimal {
+		num, ok := strconv.parse_f64(string(digits[:]))
+		assert(ok, "Conversion error.")
+		return Token {
+			kind = .Real,
+			payload = num,
+		}
+	}
+	else {
+		num, ok := strconv.parse_int(string(digits[:]), 10)
+		assert(ok, "Conversion error.")
+		return Token {
+			kind = .Int,
+			payload = num,
+		}
+	}
+}
+
+tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
+	assert(base == 2 || base == 8 || base == 16, "Invalid base.")
+	mark = current
+
+	digits := make([dynamic]byte)
+	defer delete(digits)
+
+	for !lexer_end(lex) {
+		r, n := lexer_advance(lex)
+		if is_digit_of_base(r, base) {
+			append_encoded(&digits, r)
+		}
+		else if r == '_' {
+			continue
+		}
+		else {
+			current -= n
+			break
+		}
+	}
+
+	lexeme := string(source[mark-2:current])
+	num, ok := strconv.parse_int(string(digits[:]), base)
+	assert(ok, "Conversion error.")
+	tk := Token {
+		kind = .Int,
+		payload = num,
+		lexeme = lexeme,
+	}
+	return tk
 }
 
 tokenize_identifier :: proc(using lex: ^Lexer) -> Token {
-	unimplemented()
+	mark = current
+
+	for !lexer_end(lex) {
+		r, n := lexer_advance(lex)
+		if !is_identifier(r){
+			current -= n
+			break
+		}
+	}
+
+	id := string(source[mark:current])
+
+	kind, ok := keywords[id]
+
+	tk := Token {
+		kind = ok ? kind : .Identifier,
+		lexeme = id,
+	}
+
+	return tk
 }
 
 escape_sequence :: proc(r: rune) -> (rune, bool) {
@@ -277,7 +411,6 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 		lexeme = string(source[mark-1:current+1]),
 		kind = .String,
 		payload = text,
-		loc = loc,
 	}
 
 	return tk
@@ -296,6 +429,26 @@ is_letter :: unicode.is_letter
 
 is_digit :: unicode.is_digit
 
-is_identifier :: proc(r: rune) -> bool {
-	return is_letter(r) || r == '_';
+is_whitespace :: unicode.is_white_space
+
+@(private)
+is_digit_of_base :: proc(r: rune, base: int) -> bool {
+	switch base {
+	case 2:
+		return r == '0' || r == '1'
+	case 8:
+		return r >= '0' && r <= '7'
+	case 10:
+		return r >= '0' && r <= '9'
+	case 16:
+		return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
+	}
+
+	return false
 }
+
+is_identifier :: proc(r: rune) -> bool {
+	return is_letter(r) || r == '_'
+}
+
+
