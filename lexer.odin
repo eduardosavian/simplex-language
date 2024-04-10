@@ -4,6 +4,8 @@ import "core:unicode"
 import "core:strconv"
 import utf "core:unicode/utf8"
 
+// TODO: Prohibit multi line strings
+
 Lexer :: struct {
 	current: int,
 	mark: int,
@@ -28,9 +30,12 @@ Token :: struct {
 }
 
 TokenKind :: enum i8 {
-	Identifier = 1,
-	// Reserved
-	If, Else, For, Fun, Type, Struct, Break, Continue, Return, 
+	// Tokens which are not grammar significant, but are tracked for
+	// better error messages and debugging.
+	Comment = 0, LineBreak,
+
+	// Id and reserved words
+	Identifier, If, Else, For, Func, Type, Struct, Break, Continue, Return, 
 
 	// Binary and unary operators
 	Plus, Minus, Star, Slash, Modulo,
@@ -45,7 +50,7 @@ TokenKind :: enum i8 {
 	ParenOpen, ParenClose,
 	CurlyOpen, CurlyClose,
 	SquareOpen, SquareClose,
-	Dot, Comma, Colon, Equal, Semicolon,
+	Dot, Comma, Colon, Equal, Semicolon, Caret,
 
 	// Literals
 	True, False, Int, Real, String, Nil,
@@ -58,7 +63,7 @@ keywords := map[string]TokenKind {
 	"if"       = .If,
 	"else"     = .Else,
 	"for"      = .For,
-	"fun"      = .Fun,
+	"func"     = .Func,
 	"type"     = .Type,
 	"struct"   = .Struct,
 	"break"    = .Break,
@@ -108,6 +113,7 @@ lexer_match_consume :: proc(using lex: ^Lexer, accept: ..rune) -> (rune, int, bo
 	r, n := lexer_peek(lex)
 	for a in accept {
 		if r == a {
+			lexer_advance(lex)
 			return r, n, true
 		}
 	}
@@ -128,8 +134,9 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		r, n := lexer_advance(lex)
 
 		switch r {
-		// Ignore whitespace
-		case '\n', '\t', ' ', '\r': continue
+		// Ignore whitespace, LineBreak is just for pretty printing
+		case '\n': append(&tokens, Token{kind = .LineBreak})
+		case '\t', ' ', '\r': continue
 
 		case '(': append(&tokens, Token{kind = .ParenOpen})
 		case ')': append(&tokens, Token{kind = .ParenClose})
@@ -142,6 +149,7 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		case ';': append(&tokens, Token{kind = .Semicolon})
 		case '.': append(&tokens, Token{kind = .Dot})
 		case ',': append(&tokens, Token{kind = .Comma})
+		case '^': append(&tokens, Token{kind = .Caret})
 
 		case '+': append(&tokens, Token{kind = .Plus})
 		case '-': append(&tokens, Token{kind = .Minus})
@@ -150,8 +158,9 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		case '/':
 			switch r, _ := lexer_peek(lex); r {
 			case '/':
-				lexer_advance(lex)
-				unimplemented("Lex comment")
+				lex.current -= n
+				append(&tokens, tokenize_line_comment(lex))
+				append(&tokens, Token{ kind = .LineBreak })
 			case:
 				append(&tokens, Token{kind = .Slash})
 			}
@@ -239,8 +248,27 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		}
 	}
 
+	// Just to make the parser's life a bit easier in some edge cases
+	append(&tokens, Token{kind = .LineBreak})
+
 	resize(&tokens, len(tokens))
 	return tokens[:]
+}
+
+tokenize_line_comment :: proc(using lex: ^Lexer) -> Token {
+	mark = current
+	for !lexer_end(lex){
+		r, _ := lexer_advance(lex)
+		if r == '\n' {
+			break
+		}
+	}
+
+	lexeme := string(source[mark:current-1])
+	return Token {
+		kind = .Comment,
+		lexeme = lexeme,
+	}
 }
 
 tokenize_number :: proc(using lex: ^Lexer) -> Token {
@@ -316,6 +344,7 @@ tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
 
 	for !lexer_end(lex) {
 		r, n := lexer_advance(lex)
+		// TODO: Better warnings against things such as `0b110012`
 		if is_digit_of_base(r, base) {
 			append_encoded(&digits, r)
 		}

@@ -2,10 +2,10 @@ package lang
 
 import "core:fmt"
 
-SRC : string : #load("example.em")
+SRC : string : #load("example.ki")
 
 main :: proc(){
 	tokens := tokenize(SRC)
-	// fmt.print(tokens)
 	print_tokens(tokens)
 }
+
