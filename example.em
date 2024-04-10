@@ -1,5 +1,5 @@
 fun trapArea(h: real, B: real, b: real) -> real {
-	if (b < 0b1) || (B < 0x1) || (h < 0o1) {
+	if (b < 0b1) || (B <= 0xff_ef) || (h >= 0b100) {
 		return 0;
 	}
 
@@ -8,3 +8,11 @@ fun trapArea(h: real, B: real, b: real) -> real {
 	return area / 2;
 }
 
+fun printTable(tbl: []Entry) -> int {
+	for item in tbl {
+		print(item);
+	}
+	return len(tbl);
+}
+
+fun 1isPowOf2()

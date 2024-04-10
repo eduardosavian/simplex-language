@@ -230,11 +230,10 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 				lex.current -= n
 				append(&tokens, tokenize_number(lex))
 
-			case is_identifier(r):
+			case is_identifier(r, leading = true):
 				lex.current -= n
 				append(&tokens, tokenize_identifier(lex))
 			case:
-				fmt.println(r)
 				panic("Unknown token")
 			}
 		}
@@ -245,6 +244,7 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 }
 
 tokenize_number :: proc(using lex: ^Lexer) -> Token {
+	mark = current
 	r, n := lexer_advance(lex)
 	next, _ := lexer_peek(lex)
 	if r == '0' && is_letter(next){
@@ -268,7 +268,6 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 
 	for !lexer_end(lex) {
 		r, n := lexer_advance(lex)
-		fmt.println("RUNE: ", r, is_digit_of_base(r, 10))
 
 		if is_digit_of_base(r, 10){
 			append_encoded(&digits, r)
@@ -285,13 +284,15 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 			break
 		}
 	}
-	fmt.println("NUM: ", digits)
+
+	lexeme := string(source[mark:current])
 
 	if found_decimal {
 		num, ok := strconv.parse_f64(string(digits[:]))
 		assert(ok, "Conversion error.")
 		return Token {
 			kind = .Real,
+			lexeme = lexeme,
 			payload = num,
 		}
 	}
@@ -300,6 +301,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 		assert(ok, "Conversion error.")
 		return Token {
 			kind = .Int,
+			lexeme = lexeme,
 			payload = num,
 		}
 	}
@@ -342,7 +344,7 @@ tokenize_identifier :: proc(using lex: ^Lexer) -> Token {
 
 	for !lexer_end(lex) {
 		r, n := lexer_advance(lex)
-		if !is_identifier(r){
+		if !is_identifier(r, leading = false){
 			current -= n
 			break
 		}
@@ -388,7 +390,6 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 		r, n := lexer_advance(lex)
 		if r == '\\' {
 			next, _ := lexer_advance(lex)
-			fmt.println("NEXT: ", next)
 			if esc, ok := escape_sequence(next); ok {
 				append_encoded(&buf, esc)
 			}
@@ -447,8 +448,9 @@ is_digit_of_base :: proc(r: rune, base: int) -> bool {
 	return false
 }
 
-is_identifier :: proc(r: rune) -> bool {
-	return is_letter(r) || r == '_'
+is_identifier :: proc(r: rune, leading := false) -> bool {
+	// NOTE: We do not allow identifiers to start with a digit
+	return is_letter(r) || (!leading && is_digit(r)) || r == '_'
 }
 
 

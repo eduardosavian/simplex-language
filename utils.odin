@@ -8,6 +8,11 @@ print_tokens :: proc(tokens: []Token){
 			fmt.printf("%s ", tk.lexeme)
 			continue
 		}
+		if tk.kind == .Int || tk.kind == .Real {
+			fmt.printf("%s(%s = %v) ", tk.kind, tk.lexeme, tk.payload)
+			continue
+		}
+
 		fmt.print(tk.kind)
 		if tk.kind == .Identifier {
 			fmt.printf("(%s)", tk.lexeme)
