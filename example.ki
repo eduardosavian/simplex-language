@@ -1,4 +1,3 @@
-
 // Some comment
 func main(){
 	x: int = 69;

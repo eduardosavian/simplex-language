@@ -55,8 +55,9 @@ TokenKind :: enum i8 {
 	// Literals
 	True, False, Int, Real, String, Nil,
 
-	// Error
-	BadToken = -1,
+	// Error & specials
+	EndOfFile = -1,
+	BadToken = -2,
 }
 
 keywords := map[string]TokenKind {
@@ -107,7 +108,6 @@ lexer_peek_next :: proc(using lex: ^Lexer) -> (rune, int) {
 	return r, n
 }
 
-import "core:fmt"
 
 lexer_match_consume :: proc(using lex: ^Lexer, accept: ..rune) -> (rune, int, bool){
 	r, n := lexer_peek(lex)
@@ -410,11 +410,16 @@ escape_sequence :: proc(r: rune) -> (rune, bool) {
 	return val, ok
 }
 
+tokenize_rune :: proc(using lex: ^Lexer) -> Token {
+	unimplemented()
+}
+
 tokenize_string :: proc(using lex: ^Lexer) -> Token {
 	mark = current
 
 	buf := make([dynamic]byte)
 
+	found_end := false
 	for !lexer_end(lex) {
 		r, n := lexer_advance(lex)
 		if r == '\\' {
@@ -427,11 +432,19 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 			}
 		}
 		else if r == '"' {
+			found_end = true
+			break
+		}
+		else if r == '\n' {
 			break
 		}
 		else {
 			append_encoded(&buf, r)
 		}
+	}
+
+	if !found_end {
+		panic("Unterminated string literal.")
 	}
 
 	resize(&buf, len(buf))
@@ -481,5 +494,4 @@ is_identifier :: proc(r: rune, leading := false) -> bool {
 	// NOTE: We do not allow identifiers to start with a digit
 	return is_letter(r) || (!leading && is_digit(r)) || r == '_'
 }
-
 

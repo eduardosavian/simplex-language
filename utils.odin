@@ -20,8 +20,12 @@ print_tokens :: proc(tokens: []Token){
 
 		name, ok := token_kind_to_string[tk.kind]
 		if ok {
-			fmt.print(name)
-			fmt.print(" ")
+			if tk.kind == .CurlyClose || tk.kind == .CurlyOpen {
+				fmt.printf("%s", name)
+			}
+			else {
+				fmt.printf(" %s ", name)
+			}
 			continue
 		}
 
@@ -46,9 +50,6 @@ print_tokens :: proc(tokens: []Token){
 			}
 		case: fmt.print(tk.kind)
 		}
-
-		fmt.print(" ")
-
 	}
 }
 

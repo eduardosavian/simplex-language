@@ -4,7 +4,8 @@ import "core:fmt"
 
 SRC : string : #load("example.ki")
 
-main :: proc(){
+// kasj kljads kljlkajsd fjlk kalj
+main :: proc() {
 	tokens := tokenize(SRC)
 	print_tokens(tokens)
 }
