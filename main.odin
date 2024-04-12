@@ -8,5 +8,7 @@ SRC : string : #load("example.ki")
 main :: proc() {
 	tokens := tokenize(SRC)
 	print_tokens(tokens)
+	fmt.println(precedence(TokenKind.LogicOr))
 }
+
 
