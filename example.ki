@@ -1,14 +1,14 @@
 // Some comment
 func main(){
 	x: int = 69;
-   if x == 0b1000101 {
-	   println("Nice");
-   }
-   else if x == 420 {
-	   println("Blaze it");
-   }
-   else {
-	   println("Hello, world!");
-   }
+	if x == 0b1000101 {
+		println("Nice");
+	}
+	else if x == 420 {
+		println("Blaze it");
+	}
+	else {
+		println("Hello, world!");
+	}
 }
 
