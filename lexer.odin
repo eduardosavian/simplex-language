@@ -29,6 +29,18 @@ Token :: struct {
 	payload: TokenPayload,
 }
 
+keywords := map[string]TokenKind {
+	"if"       = .If,
+	"else"     = .Else,
+	"for"      = .For,
+	"func"     = .Func,
+	"type"     = .Type,
+	"struct"   = .Struct,
+	"break"    = .Break,
+	"continue" = .Continue,
+	"return"   = .Return,
+}
+
 TokenKind :: enum i8 {
 	// Tokens which are not grammar significant, but are tracked for
 	// better error messages and debugging.
@@ -60,17 +72,6 @@ TokenKind :: enum i8 {
 	BadToken = -2,
 }
 
-keywords := map[string]TokenKind {
-	"if"       = .If,
-	"else"     = .Else,
-	"for"      = .For,
-	"func"     = .Func,
-	"type"     = .Type,
-	"struct"   = .Struct,
-	"break"    = .Break,
-	"continue" = .Continue,
-	"return"   = .Return,
-}
 
 lexer_advance :: proc(using lex: ^Lexer) -> (rune, int) {
 	r, n := lexer_peek(lex)
