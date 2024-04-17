@@ -111,11 +111,20 @@ parse_expression :: proc(using parser: ^Parser) -> ^Expression {
 
 parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> ^Expression {
 	log.debug("FUN", parser_peek(parser, 0))
-	args := parse_expression_list(parser, allow_trailing_on = .ParenClose)
-	if _, ok := parser_expect_consume(parser, .ParenClose); !ok {
-		emit_error(.NoExpectedToken, "Expected ')'")
-		return nil
+	args: []^Expression
+
+	if parser_peek(parser).kind != .ParenClose {
+		args = parse_expression_list(parser, allow_trailing_on = .ParenClose)
+		if _, ok := parser_expect_consume(parser, .ParenClose); !ok {
+			emit_error(.NoExpectedToken, "Expected ')'")
+			return nil
+		}
 	}
+	else {
+		// Empty function call
+		parser_advance(parser)
+	}
+
 	exp := new(Expression)
 	exp^ = FunctionCall {
 		func = func,
@@ -131,12 +140,15 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 	op: Token
 
 	for is_binary_operator(lookahead) && precedence(lookahead) >= min_precedence {
+		parsed_func := false
+
 		op = lookahead
 		log.debugf("OP: %v", op.kind)
 		_ = parser_advance(parser)
 
 		if op.kind == .ParenOpen {
 			left = parse_function_call(parser, left)
+			parsed_func = true
 		}
 		else {
 			right = parse_unary(parser)
@@ -153,13 +165,19 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 			lookahead = parser_peek(parser)
 		}
 
-		exp := new(Expression)
-		exp^ = Binary {
-			left_side = left,
-			right_side = right,
-			operator = op.kind,
+		if parsed_func {
+			// No need to create a binary op
+			continue
 		}
-		left = exp
+		else {
+			exp := new(Expression)
+			exp^ = Binary {
+				left_side = left,
+				right_side = right,
+				operator = op.kind,
+			}
+			left = exp
+		}
 	}
 
 	return left
@@ -209,6 +227,7 @@ parse_primary :: proc(using parser: ^Parser) -> ^Expression {
 		return exp
 	}
 
+	log.warn(parser_peek(parser, 0))
 	emit_error(.BadExpression, "Ill formed expression")
 	return nil
 }

@@ -17,10 +17,13 @@ print_expression :: proc(expr: ^Expression){
 	case FunctionCall:
 		fmt.printf("(")
 		print_expression(e.func)
-		fmt.print(" ")
-		for r in e.args {
-			print_expression(r)
+		if len(e.args) > 0 {
 			fmt.print(" ")
+			for r in e.args[:len(e.args) - 1] {
+				print_expression(r)
+				fmt.print(" ")
+			}
+			print_expression(e.args[len(e.args) - 1])
 		}
 		fmt.print(")")
 	case Binary:

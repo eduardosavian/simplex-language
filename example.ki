@@ -1,2 +1,6 @@
 
-foo(4 + f(5))
+sum(
+	col(a, 4) * row(b, -(i / 2) + 9),
+	getFoo(),
+	(8 && 8)(a, b, c),
+)
