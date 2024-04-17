@@ -14,7 +14,7 @@ should_ignore :: proc(tk: Token) -> bool {
 	}
 }
 
-parse :: proc(tokens : []Token) -> ^Expression {
+parse :: proc(tokens : []Token) -> []^Expression {
 	parser_tokens := make([dynamic]Token)
 	defer delete(parser_tokens)
 
@@ -32,8 +32,8 @@ parse :: proc(tokens : []Token) -> ^Expression {
 		tokens = parser_tokens[:],
 	}
 
-	exp := parse_expression(&parser)
-	return exp
+	exprs := parse_expression_list(&parser)
+	return exprs
 }
 
 parser_end :: proc(using parser: Parser) -> bool {
@@ -59,6 +59,11 @@ parser_advance :: proc(using parser: ^Parser) -> Token {
 	tk := parser_peek(parser, 0)
 	current = min(current + 1, len(tokens))
 	return tk
+}
+
+parser_rewind :: proc(using parser: ^Parser, n: int){
+	assert(n > 0, "Can only rewind parser by a positive integer")
+	current -= n;
 }
 
 parser_match_consume :: proc(using parser: ^Parser, accept: ..TokenKind) -> (Token, bool) {

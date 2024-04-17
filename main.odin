@@ -21,8 +21,11 @@ main :: proc() {
 	print_tokens(tokens)
 
 	// TODO: Arena here
-	ast := parse(tokens)
-	print_expression(ast)
+	exprs := parse(tokens)
+	for e in exprs {
+		print_expression(e)
+		fmt.println()
+	}
 }
 
 

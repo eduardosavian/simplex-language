@@ -14,6 +14,15 @@ print_expression :: proc(expr: ^Expression){
 		fmt.printf("(%v ", op)
 		print_expression(e.operand)
 		fmt.print(")")
+	case FunctionCall:
+		fmt.printf("(")
+		print_expression(e.func)
+		fmt.print(" ")
+		for r in e.args {
+			print_expression(r)
+			fmt.print(" ")
+		}
+		fmt.print(")")
 	case Binary:
 		op, ok := token_kind_to_string[e.operator]
 		assert(ok, "Unkown op")
@@ -84,8 +93,8 @@ print_tokens :: proc(tokens: []Token){
 
 @private
 token_kind_to_string := map[TokenKind]string {
-	.ParenOpen   = "(",
-	.ParenClose  = ")",
+	.ParenOpen   = "Po",
+	.ParenClose  = "Pc",
 	.SquareOpen  = "[",
 	.SquareClose = "]",
 	.CurlyOpen   = "{",
@@ -111,9 +120,11 @@ token_kind_to_string := map[TokenKind]string {
 	.Slash  = "/",
 	.Modulo = "%",
 
-	.BitAnd = "&",
-	.BitOr  = "|",
-	.BitXor = "~",
+	.BitAnd     = "&",
+	.BitOr      = "|",
+	.BitXor     = "~",
+	.ShiftLeft  = "<<",
+	.ShiftRight = ">>",
 
 	.LogicNot = "!",
 	.LogicAnd = "&&",

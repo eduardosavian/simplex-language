@@ -4,7 +4,44 @@ package lang
 import intr "base:intrinsics"
 import "core:log"
 
+Statement :: union {
+	InlineStatement,
+}
+
+InlineStatement :: union {
+	Expression,
+	VarDeclaration,
+	Assignment,
+	BreakStmt,
+	ContinueStmt,
+}
+
+BreakStmt :: struct {}
+
+ContinueStmt :: struct {}
+
+VarDeclaration :: struct {
+	identifiers: []Identifier,
+	type: TypeExpression,
+}
+
+TypeExpression :: struct {
+	name: Identifier,
+	qualifiers: []Qualifier, // NOTE: Order is reversed
+}
+
+Qualifier :: enum i8 {
+	Slice,
+	Pointer,
+}
+
+Assignment :: struct {
+	left_side: []Expression,
+	right_side: []Expression,
+}
+
 Expression :: union {
+	FunctionCall,
 	Binary,
 	Unary,
 	Primary,
@@ -17,6 +54,11 @@ Binary :: struct {
 	operator: TokenKind,
 }
 
+FunctionCall :: struct {
+	func: ^Expression,
+	args: []^Expression,
+}
+
 Unary :: struct {
 	operand: ^Expression,
 	operator: TokenKind,
@@ -25,7 +67,6 @@ Unary :: struct {
 Group :: struct {
 	inner: ^Expression,
 }
-
 
 Primary :: union {
 	Identifier,
@@ -37,51 +78,50 @@ Primary :: union {
 	NilType,
 }
 
-Identifier :: distinct string
-NilType    :: struct {}
-String     :: string
-Integer    :: i64
-Real       :: f64
-Rune       :: rune
-Bool       :: bool
+parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> []^Expression {
+	exprs := make([dynamic]^Expression)
+	// NOTE: An expression list must have at least one element
+	leading := parse_expression(parser)
+	append(&exprs, leading)
 
-Associativity :: enum i8 {
-	Left, Right,
-}
+	for !parser_end(parser^){
+		if _, ok := parser_match_consume(parser, .Comma); ok {
+			if parser_peek(parser).kind == allow_trailing_on {
+				break
+			}
+			else {
+				exp := parse_expression(parser)
+				append(&exprs, exp)
+			}
+		}
+		else {
+			// Nothing more to parse
+			break
+		}
+	}
 
-OperatorInfo :: struct {
-	precedence: i16,
-	associativity: Associativity,
-}
-
-OPERATOR_TABLE := map[TokenKind]OperatorInfo {
-	.Plus   = {15, .Left},
-	.Minus  = {15, .Left},
-	.Star   = {20, .Left},
-	.Slash  = {20, .Left},
-	.Modulo = {20, .Left},
-
-	.BitOr      = {15, .Left},
-	.BitXor     = {15, .Left},
-	.BitAnd     = {20, .Left},
-	.ShiftLeft  = {20, .Left},
-	.ShiftRight = {20, .Left},
-
-	.EqualEqual   = {10, .Left},
-	.NotEqual     = {10, .Left},
-	.Greater      = {10, .Left},
-	.GreaterEqual = {10, .Left},
-	.Lesser       = {10, .Left},
-	.LesserEqual  = {10, .Left},
-
-	.LogicAnd = {8, .Left},
-	.LogicOr  = {5, .Left},
-	.LogicXor = {5, .Left},
+	resize(&exprs, len(exprs))
+	return exprs[:]
 }
 
 parse_expression :: proc(using parser: ^Parser) -> ^Expression {
-	e := parse_primary(parser)
+	e := parse_unary(parser)
 	return parse_binary(parser, e, 0)
+}
+
+parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> ^Expression {
+	log.debug("FUN", parser_peek(parser, 0))
+	args := parse_expression_list(parser, allow_trailing_on = .ParenClose)
+	if _, ok := parser_expect_consume(parser, .ParenClose); !ok {
+		emit_error(.NoExpectedToken, "Expected ')'")
+		return nil
+	}
+	exp := new(Expression)
+	exp^ = FunctionCall {
+		func = func,
+		args = args,
+	}
+	return exp
 }
 
 parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i16) -> ^Expression {
@@ -92,8 +132,16 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 
 	for is_binary_operator(lookahead) && precedence(lookahead) >= min_precedence {
 		op = lookahead
+		log.debugf("OP: %v", op.kind)
 		_ = parser_advance(parser)
-		right = parse_primary(parser)
+
+		if op.kind == .ParenOpen {
+			left = parse_function_call(parser, left)
+		}
+		else {
+			right = parse_unary(parser)
+		}
+
 		lookahead = parser_peek(parser)
 
 		for is_binary_operator(lookahead) &&
@@ -101,7 +149,7 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 				(associativity(lookahead) == .Right && precedence(lookahead) == precedence(op)))
 		{
 			lookahead_prec_is_greater := precedence(lookahead) > precedence(op)
-			right = parse_binary(parser, right, precedence(op) + i16(lookahead_prec_is_greater))
+			right     = parse_binary(parser, right, precedence(op) + i16(lookahead_prec_is_greater))
 			lookahead = parser_peek(parser)
 		}
 
@@ -118,6 +166,20 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 }
 
 parse_unary :: proc(using parser: ^Parser) -> ^Expression {
+	if tk, ok := parser_match_consume(parser, .BitXor, .Minus, .Plus, .LogicNot); ok {
+		operator := tk
+		operand  := parse_unary(parser)
+
+		exp := new(Expression)
+		exp^ = Unary {
+			operator = operator.kind,
+			operand = operand,
+		}
+		return exp
+	}
+
+	exp := parse_primary(parser)
+	return exp
 }
 
 parse_primary :: proc(using parser: ^Parser) -> ^Expression {
@@ -127,6 +189,7 @@ parse_primary :: proc(using parser: ^Parser) -> ^Expression {
 	}
 
 	if tk, ok := parser_match_consume(parser, .Identifier); ok {
+		next := parser_peek(parser, 0)
 		exp := new(Expression)
 		id := Identifier(tk.lexeme)
 		exp^ = Primary(id)
@@ -154,7 +217,7 @@ associativity :: proc(tk: $T) -> Associativity {
 	#assert(type_of(tk) == Token || type_of(tk) == TokenKind, "Not a operator type")
 	key := tk.kind when T == Token else tk
 	info, ok := OPERATOR_TABLE[key]
-	log.debug(key)
+	// TODO: Sync parser on unknown operator
 	assert(ok, "Operator not in table")
 	return info.associativity
 }
@@ -163,6 +226,7 @@ precedence :: proc(tk: $T) -> i16 {
 	#assert(type_of(tk) == Token || type_of(tk) == TokenKind, "Not a operator type")
 	key := tk.kind when T == Token else tk
 	info, ok := OPERATOR_TABLE[key]
+	// TODO: Sync parser on unknown operator
 	assert(ok, "Operator not in table")
 	return info.precedence
 }
@@ -173,3 +237,40 @@ is_binary_operator :: proc(tk: $T) -> bool {
 	_, ok := OPERATOR_TABLE[key]
 	return ok
 }
+
+Associativity :: enum i8 {
+	Left, Right,
+}
+
+OperatorInfo :: struct {
+	precedence: i16,
+	associativity: Associativity,
+}
+
+OPERATOR_TABLE := map[TokenKind]OperatorInfo {
+	.ParenOpen = {30, .Left},
+
+	.Plus   = {15, .Left},
+	.Minus  = {15, .Left},
+	.Star   = {20, .Left},
+	.Slash  = {20, .Left},
+	.Modulo = {20, .Left},
+
+	.BitOr      = {15, .Left},
+	.BitXor     = {15, .Left},
+	.BitAnd     = {20, .Left},
+	.ShiftLeft  = {20, .Left},
+	.ShiftRight = {20, .Left},
+
+	.EqualEqual   = {10, .Left},
+	.NotEqual     = {10, .Left},
+	.Greater      = {10, .Left},
+	.GreaterEqual = {10, .Left},
+	.Lesser       = {10, .Left},
+	.LesserEqual  = {10, .Left},
+
+	.LogicAnd = {8, .Left},
+	.LogicOr  = {5, .Left},
+	.LogicXor = {5, .Left},
+}
+
