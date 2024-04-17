@@ -14,6 +14,7 @@ LexerError :: enum byte {
 
 ParserError :: enum byte {
 	NoExpectedToken,
+	BadExpression,
 }
 
 CheckerError :: enum byte {

@@ -15,12 +15,14 @@ main :: proc() {
 
 	tokens, lex_ok := tokenize(SRC)
 	defer delete(tokens)
-
 	if !lex_ok {
 		return
 	}
-
 	print_tokens(tokens)
+
+	// TODO: Arena here
+	ast := parse(tokens)
+	print_expression(ast)
 }
 
 

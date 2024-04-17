@@ -2,6 +2,33 @@ package lang
 
 import "core:fmt"
 
+print_expression :: proc(expr: ^Expression){
+	if expr == nil { return }
+
+	switch e in expr {
+	case Primary:
+		fmt.printf("%v",  e)
+	case Unary:
+		op, ok := token_kind_to_string[e.operator]
+		assert(ok, "Unkown op")
+		fmt.printf("(%v ", op)
+		print_expression(e.operand)
+		fmt.print(")")
+	case Binary:
+		op, ok := token_kind_to_string[e.operator]
+		assert(ok, "Unkown op")
+		fmt.printf("(%v ", op)
+		print_expression(e.left_side)
+		fmt.print(" ")
+		print_expression(e.right_side)
+		fmt.print(")")
+	case Group:
+		fmt.print("(")
+		print_expression(e.inner)
+		fmt.print(")")
+	}
+}
+
 print_tokens :: proc(tokens: []Token){
 	indent_level := 0
 
@@ -37,7 +64,7 @@ print_tokens :: proc(tokens: []Token){
 		case .Rune:
 			fmt.printf("Rune(%q)", tk.payload.(rune))
 		case .Int:
-			fmt.printf("Int(%v)", tk.payload.(int))
+			fmt.printf("Int(%v)", tk.payload.(i64))
 		case .Real:
 			fmt.printf("Real(%v)", tk.payload.(f64))
 		case .Comment:

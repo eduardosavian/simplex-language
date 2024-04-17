@@ -21,10 +21,11 @@ parse :: proc(tokens : []Token) -> ^Expression {
 	filter_tokens: {
 		for tk in tokens {
 			if !should_ignore(tk){
+
 				append(&parser_tokens, tk)
 			}
 		}
-		resize(&parser_tokens, len(tokens))
+		resize(&parser_tokens, len(parser_tokens))
 	}
 
 	parser := Parser {
@@ -77,8 +78,29 @@ parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind) -> (Toke
 		parser_advance(parser)
 		return tk, true
 	}
-	log.errorf("Expected: `%v` Found: `%v`", expect, tk.kind)
-	panic("Parser error, do parser_sync() later.")
-	// return tk, false
+	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind)
+	return tk, false
 }
+
+LITERAL_KINDS :: []TokenKind {.True, .False, .Nil, .Int, .Real, .Rune, .String}
+
+new_literal :: proc(tk: Token) -> ^Expression {
+	exp := new(Expression)
+
+	p := Primary{}
+	#partial switch tk.kind {
+	case .True:   p = true
+	case .False:  p = false
+	case .Nil:    p = NilType{}
+	case .Int:    p = tk.payload.(i64)
+	case .Real:   p = tk.payload.(f64)
+	case .Rune:   p = tk.payload.(rune)
+	case .String: p = tk.payload.(string)
+	case: panic("Invalid literal")
+	}
+
+	exp^ = p
+	return exp
+}
+
 

@@ -21,7 +21,7 @@ Location :: struct {
 }
 
 TokenPayload :: union {
-	int, f64, string, rune,
+	i64, f64, string, rune,
 }
 
 Token :: struct {
@@ -340,7 +340,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 		return Token {
 			kind = .Int,
 			lexeme = lexeme,
-			payload = num,
+			payload = Integer(num),
 		}
 	}
 }
@@ -375,7 +375,7 @@ tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
 	}
 	tk := Token {
 		kind = .Int,
-		payload = num,
+		payload = i64(num),
 		lexeme = lexeme,
 	}
 	return tk
