@@ -41,11 +41,12 @@ Assignment :: struct {
 }
 
 Expression :: union {
-	FunctionCall,
-	Binary,
-	Unary,
 	Primary,
+	Indexing,
+	FunctionCall,
 	Group,
+	Unary,
+	Binary,
 }
 
 Binary :: struct {
@@ -57,6 +58,11 @@ Binary :: struct {
 FunctionCall :: struct {
 	func: ^Expression,
 	args: []^Expression,
+}
+
+Indexing :: struct {
+	object: ^Expression,
+	index: ^Expression,
 }
 
 Unary :: struct {
@@ -109,6 +115,21 @@ parse_expression :: proc(using parser: ^Parser) -> ^Expression {
 	return parse_binary(parser, e, 0)
 }
 
+parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> ^Expression {
+
+	index := parse_expression(parser)
+	if _, ok := parser_expect_consume(parser, .SquareClose); !ok {
+		return nil
+	}
+
+	exp := new(Expression)
+	exp^ = Indexing {
+		object = object,
+		index = index,
+	}
+	return exp
+}
+
 parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> ^Expression {
 	log.debug("FUN", parser_peek(parser, 0))
 	args: []^Expression
@@ -141,6 +162,7 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 
 	for is_binary_operator(lookahead) && precedence(lookahead) >= min_precedence {
 		parsed_func := false
+		parsed_index := false
 
 		op = lookahead
 		log.debugf("OP: %v", op.kind)
@@ -149,6 +171,10 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 		if op.kind == .ParenOpen {
 			left = parse_function_call(parser, left)
 			parsed_func = true
+		}
+		else if op.kind == .SquareOpen {
+			left = parse_indexing(parser, left)
+			parsed_index = true
 		}
 		else {
 			right = parse_unary(parser)
@@ -165,7 +191,7 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 			lookahead = parser_peek(parser)
 		}
 
-		if parsed_func {
+		if parsed_func || parsed_index {
 			// No need to create a binary op
 			continue
 		}
@@ -267,7 +293,8 @@ OperatorInfo :: struct {
 }
 
 OPERATOR_TABLE := map[TokenKind]OperatorInfo {
-	.ParenOpen = {30, .Left},
+	.SquareOpen = {40, .Left}, // For indexing
+	.ParenOpen = {30, .Left}, // For function calls
 
 	.Plus   = {15, .Left},
 	.Minus  = {15, .Left},

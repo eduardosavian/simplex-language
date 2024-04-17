@@ -26,6 +26,12 @@ print_expression :: proc(expr: ^Expression){
 			print_expression(e.args[len(e.args) - 1])
 		}
 		fmt.print(")")
+	case Indexing:
+		fmt.print("([] ")
+		print_expression(e.object)
+		fmt.print(" ")
+		print_expression(e.index)
+		fmt.print(")")
 	case Binary:
 		op, ok := token_kind_to_string[e.operator]
 		assert(ok, "Unkown op")
