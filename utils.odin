@@ -34,6 +34,8 @@ print_tokens :: proc(tokens: []Token){
 			fmt.printf("$%s", tk.lexeme)
 		case .String:
 			fmt.printf("String(%q)", tk.payload.(string))
+		case .Rune:
+			fmt.printf("Rune(%q)", tk.payload.(rune))
 		case .Int:
 			fmt.printf("Int(%v)", tk.payload.(int))
 		case .Real:

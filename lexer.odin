@@ -10,6 +10,7 @@ Lexer :: struct {
 	current: int,
 	mark: int,
 	source: []byte,
+	error_count: int,
 
 	using loc: Location,
 }
@@ -20,7 +21,7 @@ Location :: struct {
 }
 
 TokenPayload :: union {
-	int, f64, string,
+	int, f64, string, rune,
 }
 
 Token :: struct {
@@ -65,7 +66,7 @@ TokenKind :: enum i8 {
 	Dot, Comma, Colon, Equal, Semicolon, Caret,
 
 	// Literals
-	True, False, Int, Real, String, Nil,
+	True, False, Int, Real, String, Rune, Nil,
 
 	// Error & specials
 	EndOfFile = -1,
@@ -122,7 +123,7 @@ lexer_match_consume :: proc(using lex: ^Lexer, accept: ..rune) -> (rune, int, bo
 	return 0, 0, false
 }
 
-tokenize :: proc(source: string, filename: string = "") -> []Token {
+tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 	tokens := make([dynamic]Token)
 
 	lex := &Lexer {
@@ -151,6 +152,7 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 		case '.': append(&tokens, Token{kind = .Dot})
 		case ',': append(&tokens, Token{kind = .Comma})
 		case '^': append(&tokens, Token{kind = .Caret})
+
 
 		case '+': append(&tokens, Token{kind = .Plus})
 		case '-': append(&tokens, Token{kind = .Minus})
@@ -232,7 +234,7 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 			append(&tokens, tokenize_string(lex))
 
 		case '\'':
-			unimplemented("Tokenize rune")
+			append(&tokens, tokenize_rune(lex))
 
 		case:
 			switch {
@@ -244,7 +246,8 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 				lex.current -= n
 				append(&tokens, tokenize_identifier(lex))
 			case:
-				panic("Unknown token")
+				append(&tokens, BAD_TOKEN)
+				emit_error(.UnknownRune, "Unknown rune: %q", r)
 			}
 		}
 	}
@@ -253,7 +256,7 @@ tokenize :: proc(source: string, filename: string = "") -> []Token {
 	append(&tokens, Token{kind = .LineBreak})
 
 	resize(&tokens, len(tokens))
-	return tokens[:]
+	return tokens[:], lex.error_count == 0
 }
 
 tokenize_line_comment :: proc(using lex: ^Lexer) -> Token {
@@ -318,7 +321,10 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 
 	if found_decimal {
 		num, ok := strconv.parse_f64(string(digits[:]))
-		assert(ok, "Conversion error.")
+		if !ok {
+			emit_error(.ConversionError, "Could not convert %q to numeric literal", string(digits[:]))
+			return BAD_TOKEN
+		}
 		return Token {
 			kind = .Real,
 			lexeme = lexeme,
@@ -327,7 +333,10 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 	}
 	else {
 		num, ok := strconv.parse_int(string(digits[:]), 10)
-		assert(ok, "Conversion error.")
+		if !ok {
+			emit_error(.ConversionError, "Could not convert %q to numeric literal", string(digits[:]))
+			return BAD_TOKEN
+		}
 		return Token {
 			kind = .Int,
 			lexeme = lexeme,
@@ -360,7 +369,10 @@ tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
 
 	lexeme := string(source[mark-2:current])
 	num, ok := strconv.parse_int(string(digits[:]), base)
-	assert(ok, "Conversion error.")
+	if !ok {
+		emit_error(.ConversionError, "Could not convert %q to numeric literal", string(digits[:]))
+		return BAD_TOKEN
+	}
 	tk := Token {
 		kind = .Int,
 		payload = num,
@@ -412,7 +424,44 @@ escape_sequence :: proc(r: rune) -> (rune, bool) {
 }
 
 tokenize_rune :: proc(using lex: ^Lexer) -> Token {
-	unimplemented()
+	codepoint: rune
+	if _, _, ok := lexer_match_consume(lex, '\\'); ok {
+		r, n := lexer_advance(lex)
+		esc, ok := escape_sequence(r)
+		if !ok {
+			emit_error(.InvalidEscape, "Invalid escape sequence %q", r)
+			lex.error_count += 1
+			return BAD_TOKEN
+		}
+		codepoint = esc
+	}
+	else {
+		r, n := lexer_advance(lex)
+		if r == '\n' || r == '\t' {
+			lex.error_count += 1
+			emit_error(.NoExpectedRune, "Cannot use newline or tab inside rune literal, use '\\n' or '\\t' instead.")
+		}
+		codepoint = r
+	}
+
+	if _, _, ok := lexer_consume_expect(lex, '\''); !ok {
+			lex.error_count += 1
+		return BAD_TOKEN
+	}
+
+	return Token {
+		kind = .Rune,
+		payload = codepoint,
+	}
+}
+
+lexer_consume_expect :: proc(using lex: ^Lexer, expect: rune) -> (rune, int, bool) {
+	r, n, ok := lexer_match_consume(lex, expect)
+	if !ok {
+		emit_error(LexerError.NoExpectedRune, "Expected %q, found %q", expect, r)
+		return 0, 1, false
+	}
+	return r, n, ok
 }
 
 tokenize_string :: proc(using lex: ^Lexer) -> Token {
@@ -429,7 +478,8 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 				append_encoded(&buf, esc)
 			}
 			else {
-				panic("Invalid escape sequence")
+				emit_error(.InvalidEscape, "Invalid escape sequence: %q", esc)
+				return BAD_TOKEN
 			}
 		}
 		else if r == '"' {
@@ -445,7 +495,8 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 	}
 
 	if !found_end {
-		panic("Unterminated string literal.")
+		emit_error(.BadStringLiteral, "Unterminated string literal.")
+		return BAD_TOKEN
 	}
 
 	resize(&buf, len(buf))
@@ -496,3 +547,4 @@ is_identifier :: proc(r: rune, leading := false) -> bool {
 	return is_letter(r) || (!leading && is_digit(r)) || r == '_'
 }
 
+BAD_TOKEN :: Token { kind = .BadToken }

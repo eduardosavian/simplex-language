@@ -13,11 +13,14 @@ main :: proc() {
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
 
-	tokens := tokenize(SRC)
+	tokens, lex_ok := tokenize(SRC)
 	defer delete(tokens)
 
+	if !lex_ok {
+		return
+	}
+
 	print_tokens(tokens)
-	emit_error(.UnknownRune, ":P")
 }
 
 

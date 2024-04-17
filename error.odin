@@ -7,12 +7,17 @@ LexerError :: enum byte {
 	BadStringLiteral,
 	InvalidBase,
 	UnknownRune,
+	InvalidEscape,
 	NoExpectedRune,
+	ConversionError,
 }
 
-ParserError :: enum byte {}
+ParserError :: enum byte {
+	NoExpectedToken,
+}
 
-CheckerError :: enum byte {}
+CheckerError :: enum byte {
+}
 
 Error :: union {
 	LexerError, ParserError, CheckerError,
@@ -40,3 +45,4 @@ emit_error :: proc(e: Error, format: string = "", args: ..any, loc := #caller_lo
 		log.errorf("%s: %s", error_name(e), e, location = loc)
 	}
 }
+
