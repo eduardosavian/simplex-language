@@ -6,28 +6,42 @@ import "core:log"
 
 Statement :: union {
 	InlineStatement,
+	If,
+	For,
+	Scope,
 }
+
+Scope :: struct {
+	body: []Statement,
+}
+
+If :: struct {}
+
+For :: struct {}
 
 InlineStatement :: union {
-	Expression,
+	ExpressionStatement,
 	VarDeclaration,
 	Assignment,
-	BreakStmt,
-	ContinueStmt,
+	Break,
+	Continue,
 }
 
-BreakStmt :: struct {}
+ExpressionStatement :: distinct ^Expression
 
-ContinueStmt :: struct {}
+Break :: struct {}
+
+Continue :: struct {}
 
 VarDeclaration :: struct {
 	identifiers: []Identifier,
 	type: TypeExpression,
+	expressions: []^Expression, // NOTE: Only for decl+assign
 }
 
 TypeExpression :: struct {
 	name: Identifier,
-	qualifiers: []Qualifier, // NOTE: Order is reversed
+	qualifiers: []Qualifier,
 }
 
 Qualifier :: enum i8 {
@@ -84,13 +98,71 @@ Primary :: union {
 	NilType,
 }
 
-parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
-	// idList (= exprList);
-	ids := parse_identifier_list(parser)
-	if _, ok := parser_match_consume(parser, .Equal); ok {
-		unimplemented("Decl assign")
+// Parses a whole file into one "file scope"
+parse_file :: parse_scope
+
+parse_scope :: proc(using parser: ^Parser) -> Scope {
+	statements := make([dynamic]Statement)
+
+	for !parser_end(parser^){
+		log.debug("FILE: ", parser.tokens[current])
+		stmt : Statement
+		// Inline statement
+		if tk, ok := parser_match_consume(parser, .Var); ok {
+			#partial switch tk.kind {
+			case .Var:
+				stmt = InlineStatement(parse_var_declaration(parser))
+			}
+			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
+				return Scope{}
+			}
+		}
+		else {
+			expr := ExpressionStatement(parse_expression(parser))
+			stmt = InlineStatement(expr)
+			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
+				return Scope{}
+			}
+		}
+		append(&statements, stmt)
 	}
-		unimplemented("Decl assign")
+	resize(&statements, len(statements))
+
+	return Scope {
+		body = statements[:],
+	}
+}
+
+parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
+	// idList: typeExpr (= exprList);
+	ids := parse_identifier_list(parser)
+	type: TypeExpression
+	exprs: []^Expression
+
+	if _, ok := parser_expect_consume(parser, .Colon); ok {
+		type = parse_type_expression(parser)
+	}
+	else {
+		return VarDeclaration{}
+	}
+
+	has_assign := false
+	if _, ok := parser_match_consume(parser, .Equal); ok {
+		has_assign = true
+		exprs = parse_expression_list(parser)
+	}
+
+	decl := VarDeclaration {
+		identifiers = ids,
+		type = type,
+		expressions = exprs,
+	}
+
+	if has_assign && len(exprs) != len(ids){
+		emit_error(.SizeMismatch, "Mismatched sizes for assignment: %v = %v", len(ids), len(exprs))
+	}
+
+	return decl
 }
 
 parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
@@ -107,6 +179,7 @@ parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
 			append(&qualifiers, Qualifier.Pointer)
 		}
 		else if tk.kind == .Identifier {
+			name = Identifier(tk.lexeme)
 			break
 		}
 		else {
@@ -232,7 +305,6 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 		parsed_index := false
 
 		op = lookahead
-		log.debugf("OP: %v", op.kind)
 		_ = parser_advance(parser)
 
 		if op.kind == .ParenOpen {

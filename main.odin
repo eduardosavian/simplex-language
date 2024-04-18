@@ -21,11 +21,8 @@ main :: proc() {
 	print_tokens(tokens)
 
 	// TODO: Arena here
-	exprs := parse(tokens)
-	for e in exprs {
-		print_expression(e)
-		fmt.println()
-	}
+	scope := parse(tokens)
+	print_scope(scope)
 }
 
 

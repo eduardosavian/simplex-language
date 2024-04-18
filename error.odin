@@ -16,6 +16,7 @@ ParserError :: enum byte {
 	NoExpectedToken,
 	UnexpectedToken,
 	BadExpression,
+	SizeMismatch,
 }
 
 CheckerError :: enum byte {

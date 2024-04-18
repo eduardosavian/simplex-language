@@ -2,12 +2,70 @@ package lang
 
 import "core:fmt"
 
+print_type :: proc(t: TypeExpression){
+	for q in t.qualifiers {
+		switch q {
+		case .Pointer:
+			fmt.print("pointer to ")
+		case .Slice:
+			fmt.print("slice of ")
+		}
+	}
+	fmt.print(t.name)
+}
+
+print_scope :: proc(scope: Scope){
+	for stmt in scope.body {
+		switch s in stmt {
+		case InlineStatement:
+			switch v in s {
+			case ExpressionStatement:
+				print_expression(cast(^Expression)v)
+			case Break:
+				fmt.println("break")
+			case Continue:
+				fmt.println("continue")
+			case Assignment:
+			case VarDeclaration:
+				fmt.println("var")
+				if len(v.expressions) == 0 {
+					for id in v.identifiers {
+						fmt.printf("  %s: ", id)
+						print_type(v.type)
+						fmt.println()
+					}
+				}
+				else {
+					for id, i in v.identifiers {
+						fmt.printf("  %s: ", id)
+						print_type(v.type)
+						fmt.printf(" = ")
+						print_expression(v.expressions[i])
+						fmt.println()
+					}
+				}
+			}
+			fmt.println(";")
+
+		case If:
+		case For:
+		case Scope:
+			print_scope(s)
+		}
+	}
+}
+
 print_expression :: proc(expr: ^Expression){
 	if expr == nil { return }
 
 	switch e in expr {
 	case Primary:
-		fmt.printf("%v",  e)
+		#partial switch _ in e{
+		case String, Rune:
+			fmt.printf("%q",  e)
+		case:
+			fmt.printf("%v",  e)
+		}
 	case Unary:
 		op, ok := token_kind_to_string[e.operator]
 		assert(ok, "Unkown op")
@@ -102,8 +160,8 @@ print_tokens :: proc(tokens: []Token){
 
 @private
 token_kind_to_string := map[TokenKind]string {
-	.ParenOpen   = "Po",
-	.ParenClose  = "Pc",
+	.ParenOpen   = "(",
+	.ParenClose  = ")",
 	.SquareOpen  = "[",
 	.SquareClose = "]",
 	.CurlyOpen   = "{",

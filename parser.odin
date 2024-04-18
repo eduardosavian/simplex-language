@@ -14,7 +14,7 @@ should_ignore :: proc(tk: Token) -> bool {
 	}
 }
 
-parse :: proc(tokens : []Token) -> []^Expression {
+parse :: proc(tokens : []Token) -> Scope {
 	parser_tokens := make([dynamic]Token)
 	defer delete(parser_tokens)
 
@@ -32,8 +32,8 @@ parse :: proc(tokens : []Token) -> []^Expression {
 		tokens = parser_tokens[:],
 	}
 
-	exprs := parse_expression_list(&parser)
-	return exprs
+	s := parse_file(&parser)
+	return s
 }
 
 parser_end :: proc(using parser: Parser) -> bool {
