@@ -31,6 +31,7 @@ Token :: struct {
 }
 
 keywords := map[string]TokenKind {
+	"var"      = .Var,
 	"if"       = .If,
 	"else"     = .Else,
 	"for"      = .For,
@@ -48,7 +49,7 @@ TokenKind :: enum i8 {
 	Comment = 0, LineBreak,
 
 	// Id and reserved words
-	Identifier, If, Else, For, Func, Type, Struct, Break, Continue, Return, 
+	Identifier, Var, If, Else, For, Func, Type, Struct, Break, Continue, Return, 
 
 	// Binary and unary operators
 	Plus, Minus, Star, Slash, Modulo,

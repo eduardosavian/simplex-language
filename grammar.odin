@@ -84,6 +84,73 @@ Primary :: union {
 	NilType,
 }
 
+parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
+	// idList (= exprList);
+	ids := parse_identifier_list(parser)
+	if _, ok := parser_match_consume(parser, .Equal); ok {
+		unimplemented("Decl assign")
+	}
+		unimplemented("Decl assign")
+}
+
+parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
+	qualifiers := make([dynamic]Qualifier)
+	name: Identifier
+	for !parser_end(parser^){
+		tk := parser_advance(parser)
+		if tk.kind == .SquareOpen {
+			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
+				append(&qualifiers, Qualifier.Slice)
+			}
+		}
+		else if tk.kind == .Caret {
+			append(&qualifiers, Qualifier.Pointer)
+		}
+		else if tk.kind == .Identifier {
+			break
+		}
+		else {
+			emit_error(.UnexpectedToken, "Expected '^', '[]', or identifier in type expression")
+		}
+	}
+	resize(&qualifiers, len(qualifiers))
+
+	exp := TypeExpression {
+		name = name,
+		qualifiers = qualifiers[:],
+	}
+	return exp
+}
+
+parse_identifier_list :: proc(using parser: ^Parser) -> []Identifier {
+	ids := make([dynamic]Identifier)
+
+	if tk, ok := parser_expect_consume(parser, .Identifier); ok {
+		append(&ids, Identifier(tk.lexeme))
+	}
+	else {
+		emit_error(.NoExpectedToken, "Expected identifier.")
+		return nil
+	}
+
+	for !parser_end(parser^){
+		if _, ok := parser_match_consume(parser, .Comma); ok {
+			if id, ok := parser_expect_consume(parser, .Identifier); ok {
+				append(&ids, Identifier(id.lexeme))
+			}
+			else {
+				return nil
+			}
+		}
+		else {
+			break
+		}
+	}
+
+	resize(&ids, len(ids))
+	return ids[:]
+}
+
 parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> []^Expression {
 	exprs := make([dynamic]^Expression)
 	// NOTE: An expression list must have at least one element
