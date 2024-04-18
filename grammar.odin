@@ -98,9 +98,11 @@ Primary :: union {
 	NilType,
 }
 
-parse_scope :: proc(using parser: ^Parser) -> Scope {
+parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
 	// "{" statement* "}"
 	if _, ok := parser_expect_consume(parser, .CurlyOpen); !ok {
+		err = .NoExpectedToken
+		return
 	}
 
 	statements := make([dynamic]Statement)
@@ -117,7 +119,7 @@ parse_scope :: proc(using parser: ^Parser) -> Scope {
 
 		// New Sub-Scope
 		if _, ok := parser_match_consume(parser, .CurlyOpen); ok {
-			stmt = parse_scope(parser)
+			stmt = parse_scope(parser) or_return
 			append(&statements)
 		}
 
@@ -125,39 +127,43 @@ parse_scope :: proc(using parser: ^Parser) -> Scope {
 		if tk, ok := parser_match_consume(parser, .Var); ok {
 			#partial switch tk.kind {
 			case .Var:
-				stmt = InlineStatement(parse_var_declaration(parser))
+				stmt = InlineStatement(parse_var_declaration(parser) or_return)
 			}
 			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
-				return Scope{}
+				err = .NoExpectedToken
+				return
 			}
 		}
 		else {
 			if disambiguate_assignment_from_expression_statement(parser) {
-				assign := parse_assignment(parser)
+				assign := parse_assignment(parser) or_return
+				log.debug("ASSIGN IS: ", assign)
 				stmt = InlineStatement(assign)
 			}
 			else {
-				expr := ExpressionStatement(parse_expression(parser))
+				expr := ExpressionStatement(parse_expression(parser) or_return)
 				stmt = InlineStatement(expr)
 			}
 
 			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
-				return Scope{}
+				err = .NoExpectedToken
+				return
 			}
 		}
 		append(&statements, stmt)
 	}
 
 	if !closed {
-		emit_error(.NoExpectedToken, "Unclosed scope.")
-		return Scope{}
+		err = emit_error(.NoExpectedToken, "Unclosed scope.")
+		return
 	}
 
 	resize(&statements, len(statements))
 
-	return Scope {
+	scope = Scope {
 		body = statements[:],
 	}
+	return
 }
 
 // True: Assignment
@@ -178,59 +184,64 @@ disambiguate_assignment_from_expression_statement :: proc(using parser: ^Parser)
 	return false
 }
 
-parse_assignment :: proc(using parser: ^Parser) -> (stmt: Assignment) {
+parse_assignment :: proc(using parser: ^Parser) -> (assignment: Assignment, err: Error) {
 	// exprList "=" exprList
-	left_values := parse_expression_list(parser)
+	left_values := parse_expression_list(parser) or_return
+
 	if _, ok := parser_expect_consume(parser, .Equal); !ok {
+		err = .NoExpectedToken
 		return
 	}
-	right_values := parse_expression_list(parser)
+
+	right_values := parse_expression_list(parser) or_return
 
 	if len(right_values) != len(left_values) {
-		emit_error(.SizeMismatch, "Mismatched sizes for assignment %v = %v", len(right_values), len(left_values))
+		err = emit_error(.SizeMismatch, "Mismatched sizes for assignment %v = %v", len(right_values), len(left_values))
 		return
 	}
 
-	stmt = Assignment {
+	assignment = Assignment {
 		left_side = left_values,
 		right_side = right_values,
 	}
 	return
 }
 
-parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
+parse_var_declaration :: proc(using parser: ^Parser) -> (declaration: VarDeclaration, err: Error) {
 	// idList: typeExpr ("=" exprList)?
-	ids := parse_identifier_list(parser)
+	ids := parse_identifier_list(parser) or_return
 	type: TypeExpression
 	exprs: []^Expression
 
 	if _, ok := parser_expect_consume(parser, .Colon); ok {
-		type = parse_type_expression(parser)
+		type = parse_type_expression(parser) or_return
 	}
 	else {
-		return VarDeclaration{}
+		err = .NoExpectedToken
+		return
 	}
 
 	has_assign := false
 	if _, ok := parser_match_consume(parser, .Equal); ok {
 		has_assign = true
-		exprs = parse_expression_list(parser)
+		exprs = parse_expression_list(parser) or_return
 	}
 
-	decl := VarDeclaration {
+	if has_assign && len(exprs) != len(ids){
+		err = emit_error(.SizeMismatch, "Mismatched sizes for assignment: %v = %v", len(ids), len(exprs))
+		return
+	}
+
+	declaration = VarDeclaration {
 		identifiers = ids,
 		type = type,
 		expressions = exprs,
 	}
 
-	if has_assign && len(exprs) != len(ids){
-		emit_error(.SizeMismatch, "Mismatched sizes for assignment: %v = %v", len(ids), len(exprs))
-	}
-
-	return decl
+	return
 }
 
-parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
+parse_type_expression :: proc(using parser: ^Parser) -> (type_expr: TypeExpression, err: Error) {
 	// ("[]" | "^")* id
 	qualifiers := make([dynamic]Qualifier)
 	name: Identifier
@@ -249,27 +260,28 @@ parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
 			break
 		}
 		else {
-			emit_error(.UnexpectedToken, "Expected '^', '[]', or identifier in type expression")
+			err = emit_error(.UnexpectedToken, "Expected '^', '[]', or identifier in type expression")
+			return
 		}
 	}
 	resize(&qualifiers, len(qualifiers))
 
-	exp := TypeExpression {
+	type_expr = TypeExpression {
 		name = name,
 		qualifiers = qualifiers[:],
 	}
-	return exp
+	return
 }
 
-parse_identifier_list :: proc(using parser: ^Parser) -> []Identifier {
+parse_identifier_list :: proc(using parser: ^Parser) -> (list: []Identifier, err: Error) {
 	ids := make([dynamic]Identifier)
 
 	if tk, ok := parser_expect_consume(parser, .Identifier); ok {
 		append(&ids, Identifier(tk.lexeme))
 	}
 	else {
-		emit_error(.NoExpectedToken, "Expected identifier.")
-		return nil
+		err = .NoExpectedToken
+		return
 	}
 
 	for !parser_end(parser^){
@@ -278,7 +290,8 @@ parse_identifier_list :: proc(using parser: ^Parser) -> []Identifier {
 				append(&ids, Identifier(id.lexeme))
 			}
 			else {
-				return nil
+				err = .NoExpectedToken
+				return
 			}
 		}
 		else {
@@ -287,13 +300,15 @@ parse_identifier_list :: proc(using parser: ^Parser) -> []Identifier {
 	}
 
 	resize(&ids, len(ids))
-	return ids[:]
+	list = ids[:]
+	return
 }
 
-parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> []^Expression {
+parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> (list: []^Expression, err: Error) {
 	exprs := make([dynamic]^Expression)
+
 	// NOTE: An expression list must have at least one element
-	leading := parse_expression(parser)
+	leading := parse_expression(parser) or_return
 	append(&exprs, leading)
 
 	for !parser_end(parser^){
@@ -302,7 +317,7 @@ parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(T
 				break
 			}
 			else {
-				exp := parse_expression(parser)
+				exp := parse_expression(parser) or_return
 				append(&exprs, exp)
 			}
 		}
@@ -313,38 +328,43 @@ parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(T
 	}
 
 	resize(&exprs, len(exprs))
-	return exprs[:]
+
+	list = exprs[:]
+	return
 }
 
-parse_expression :: proc(using parser: ^Parser) -> ^Expression {
-	e := parse_unary(parser)
-	return parse_binary(parser, e, 0)
+parse_expression :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
+	e := parse_unary(parser) or_return
+	expression = parse_binary(parser, e, 0) or_return
+	return
 }
 
-parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> ^Expression {
+parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> (expression: ^Expression, err:Error) {
 	// expr "[" expr "]"
-	index := parse_expression(parser)
+	index := parse_expression(parser) or_return
 	if _, ok := parser_expect_consume(parser, .SquareClose); !ok {
-		return nil
+		err = .NoExpectedToken
+		return
 	}
 
-	exp := new(Expression)
-	exp^ = Indexing {
+	expression = new(Expression)
+	expression^ = Indexing {
 		object = object,
 		index = index,
 	}
-	return exp
+
+	return
 }
 
-parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> ^Expression {
+parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> (expression: ^Expression, err: Error) {
 	log.debug("FUN", parser_peek(parser, 0))
 	args: []^Expression
 
 	if parser_peek(parser).kind != .ParenClose {
-		args = parse_expression_list(parser, allow_trailing_on = .ParenClose)
+		args = parse_expression_list(parser, allow_trailing_on = .ParenClose) or_return
 		if _, ok := parser_expect_consume(parser, .ParenClose); !ok {
-			emit_error(.NoExpectedToken, "Expected ')'")
-			return nil
+			err = emit_error(.NoExpectedToken, "Expected ')'")
+			return
 		}
 	}
 	else {
@@ -352,15 +372,15 @@ parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> ^Expres
 		parser_advance(parser)
 	}
 
-	exp := new(Expression)
-	exp^ = FunctionCall {
+	expression = new(Expression)
+	expression^ = FunctionCall {
 		func = func,
 		args = args,
 	}
-	return exp
+	return
 }
 
-parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i16) -> ^Expression {
+parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i16) -> (expression: ^Expression, err: Error) {
 	left := left
 	right : ^Expression
 	lookahead := parser_peek(parser)
@@ -374,15 +394,15 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 		_ = parser_advance(parser)
 
 		if op.kind == .ParenOpen {
-			left = parse_function_call(parser, left)
+			left = parse_function_call(parser, left) or_return
 			parsed_func = true
 		}
 		else if op.kind == .SquareOpen {
-			left = parse_indexing(parser, left)
+			left = parse_indexing(parser, left) or_return
 			parsed_index = true
 		}
 		else {
-			right = parse_unary(parser)
+			right = parse_unary(parser) or_return
 		}
 
 		lookahead = parser_peek(parser)
@@ -392,75 +412,79 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 				(associativity(lookahead) == .Right && precedence(lookahead) == precedence(op)))
 		{
 			lookahead_prec_is_greater := precedence(lookahead) > precedence(op)
-			right     = parse_binary(parser, right, precedence(op) + i16(lookahead_prec_is_greater))
+			right     = parse_binary(parser, right, precedence(op) + i16(lookahead_prec_is_greater)) or_return
 			lookahead = parser_peek(parser)
 		}
 
 		if parsed_func || parsed_index {
 			// No need to create a binary op
+			expression = left
 			continue
 		}
 		else {
-			exp := new(Expression)
-			exp^ = Binary {
+			expression = new(Expression)
+			expression^ = Binary {
 				left_side = left,
 				right_side = right,
 				operator = op.kind,
 			}
-			left = exp
+			left = expression
 		}
 	}
-
-	return left
+	expression = left
+	return
 }
 
-parse_unary :: proc(using parser: ^Parser) -> ^Expression {
+parse_unary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
 	if tk, ok := parser_match_consume(parser, .BitXor, .Minus, .Plus, .LogicNot); ok {
 		operator := tk
-		operand  := parse_unary(parser)
+		operand  := parse_unary(parser) or_return
 
-		exp := new(Expression)
-		exp^ = Unary {
+		expression = new(Expression)
+		expression^ = Unary {
 			operator = operator.kind,
 			operand = operand,
 		}
-		return exp
+		return
 	}
 
-	exp := parse_primary(parser)
-	return exp
+	expression = parse_primary(parser) or_return
+	return
 }
 
-parse_primary :: proc(using parser: ^Parser) -> ^Expression {
+parse_primary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
 	if tk, ok := parser_match_consume(parser, ..LITERAL_KINDS); ok {
-		exp := new_literal(tk)
-		return exp
+		expression = new_literal(tk)
+		return
 	}
 
 	if tk, ok := parser_match_consume(parser, .Identifier); ok {
 		next := parser_peek(parser, 0)
-		exp := new(Expression)
 		id := Identifier(tk.lexeme)
-		exp^ = Primary(id)
-		return exp
+
+		log.debug("ID: ", tk)
+		expression = new(Expression)
+		expression^ = Primary(id)
+		return
 	}
 
 	if tk, ok := parser_match_consume(parser, .ParenOpen); ok {
-		inner := parse_expression(parser)
+		inner := parse_expression(parser) or_return
 		left, ok := parser_expect_consume(parser, .ParenClose)
 		if !ok {
 			panic("TODO: Parser sync()")
 		}
-		exp := new(Expression)
-		exp^ = Group {
+
+		expression = new(Expression)
+		expression^ = Group {
 			inner = inner,
 		}
-		return exp
+		return
 	}
 
-	log.warn(parser_peek(parser, 0))
-	emit_error(.BadExpression, "Ill formed expression")
-	return nil
+	// log.warn(parser_peek(parser, 0))
+	err = emit_error(.BadExpression, "Ill formed expression")
+	return
 }
 
 associativity :: proc(tk: $T) -> Associativity {

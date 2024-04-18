@@ -32,7 +32,10 @@ parse :: proc(tokens : []Token) -> Scope {
 		tokens = parser_tokens[:],
 	}
 
-	s := parse_scope(&parser)
+	s, err := parse_scope(&parser)
+	if err != nil {
+		return Scope{}
+	}
 	return s
 }
 

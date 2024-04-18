@@ -38,7 +38,7 @@ error_name :: proc(e: Error) -> string {
 	return msg
 }
 
-emit_error :: proc(e: Error, format: string = "", args: ..any, loc := #caller_location){
+emit_error :: proc(e: Error, format: string = "", args: ..any, loc := #caller_location) -> Error {
 	assert(e != nil, "Cannot emmit a nil error")
 	if len(format) > 0 {
 		f := fmt.tprintf("%s: %s", error_name(e), format)
@@ -47,5 +47,6 @@ emit_error :: proc(e: Error, format: string = "", args: ..any, loc := #caller_lo
 	else {
 		log.errorf("%s: %s", error_name(e), e, location = loc)
 	}
+	return e
 }
 
