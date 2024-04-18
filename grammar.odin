@@ -11,27 +11,38 @@ Statement :: union {
 	Scope,
 }
 
-Scope :: struct {
-	body: []Statement,
-}
-
-If :: struct {}
-
-For :: struct {}
-
 InlineStatement :: union {
 	ExpressionStatement,
 	VarDeclaration,
 	Assignment,
+	Return,
 	Break,
 	Continue,
 }
+
+
+Scope :: struct {
+	body: []Statement,
+}
+
+If :: struct {
+	condition: ^Expression,
+	using scope: Scope,
+
+	else_branch: ^Statement, // NOTE: Can only be Scope or If
+}
+
+For :: struct {}
 
 ExpressionStatement :: distinct ^Expression
 
 Break :: struct {}
 
 Continue :: struct {}
+
+Return :: struct {
+	value: ^Expression,
+}
 
 VarDeclaration :: struct {
 	identifiers: []Identifier,
@@ -98,7 +109,53 @@ Primary :: union {
 	NilType,
 }
 
-parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
+is_top_level_statement :: proc(stmt: Statement) -> bool {
+	v := false
+	switch body in stmt {
+	case If, For, Scope: v = false
+	case InlineStatement:
+		switch _ in body {
+		case Break, Continue, Return, Assignment, ExpressionStatement: v = false
+		case VarDeclaration: v = true;
+		}
+	}
+	return v
+}
+
+// parse_file :: proc(parser: ^Parser, tokens: []Token) -> (program: []Statement, err: Error) {
+// 	statements := make([dynamic]Statement)
+// 	for !parser_end(parser^){
+// 	}
+// }
+
+parse_if_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
+	cond := parse_expression(parser) or_return
+	scope := parse_scope(parser) or_return
+
+	if_block := If {
+		condition = cond,
+		scope = scope,
+	}
+
+	if _, ok := parser_match_consume(parser, .Else); ok{
+		if _, ok := parser_match_consume(parser, .If); ok {
+			tmp := parse_if_block(parser) or_return
+			if_block.else_branch = new(Statement)
+			if_block.else_branch^ = tmp
+		}
+		else {
+			tmp := parse_scope(parser) or_return
+			if_block.else_branch = new(Statement)
+			if_block.else_branch^ = tmp
+		}
+	}
+
+	statement = if_block
+
+	return
+}
+
+parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 	// "{" statement* "}"
 	if _, ok := parser_expect_consume(parser, .CurlyOpen); !ok {
 		err = .NoExpectedToken
@@ -121,6 +178,14 @@ parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
 		if _, ok := parser_match_consume(parser, .CurlyOpen); ok {
 			stmt = parse_scope(parser) or_return
 			append(&statements)
+			continue
+		}
+
+		// If
+		if _, ok := parser_match_consume(parser, .If); ok {
+			stmt = parse_if_block(parser) or_return
+			append(&statements, stmt)
+			continue
 		}
 
 		// Inline statement
@@ -133,11 +198,11 @@ parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
 				err = .NoExpectedToken
 				return
 			}
+			append(&statements, stmt)
 		}
 		else {
 			if disambiguate_assignment_from_expression_statement(parser) {
 				assign := parse_assignment(parser) or_return
-				log.debug("ASSIGN IS: ", assign)
 				stmt = InlineStatement(assign)
 			}
 			else {
@@ -149,8 +214,8 @@ parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
 				err = .NoExpectedToken
 				return
 			}
+			append(&statements, stmt)
 		}
-		append(&statements, stmt)
 	}
 
 	if !closed {
@@ -168,7 +233,7 @@ parse_scope :: proc(using parser: ^Parser) -> (scope: Scope, err: Error) {
 
 // True: Assignment
 // False: ExpressionStatement
-disambiguate_assignment_from_expression_statement :: proc(using parser: ^Parser) -> bool {
+disambiguate_assignment_from_expression_statement :: proc(parser: ^Parser) -> bool {
 	restore := parser.current
 	defer parser.current = restore
 
@@ -184,7 +249,7 @@ disambiguate_assignment_from_expression_statement :: proc(using parser: ^Parser)
 	return false
 }
 
-parse_assignment :: proc(using parser: ^Parser) -> (assignment: Assignment, err: Error) {
+parse_assignment :: proc(parser: ^Parser) -> (assignment: Assignment, err: Error) {
 	// exprList "=" exprList
 	left_values := parse_expression_list(parser) or_return
 
@@ -207,7 +272,7 @@ parse_assignment :: proc(using parser: ^Parser) -> (assignment: Assignment, err:
 	return
 }
 
-parse_var_declaration :: proc(using parser: ^Parser) -> (declaration: VarDeclaration, err: Error) {
+parse_var_declaration :: proc(parser: ^Parser) -> (declaration: VarDeclaration, err: Error) {
 	// idList: typeExpr ("=" exprList)?
 	ids := parse_identifier_list(parser) or_return
 	type: TypeExpression
@@ -241,7 +306,7 @@ parse_var_declaration :: proc(using parser: ^Parser) -> (declaration: VarDeclara
 	return
 }
 
-parse_type_expression :: proc(using parser: ^Parser) -> (type_expr: TypeExpression, err: Error) {
+parse_type_expression :: proc(parser: ^Parser) -> (type_expr: TypeExpression, err: Error) {
 	// ("[]" | "^")* id
 	qualifiers := make([dynamic]Qualifier)
 	name: Identifier
@@ -273,7 +338,7 @@ parse_type_expression :: proc(using parser: ^Parser) -> (type_expr: TypeExpressi
 	return
 }
 
-parse_identifier_list :: proc(using parser: ^Parser) -> (list: []Identifier, err: Error) {
+parse_identifier_list :: proc(parser: ^Parser) -> (list: []Identifier, err: Error) {
 	ids := make([dynamic]Identifier)
 
 	if tk, ok := parser_expect_consume(parser, .Identifier); ok {
@@ -304,7 +369,7 @@ parse_identifier_list :: proc(using parser: ^Parser) -> (list: []Identifier, err
 	return
 }
 
-parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> (list: []^Expression, err: Error) {
+parse_expression_list :: proc(parser: ^Parser, allow_trailing_on : Maybe(TokenKind) = nil) -> (list: []^Expression, err: Error) {
 	exprs := make([dynamic]^Expression)
 
 	// NOTE: An expression list must have at least one element
@@ -333,13 +398,13 @@ parse_expression_list :: proc(using parser: ^Parser, allow_trailing_on : Maybe(T
 	return
 }
 
-parse_expression :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
+parse_expression :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) {
 	e := parse_unary(parser) or_return
 	expression = parse_binary(parser, e, 0) or_return
 	return
 }
 
-parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> (expression: ^Expression, err:Error) {
+parse_indexing :: proc(parser: ^Parser, object: ^Expression) -> (expression: ^Expression, err:Error) {
 	// expr "[" expr "]"
 	index := parse_expression(parser) or_return
 	if _, ok := parser_expect_consume(parser, .SquareClose); !ok {
@@ -356,8 +421,7 @@ parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> (expressio
 	return
 }
 
-parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> (expression: ^Expression, err: Error) {
-	log.debug("FUN", parser_peek(parser, 0))
+parse_function_call :: proc(parser: ^Parser, func: ^Expression) -> (expression: ^Expression, err: Error) {
 	args: []^Expression
 
 	if parser_peek(parser).kind != .ParenClose {
@@ -380,7 +444,7 @@ parse_function_call :: proc(using parser: ^Parser, func: ^Expression) -> (expres
 	return
 }
 
-parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i16) -> (expression: ^Expression, err: Error) {
+parse_binary :: proc(parser: ^Parser, left: ^Expression, min_precedence: i16) -> (expression: ^Expression, err: Error) {
 	left := left
 	right : ^Expression
 	lookahead := parser_peek(parser)
@@ -435,7 +499,7 @@ parse_binary :: proc(using parser: ^Parser, left: ^Expression, min_precedence: i
 	return
 }
 
-parse_unary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
+parse_unary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) {
 	if tk, ok := parser_match_consume(parser, .BitXor, .Minus, .Plus, .LogicNot); ok {
 		operator := tk
 		operand  := parse_unary(parser) or_return
@@ -452,7 +516,7 @@ parse_unary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Err
 	return
 }
 
-parse_primary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: Error) {
+parse_primary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) {
 	if tk, ok := parser_match_consume(parser, ..LITERAL_KINDS); ok {
 		expression = new_literal(tk)
 		return
@@ -482,7 +546,7 @@ parse_primary :: proc(using parser: ^Parser) -> (expression: ^Expression, err: E
 		return
 	}
 
-	// log.warn(parser_peek(parser, 0))
+	log.warn(parser_peek(parser, 0))
 	err = emit_error(.BadExpression, "Ill formed expression")
 	return
 }

@@ -14,39 +14,53 @@ print_type :: proc(t: TypeExpression){
 	fmt.print(t.name)
 }
 
-print_scope :: proc(scope: Scope){
+printf :: proc(level: int, format: string, args: ..any){
+	for _ in 0..<level {
+		fmt.print("    ")
+	}
+	fmt.printf(format, ..args)
+}
+
+print_scope :: proc(scope: Scope, n := 0){
+	printf(n - 1, "{{\n")
+	defer printf(n - 1, "}}\n")
+
 	for stmt in scope.body {
 		switch s in stmt {
 		case InlineStatement:
 			switch v in s {
 			case ExpressionStatement:
+				printf(n, "")
 				print_expression(cast(^Expression)v)
+			case Return:
+				printf(n, "return ")
+				print_expression(v.value)
 			case Break:
-				fmt.println("break")
+				printf(n, "break")
 			case Continue:
-				fmt.println("continue")
+				printf(n, "continue")
 			case Assignment:
-				fmt.println("assign")
+				printf(n, "assign\n")
 				for _, i in v.left_side {
-					fmt.print("  ")
+					printf(n + 1, "")
 					print_expression(v.left_side[i])
-					fmt.printf(" = ")
+					fmt.print(" = ")
 					print_expression(v.right_side[i])
 					fmt.println()
 				}
 
 			case VarDeclaration:
-				fmt.println("var")
+				printf(n, "var\n")
 				if len(v.expressions) == 0 {
 					for id in v.identifiers {
-						fmt.printf("  %s: ", id)
+						printf(n + 1, "%s: ", id)
 						print_type(v.type)
 						fmt.println()
 					}
 				}
 				else {
 					for id, i in v.identifiers {
-						fmt.printf("  %s: ", id)
+						printf(n + 1, "%s: ", id)
 						print_type(v.type)
 						fmt.printf(" = ")
 						print_expression(v.expressions[i])
@@ -54,12 +68,30 @@ print_scope :: proc(scope: Scope){
 					}
 				}
 			}
-			fmt.println(";")
 
 		case If:
+			printf(n, "if ")
+			print_expression(s.condition)
+			print_scope(s.scope, n + 1)
+
+			cur := s.else_branch
+			for cur != nil {
+				#partial switch blk in cur {
+				case If:
+					printf(n, "else if ")
+					print_expression(s.condition)
+					print_scope(blk.scope, n + 1)
+					cur = cur.(If).else_branch
+				case Scope:
+					printf(n, "else ")
+					print_scope(blk, n + 1)
+					cur = nil
+				}
+			}
+
 		case For:
 		case Scope:
-			print_scope(s)
+			print_scope(s, n + 1)
 		}
 	}
 }
