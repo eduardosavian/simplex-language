@@ -26,6 +26,15 @@ print_scope :: proc(scope: Scope){
 			case Continue:
 				fmt.println("continue")
 			case Assignment:
+				fmt.println("assign")
+				for _, i in v.left_side {
+					fmt.print("  ")
+					print_expression(v.left_side[i])
+					fmt.printf(" = ")
+					print_expression(v.right_side[i])
+					fmt.println()
+				}
+
 			case VarDeclaration:
 				fmt.println("var")
 				if len(v.expressions) == 0 {

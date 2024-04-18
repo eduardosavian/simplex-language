@@ -50,8 +50,8 @@ Qualifier :: enum i8 {
 }
 
 Assignment :: struct {
-	left_side: []Expression,
-	right_side: []Expression,
+	left_side: []^Expression,
+	right_side: []^Expression,
 }
 
 Expression :: union {
@@ -98,15 +98,29 @@ Primary :: union {
 	NilType,
 }
 
-// Parses a whole file into one "file scope"
-parse_file :: parse_scope
-
 parse_scope :: proc(using parser: ^Parser) -> Scope {
+	// "{" statement* "}"
+	if _, ok := parser_expect_consume(parser, .CurlyOpen); !ok {
+	}
+
 	statements := make([dynamic]Statement)
+	closed := false
 
 	for !parser_end(parser^){
-		log.debug("FILE: ", parser.tokens[current])
 		stmt : Statement
+
+		// Close current scope
+		if _, ok := parser_match_consume(parser, .CurlyClose); ok {
+			closed = true
+			break
+		}
+
+		// New Sub-Scope
+		if _, ok := parser_match_consume(parser, .CurlyOpen); ok {
+			stmt = parse_scope(parser)
+			append(&statements)
+		}
+
 		// Inline statement
 		if tk, ok := parser_match_consume(parser, .Var); ok {
 			#partial switch tk.kind {
@@ -118,14 +132,27 @@ parse_scope :: proc(using parser: ^Parser) -> Scope {
 			}
 		}
 		else {
-			expr := ExpressionStatement(parse_expression(parser))
-			stmt = InlineStatement(expr)
+			if disambiguate_assignment_from_expression_statement(parser) {
+				assign := parse_assignment(parser)
+				stmt = InlineStatement(assign)
+			}
+			else {
+				expr := ExpressionStatement(parse_expression(parser))
+				stmt = InlineStatement(expr)
+			}
+
 			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
 				return Scope{}
 			}
 		}
 		append(&statements, stmt)
 	}
+
+	if !closed {
+		emit_error(.NoExpectedToken, "Unclosed scope.")
+		return Scope{}
+	}
+
 	resize(&statements, len(statements))
 
 	return Scope {
@@ -133,8 +160,46 @@ parse_scope :: proc(using parser: ^Parser) -> Scope {
 	}
 }
 
+// True: Assignment
+// False: ExpressionStatement
+disambiguate_assignment_from_expression_statement :: proc(using parser: ^Parser) -> bool {
+	restore := parser.current
+	defer parser.current = restore
+
+	for !parser_end(parser^) {
+		tk := parser_advance(parser)
+		if tk.kind == .Equal {
+			return true
+		}
+		if tk.kind == .Semicolon {
+			return false
+		}
+	}
+	return false
+}
+
+parse_assignment :: proc(using parser: ^Parser) -> (stmt: Assignment) {
+	// exprList "=" exprList
+	left_values := parse_expression_list(parser)
+	if _, ok := parser_expect_consume(parser, .Equal); !ok {
+		return
+	}
+	right_values := parse_expression_list(parser)
+
+	if len(right_values) != len(left_values) {
+		emit_error(.SizeMismatch, "Mismatched sizes for assignment %v = %v", len(right_values), len(left_values))
+		return
+	}
+
+	stmt = Assignment {
+		left_side = left_values,
+		right_side = right_values,
+	}
+	return
+}
+
 parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
-	// idList: typeExpr (= exprList);
+	// idList: typeExpr ("=" exprList)?
 	ids := parse_identifier_list(parser)
 	type: TypeExpression
 	exprs: []^Expression
@@ -166,6 +231,7 @@ parse_var_declaration :: proc(using parser: ^Parser) -> VarDeclaration {
 }
 
 parse_type_expression :: proc(using parser: ^Parser) -> TypeExpression {
+	// ("[]" | "^")* id
 	qualifiers := make([dynamic]Qualifier)
 	name: Identifier
 	for !parser_end(parser^){
@@ -256,7 +322,7 @@ parse_expression :: proc(using parser: ^Parser) -> ^Expression {
 }
 
 parse_indexing :: proc(using parser: ^Parser, object: ^Expression) -> ^Expression {
-
+	// expr "[" expr "]"
 	index := parse_expression(parser)
 	if _, ok := parser_expect_consume(parser, .SquareClose); !ok {
 		return nil

@@ -1,9 +1,8 @@
+{
+	var a, c: int;
 
+	var b: []int;
 
-var a, _, c: ^int = 1, 1 + 2, -4 >> foo(1, a);
-
-var name: string = "Toma";
-var initial: rune = 'r';
-
-println("Hello");
+	a, b[2] = 20, -10, ~0;
+}
 

@@ -32,7 +32,7 @@ parse :: proc(tokens : []Token) -> Scope {
 		tokens = parser_tokens[:],
 	}
 
-	s := parse_file(&parser)
+	s := parse_scope(&parser)
 	return s
 }
 
@@ -77,13 +77,13 @@ parser_match_consume :: proc(using parser: ^Parser, accept: ..TokenKind) -> (Tok
 	return tk, false
 }
 
-parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind) -> (Token, bool){
+parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind, loc := #caller_location) -> (Token, bool){
 	tk := parser_peek(parser, 0)
 	if tk.kind == expect {
 		parser_advance(parser)
 		return tk, true
 	}
-	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind)
+	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind, loc = loc)
 	return tk, false
 }
 
@@ -101,7 +101,7 @@ new_literal :: proc(tk: Token) -> ^Expression {
 	case .Real:   p = tk.payload.(f64)
 	case .Rune:   p = tk.payload.(rune)
 	case .String: p = tk.payload.(string)
-	case: panic("Invalid literal")
+	case: panic("Not a literal")
 	}
 
 	exp^ = p
