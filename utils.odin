@@ -21,61 +21,70 @@ printf :: proc(level: int, format: string, args: ..any){
 	fmt.printf(format, ..args)
 }
 
+print_inline_stmt :: proc(s: InlineStatement, n: int){
+	switch v in s {
+	case ExpressionStatement:
+		printf(n, "")
+		print_expression(cast(^Expression)v)
+		fmt.print(";\n")
+	case Return:
+		printf(n, "return ")
+		print_expression(v.value)
+		fmt.print(";\n")
+	case Break:
+		printf(n, "break;\n")
+	case Continue:
+		printf(n, "continue;\n")
+	case Assignment:
+		printf(n, "assign\n")
+		for _, i in v.left_side {
+			printf(n + 1, "")
+			print_expression(v.left_side[i])
+			fmt.print(" = ")
+			print_expression(v.right_side[i])
+			fmt.println()
+		}
+		printf(n, ";\n")
+
+	case VarDeclaration:
+		printf(n, "var\n")
+		if len(v.expressions) == 0 {
+			for id in v.identifiers {
+				printf(n + 1, "%s: ", id)
+				print_type(v.type)
+				fmt.println()
+			}
+		}
+		else {
+			for id, i in v.identifiers {
+				printf(n + 1, "%s: ", id)
+				print_type(v.type)
+				fmt.printf(" = ")
+				print_expression(v.expressions[i])
+				fmt.println()
+			}
+		}
+		printf(n, ";\n")
+	}
+}
+
 print_scope :: proc(scope: Scope, n := 0){
-	printf(n - 1, "{{\n")
-	defer printf(n - 1, "}}\n")
+	if n > 0 {
+		printf(n - 1, "{{\n")
+	}
+	defer if n > 0 {
+		printf(n - 1, "}}\n")
+	}
 
 	for stmt in scope.body {
 		switch s in stmt {
 		case InlineStatement:
-			switch v in s {
-			case ExpressionStatement:
-				printf(n, "")
-				print_expression(cast(^Expression)v)
-				fmt.print(";\n")
-			case Return:
-				printf(n, "return ")
-				print_expression(v.value)
-				fmt.print(";\n")
-			case Break:
-				printf(n, "break;\n")
-			case Continue:
-				printf(n, "continue;\n")
-			case Assignment:
-				printf(n, "assign\n")
-				for _, i in v.left_side {
-					printf(n + 1, "")
-					print_expression(v.left_side[i])
-					fmt.print(" = ")
-					print_expression(v.right_side[i])
-					fmt.println()
-				}
-				printf(n, ";\n")
-
-			case VarDeclaration:
-				printf(n, "var\n")
-				if len(v.expressions) == 0 {
-					for id in v.identifiers {
-						printf(n + 1, "%s: ", id)
-						print_type(v.type)
-						fmt.println()
-					}
-				}
-				else {
-					for id, i in v.identifiers {
-						printf(n + 1, "%s: ", id)
-						print_type(v.type)
-						fmt.printf(" = ")
-						print_expression(v.expressions[i])
-						fmt.println()
-					}
-				}
-				printf(n, ";\n")
-			}
+			print_inline_stmt(s, n)
 
 		case If:
 			printf(n, "if ")
 			print_expression(s.condition)
+			fmt.println()
 			print_scope(s.scope, n + 1)
 
 			cur := s.else_branch
@@ -94,6 +103,22 @@ print_scope :: proc(scope: Scope, n := 0){
 			}
 
 		case For:
+			if s.pre_stmt != nil {
+				printf(n, "for\n")
+				print_inline_stmt(s.pre_stmt.(InlineStatement), n+1)
+				printf(n+1, "")
+				print_expression(s.condition)
+				fmt.print("\n")
+				print_inline_stmt(s.post_stmt.(InlineStatement), n+1)
+				print_scope(s.scope, n + 1)
+			}
+			else {
+				printf(n, "for ")
+				print_expression(s.condition)
+				fmt.println()
+				print_scope(s.scope, n + 1)
+			}
+
 		case Scope:
 			print_scope(s, n + 1)
 		}

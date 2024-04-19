@@ -18,6 +18,7 @@ parse :: proc(tokens : []Token) -> Scope {
 	parser_tokens := make([dynamic]Token)
 	defer delete(parser_tokens)
 
+	append(&parser_tokens, Token{kind = .CurlyOpen})
 	filter_tokens: {
 		for tk in tokens {
 			if !should_ignore(tk){
@@ -27,6 +28,7 @@ parse :: proc(tokens : []Token) -> Scope {
 		}
 		resize(&parser_tokens, len(parser_tokens))
 	}
+	append(&parser_tokens, Token{kind = .CurlyClose})
 
 	parser := Parser {
 		tokens = parser_tokens[:],

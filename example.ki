@@ -1,14 +1,9 @@
-{
-	if x % 2 == 0 {
-		die();
+for break; i == 1; a, b = i + 2, -i {
+	if true {
 	}
-	else if x % 3 == 1 {
-		live();
-		var a: int = 3 + 1;
-	}
-	else {
-		a();
-		var x: int = 0xfffd;
-	}
+}
+
+for _ {
+	print("AAAAAAAAAAAAA");
 }
 
