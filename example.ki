@@ -1,11 +1,14 @@
-for a, b, i: int = 4, 2, 0; i == 1; a, b = i + 2, -i {
-	if true { "big"; }
-}
 
-for _ {
-	print("AAAAAAAAAAAAA");
-}
+func fizzbuzz(n: int) -> string {
+	msg: string = "";
+	if n % 3 == 0 {
+		msg = msg + "fizz";
+	}
+	if n % 5 == 0 {
+		msg = msg + "buzz";
+		return msg;
+	}
 
-a: int = 1;
-a = 100;
+	return intToString(n);
+}
 

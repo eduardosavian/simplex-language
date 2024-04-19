@@ -81,6 +81,18 @@ print_scope :: proc(scope: Scope, n := 0){
 		case InlineStatement:
 			print_inline_stmt(s, n)
 
+		case Function:
+			printf(n, "func %v ( ", s.name)
+			for a in s.args {
+				printf(n, "")
+				print_type(a.type)
+				fmt.print(" ")
+			}
+			fmt.print(") -> ")
+			print_type(s.return_type)
+			fmt.print("\n")
+			print_scope(s.body, n + 1)
+
 		case If:
 			printf(n, "if ")
 			print_expression(s.condition)

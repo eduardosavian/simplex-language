@@ -9,6 +9,7 @@ Statement :: union {
 	If,
 	For,
 	Scope,
+	Function,
 }
 
 InlineStatement :: union {
@@ -131,6 +132,7 @@ Primary :: union {
 is_top_level_statement :: proc(stmt: Statement) -> bool {
 	v := false
 	switch body in stmt {
+	case Function: v = true
 	case If, For, Scope: v = false
 	case InlineStatement:
 		switch _ in body {
@@ -177,7 +179,13 @@ disambiguate_for_loop_type :: proc(parser: ^Parser) -> bool {
 	return false
 }
 
-parse_function_declaration :: proc(parser: ^Parser) -> (func: Function, err: Error) {}
+parse_return :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
+	ret := Return {
+		value = parse_expression(parser) or_return,
+	}
+	statement = InlineStatement(ret)
+	return
+}
 
 parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 	complex_for := disambiguate_for_loop_type(parser)
@@ -215,6 +223,45 @@ parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 		statement = for_block
 	}
 
+	return
+}
+
+parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Error){
+	args: []Field
+	return_type: TypeExpression
+
+	name, ok := parser_expect_consume(parser, .Identifier)
+	if !ok {
+		err = emit_error(.NoExpectedToken, "Expected identifier")
+		return
+	}
+
+	if tk, ok := parser_expect_consume(parser, .ParenOpen); !ok {
+		err = emit_error(.UnexpectedToken, "Expected `(`, found %v", tk)
+		return
+	}
+
+
+	if parser_peek(parser).kind != .ParenClose {
+		args = parse_field_list(parser) or_return
+	}
+
+	if _, ok := parser_expect_consume(parser, .ParenClose); ok {
+		err = .NoExpectedToken
+		return
+	}
+
+	if _, ok := parser_match_consume(parser, .Arrow); ok {
+		return_type = parse_type_expression(parser) or_return
+	}
+
+	body := parse_scope(parser) or_return
+
+	func = Function {
+		args = args,
+		return_type = return_type,
+		body = body,
+	}
 	return
 }
 
@@ -292,6 +339,11 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 		if _, ok := parser_match_consume(parser, .CurlyClose); ok {
 			closed = true
 			break
+		}
+
+		// Function definition
+		if _, ok := parser_match_consume(parser, .Func); ok {
+			stmt = parse_function_definition(parser) or_return
 		}
 
 		// New Sub-Scope

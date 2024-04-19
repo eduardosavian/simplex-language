@@ -63,7 +63,7 @@ TokenKind :: enum i8 {
 	ParenOpen, ParenClose,
 	CurlyOpen, CurlyClose,
 	SquareOpen, SquareClose,
-	Dot, Comma, Colon, Equal, Semicolon, Caret,
+	Dot, Comma, Colon, Equal, Semicolon, Caret, Arrow,
 
 	// Literals
 	True, False, Int, Real, String, Rune, Nil,
@@ -154,7 +154,15 @@ tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 		case '^': append(&tokens, Token{kind = .Caret})
 
 		case '+': append(&tokens, Token{kind = .Plus})
-		case '-': append(&tokens, Token{kind = .Minus})
+		case '-':
+			switch r, _ := lexer_peek(lex); r {
+			case '-':
+				append(&tokens, Token{kind = .Minus})
+			case '>':
+				append(&tokens, Token{kind = .Arrow})
+				lexer_advance(lex)
+			}
+
 		case '*': append(&tokens, Token{kind = .Star})
 		case '%': append(&tokens, Token{kind = .Modulo})
 		case '/':
