@@ -1,12 +1,11 @@
-for a, b, i: int = 4, 2, 0 ; i == 1; a, b = i + 2, -i {
-	if true {
-	}
+for a, b, i: int = 4, 2, 0; i == 1; a, b = i + 2, -i {
+	if true { "big"; }
 }
 
 for _ {
 	print("AAAAAAAAAAAAA");
 }
 
-a: int =;
+a: int = 1;
 a = 100;
 

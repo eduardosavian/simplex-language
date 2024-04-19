@@ -50,6 +50,13 @@ Return :: struct {
 	value: ^Expression,
 }
 
+Function :: struct {
+	name: Identifier,
+	args: []Field,
+	return_type: TypeExpression,
+	body: Scope,
+}
+
 VarDeclaration :: struct {
 	identifiers: []Identifier,
 	type: TypeExpression,
@@ -59,6 +66,12 @@ VarDeclaration :: struct {
 TypeExpression :: struct {
 	name: Identifier,
 	qualifiers: []Qualifier,
+}
+
+// Can be the field of a struct or argument to a function
+Field :: struct {
+	name: Identifier,
+	type: TypeExpression,
 }
 
 Qualifier :: enum i8 {
@@ -163,6 +176,8 @@ disambiguate_for_loop_type :: proc(parser: ^Parser) -> bool {
 	}
 	return false
 }
+
+parse_function_declaration :: proc(parser: ^Parser) -> (func: Function, err: Error) {}
 
 parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 	complex_for := disambiguate_for_loop_type(parser)
@@ -391,6 +406,54 @@ parse_var_declaration :: proc(parser: ^Parser) -> (declaration: VarDeclaration, 
 		expressions = exprs,
 	}
 
+	return
+}
+
+
+
+parse_field_entry :: proc(parser: ^Parser) -> (field: Field, err: Error){
+	name, ok := parser_expect_consume(parser, .Identifier)
+	if !ok {
+		err = .NoExpectedToken
+		return
+	}
+	if _, ok := parser_expect_consume(parser, .Colon); !ok {
+		err = .NoExpectedToken
+		return
+	}
+	type := parse_type_expression(parser) or_return
+
+	field = Field {
+		name = Identifier(name.lexeme),
+		type = type,
+	}
+	return
+}
+
+parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFile) -> (list: []Field, err: Error){
+	fields := make([dynamic]Field)
+
+	first := parse_field_entry(parser) or_return
+	append(&fields, first)
+
+	for !parser_end(parser^) {
+		if _, ok := parser_match_consume(parser, .Comma); ok {
+			if parser_peek(parser).kind == allow_trailing_on {
+				break
+			}
+			else {
+				field := parse_field_entry(parser) or_return
+				append(&fields, field)
+			}
+		}
+		else {
+			// Nothing more to parse
+			break
+		}
+	}
+
+	resize(&fields, len(fields))
+	list = fields[:]
 	return
 }
 
