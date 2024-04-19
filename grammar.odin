@@ -27,12 +27,18 @@ Scope :: struct {
 
 If :: struct {
 	condition: ^Expression,
-	using scope: Scope,
-
 	else_branch: ^Statement, // NOTE: Can only be Scope or If
+
+	using scope: Scope,
 }
 
-For :: struct {}
+For :: struct {
+	condition: ^Expression,
+	pre_stmt: ^Statement,
+	post_stmt: ^Statement,
+
+	using scope: Scope,
+}
 
 ExpressionStatement :: distinct ^Expression
 
@@ -128,6 +134,78 @@ is_top_level_statement :: proc(stmt: Statement) -> bool {
 // 	}
 // }
 
+// true: Complex for
+// false: Simple for
+@private
+disambiguate_for_loop_type :: proc(parser: ^Parser) -> bool {
+	restore := parser.current
+	defer parser.current = restore
+
+	for !parser_end(parser^){
+		tk := parser_advance(parser)
+		if tk.kind == .Semicolon {
+			return true
+		}
+		if tk.kind == .CurlyOpen {
+			return false
+		}
+	}
+	return false
+}
+
+parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
+	// complex_for := disambiguate_for_loop_type(parser)
+	//
+	// if complex_for {
+	// 	pre := parse_inline_statement(parser) or_return
+	// }
+	// else {
+	// }
+	unimplemented()
+}
+
+parse_inline_statement :: proc(parser: ^Parser, force_semicolon := true) -> (statement: Statement, err: Error){
+	if tk, ok := parser_match_consume(parser, .Var); ok {
+		#partial switch tk.kind {
+		case .Var:
+			statement = InlineStatement(parse_var_declaration(parser) or_return)
+		}
+		if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
+			err = .NoExpectedToken
+		}
+		return
+	}
+
+	if tk, ok := parser_match_consume(parser, .Break); ok{
+		statement = InlineStatement(Break{})
+		return
+	}
+
+	if tk, ok := parser_match_consume(parser, .Continue); ok{
+		statement = InlineStatement(Continue{})
+		return
+	}
+
+	// Expression statement
+	if disambiguate_assignment_from_expression_statement(parser) {
+		assign := parse_assignment(parser) or_return
+		statement = InlineStatement(assign)
+	}
+	else {
+		expr := ExpressionStatement(parse_expression(parser) or_return)
+		statement = InlineStatement(expr)
+	}
+
+	if force_semicolon {
+		if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
+			err = .NoExpectedToken
+			return
+		}
+	}
+
+	return
+}
+
 parse_if_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 	cond := parse_expression(parser) or_return
 	scope := parse_scope(parser) or_return
@@ -189,31 +267,8 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 		}
 
 		// Inline statement
-		if tk, ok := parser_match_consume(parser, .Var); ok {
-			#partial switch tk.kind {
-			case .Var:
-				stmt = InlineStatement(parse_var_declaration(parser) or_return)
-			}
-			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
-				err = .NoExpectedToken
-				return
-			}
-			append(&statements, stmt)
-		}
-		else {
-			if disambiguate_assignment_from_expression_statement(parser) {
-				assign := parse_assignment(parser) or_return
-				stmt = InlineStatement(assign)
-			}
-			else {
-				expr := ExpressionStatement(parse_expression(parser) or_return)
-				stmt = InlineStatement(expr)
-			}
-
-			if _, ok := parser_expect_consume(parser, .Semicolon); !ok {
-				err = .NoExpectedToken
-				return
-			}
+		{
+			stmt = parse_inline_statement(parser) or_return
 			append(&statements, stmt)
 		}
 	}
@@ -526,7 +581,6 @@ parse_primary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) 
 		next := parser_peek(parser, 0)
 		id := Identifier(tk.lexeme)
 
-		log.debug("ID: ", tk)
 		expression = new(Expression)
 		expression^ = Primary(id)
 		return

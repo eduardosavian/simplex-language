@@ -32,13 +32,15 @@ print_scope :: proc(scope: Scope, n := 0){
 			case ExpressionStatement:
 				printf(n, "")
 				print_expression(cast(^Expression)v)
+				fmt.print(";\n")
 			case Return:
 				printf(n, "return ")
 				print_expression(v.value)
+				fmt.print(";\n")
 			case Break:
-				printf(n, "break")
+				printf(n, "break;\n")
 			case Continue:
-				printf(n, "continue")
+				printf(n, "continue;\n")
 			case Assignment:
 				printf(n, "assign\n")
 				for _, i in v.left_side {
@@ -48,6 +50,7 @@ print_scope :: proc(scope: Scope, n := 0){
 					print_expression(v.right_side[i])
 					fmt.println()
 				}
+				printf(n, ";\n")
 
 			case VarDeclaration:
 				printf(n, "var\n")
@@ -67,6 +70,7 @@ print_scope :: proc(scope: Scope, n := 0){
 						fmt.println()
 					}
 				}
+				printf(n, ";\n")
 			}
 
 		case If:
