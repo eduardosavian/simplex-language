@@ -31,7 +31,6 @@ Token :: struct {
 }
 
 keywords := map[string]TokenKind {
-	"var"      = .Var,
 	"if"       = .If,
 	"else"     = .Else,
 	"for"      = .For,
@@ -49,7 +48,7 @@ TokenKind :: enum i8 {
 	Comment = 0, LineBreak,
 
 	// Id and reserved words
-	Identifier, Var, If, Else, For, Func, Type, Struct, Break, Continue, Return, 
+	Identifier, If, Else, For, Func, Type, Struct, Break, Continue, Return, 
 
 	// Binary and unary operators
 	Plus, Minus, Star, Slash, Modulo,
@@ -153,7 +152,6 @@ tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 		case '.': append(&tokens, Token{kind = .Dot})
 		case ',': append(&tokens, Token{kind = .Comma})
 		case '^': append(&tokens, Token{kind = .Caret})
-
 
 		case '+': append(&tokens, Token{kind = .Plus})
 		case '-': append(&tokens, Token{kind = .Minus})

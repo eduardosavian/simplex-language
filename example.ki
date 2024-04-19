@@ -1,4 +1,4 @@
-for break; i == 1; a, b = i + 2, -i {
+for a, b, i: int = 4, 2, 0 ; i == 1; a, b = i + 2, -i {
 	if true {
 	}
 }
@@ -6,4 +6,7 @@ for break; i == 1; a, b = i + 2, -i {
 for _ {
 	print("AAAAAAAAAAAAA");
 }
+
+a: int =;
+a = 100;
 

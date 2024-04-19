@@ -128,6 +128,23 @@ is_top_level_statement :: proc(stmt: Statement) -> bool {
 	return v
 }
 
+look_for_var_declaration :: proc(parser: ^Parser) -> bool {
+	restore := parser.current
+	defer parser.current = restore
+
+	for !parser_end(parser^){
+		tk := parser_advance(parser)
+		if tk.kind == .Colon {
+			return true
+		}
+		if tk.kind == .Semicolon {
+			break
+		}
+	}
+
+	return false
+}
+
 // True: Complex for
 // False: Simple for
 @private
@@ -187,16 +204,17 @@ parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 }
 
 parse_inline_statement :: proc(parser: ^Parser, force_semicolon := true) -> (statement: Statement, err: Error){
-	if tk, ok := parser_match_consume(parser, .Var); ok {
-		statement = InlineStatement(parse_var_declaration(parser) or_return)
-	}
-	else if tk, ok := parser_match_consume(parser, .Break); ok{
+	if tk, ok := parser_match_consume(parser, .Break); ok{
 		statement = InlineStatement(Break{})
 	}
 	else if tk, ok := parser_match_consume(parser, .Continue); ok{
 		statement = InlineStatement(Continue{})
 	}
-	else if disambiguate_assignment_from_expression_statement(parser) {
+	else if look_for_var_declaration(parser) {
+		decl := parse_var_declaration(parser) or_return
+		statement = InlineStatement(decl)
+	}
+	else if look_for_assignment(parser){
 		assign := parse_assignment(parser) or_return
 		statement = InlineStatement(assign)
 	}
@@ -302,9 +320,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 	return
 }
 
-// True: Assignment
-// False: ExpressionStatement
-disambiguate_assignment_from_expression_statement :: proc(parser: ^Parser) -> bool {
+look_for_assignment :: proc(parser: ^Parser) -> bool {
 	restore := parser.current
 	defer parser.current = restore
 
@@ -313,8 +329,9 @@ disambiguate_assignment_from_expression_statement :: proc(parser: ^Parser) -> bo
 		if tk.kind == .Equal {
 			return true
 		}
+
 		if tk.kind == .Semicolon {
-			return false
+			break
 		}
 	}
 	return false
@@ -616,7 +633,7 @@ parse_primary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) 
 		return
 	}
 
-	log.warn(parser_peek(parser, 0))
+	log.warn("Unexpected Token:", parser_peek(parser, 0))
 	err = emit_error(.BadExpression, "Ill formed expression")
 	return
 }
