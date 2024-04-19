@@ -128,8 +128,8 @@ is_top_level_statement :: proc(stmt: Statement) -> bool {
 	return v
 }
 
-// true: Complex for
-// false: Simple for
+// True: Complex for
+// False: Simple for
 @private
 disambiguate_for_loop_type :: proc(parser: ^Parser) -> bool {
 	restore := parser.current
