@@ -12,7 +12,6 @@ Statement :: union {
 	For,
 	Scope,
 	FunctionDef,
-	TypeDef,
 }
 
 InlineStatement :: union {
@@ -147,7 +146,7 @@ Primary :: union {
 is_top_level_statement :: proc(stmt: Statement) -> bool {
 	v := false
 	switch body in stmt {
-	case FunctionDef, TypeDef: v = true
+	case FunctionDef: v = true
 	case If, For, Scope: v = false
 	case InlineStatement:
 		switch _ in body {
@@ -406,7 +405,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 	}
 
 	resize(&statements, len(statements))
-	log.debug("S: ", statements)
+	//log.debug("S: ", statements)
 
 	scope = Scope {
 		body = statements[:],

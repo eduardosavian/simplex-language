@@ -2,25 +2,29 @@ package lang
 
 import "core:fmt"
 
-// print_type :: proc(type: Type){
-// 	switch t in type {
-// 	case NoType:
-// 	case FunctionType:
-// 		fmt.print(t)
-// 	case BultinType:
-// 		fmt.print(t)
-// 	case IndirectType:
-// 		for q in t.qualifiers {
-// 			switch q {
-// 			case .Pointer:
-// 				fmt.print("pointer to ")
-// 			case .Slice:
-// 				fmt.print("slice of ")
-// 			}
-// 		}
-// 		fmt.print(t.core_type)
-// 	}
-// }
+print_env :: proc(scope: ^Scope, n := 0){
+	for name, sym in scope.env {
+		printf(n, "%v: ", name)
+		for mod in sym.type.modifiers {
+			switch mod {
+			case .Pointer: fmt.print("^")
+			case .Slice: fmt.print("[]")
+			}
+		}
+		fmt.printf("%v\n", sym.type.backing_type)
+	}
+
+	for stmt in scope.body {
+		#partial switch &v in stmt {
+		case For:
+			print_env(&v.scope, n + 1)
+		case FunctionDef:
+			print_env(&v.scope, n + 1)
+		case Scope:
+			print_env(&v, n + 1)
+		}
+	}
+}
 
 print_parser_type :: proc(type: ParserType){
 	for q in type.modifiers {
@@ -154,8 +158,6 @@ print_scope :: proc(scope: Scope, n := 0){
 		case Scope:
 			print_scope(s, n + 1)
 
-		case TypeDef:
-			printf(n, "type %v %v;", s.name, s.what)
 		}
 	}
 }

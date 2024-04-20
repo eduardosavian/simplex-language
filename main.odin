@@ -46,6 +46,18 @@ main :: proc() {
 	check_time  := time.since(check_begin)
 	log.info("Type Checker took:", check_time)
 
+	print_env(&scope)
+
+	// for s in scope.body {
+	// 	if ss, ok := s.(FunctionDef); ok {
+	// 		fmt.println("(fun) >>", ss.scope.parent, ss.scope.env)
+	// 		continue
+	// 	}
+	// 	if ss, ok := s.(Scope); ok {
+	// 		fmt.println("(scope) >>", ss.parent, ss.env)
+	// 		continue
+	// 	}
+	// }
 }
 
 

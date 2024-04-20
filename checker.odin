@@ -1,5 +1,6 @@
 package lang
 
+import "core:log"
 import "core:reflect"
 import "core:slice"
 
@@ -12,11 +13,10 @@ Rune       :: rune
 Bool       :: bool
 
 Type :: struct {
-	definition: union {
-		FunctionType,
+	modifiers: []Modifier,
+	backing_type: union {
 		PrimitiveType,
-		IndirectType,
-		NoType,
+		FunctionType,
 	},
 	flags: TypeFlags,
 }
@@ -27,14 +27,6 @@ PrimitiveType :: enum {
 	Rune,
 	Bool,
 	String,
-}
-
-IndirectType :: struct {
-	modifiers: []Modifier,
-	backing_type: union {
-		FunctionType,
-		PrimitiveType,
-	},
 }
 
 FunctionType :: struct {
@@ -49,35 +41,26 @@ TypeFlags :: bit_set[TypeFlag]
 TypeFlag :: enum {
 	BuiltIn,
 	Nullable,
+	Parameter,
 }
 
 SymbolKind :: enum {
-	Variable, Function, Type,
+	Variable, Function,
 }
 
 SymbolInfo :: struct {
 	kind: SymbolKind,
-	type: ^Type,
+	type: Type,
 }
 
 Environment :: map[Identifier]SymbolInfo
 
-CheckerContext :: struct {
-	env_stack: [dynamic]Environment,
-}
-
-TYPE_INT    := Type{definition = PrimitiveType.Int,    flags = {.BuiltIn}}
-TYPE_REAL   := Type{definition = PrimitiveType.Real,   flags = {.BuiltIn}}
-TYPE_RUNE   := Type{definition = PrimitiveType.Rune,   flags = {.BuiltIn}}
-TYPE_STRING := Type{definition = PrimitiveType.String, flags = {.BuiltIn}}
-TYPE_BOOL   := Type{definition = PrimitiveType.Bool,   flags = {.BuiltIn}}
-
-BUILTIN_TYPE_NAMES := map[Identifier]^Type {
-	"int"    = &TYPE_INT,
-	"real"   = &TYPE_REAL,
-	"rune"   = &TYPE_RUNE,
-	"string" = &TYPE_STRING,
-	"bool"   = &TYPE_BOOL,
+BUILTIN_TYPE_NAMES := map[Identifier]Type {
+	"int"    = {backing_type = .Int},
+	"real"   = {backing_type = .Real},
+	"rune"   = {backing_type = .Rune},
+	"string" = {backing_type = .String},
+	"bool"   = {backing_type = .Bool},
 }
 
 env_make :: proc() -> Environment {
@@ -91,8 +74,10 @@ env_destroy :: proc(env: ^Environment){
 
 check_ast :: proc(global_scope: ^Scope) -> (err: Error) {
 	check_toplevel(global_scope^) or_return
+
 	init_scopes(global_scope, nil)
-	init_global_scope(global_scope)
+
+	check_scope(global_scope)
 
 	return 
 }
@@ -105,12 +90,12 @@ type_equal :: proc(a, b: Type) -> bool {
 init_global_scope :: proc(global: ^Scope){
 	for name, type in BUILTIN_TYPE_NAMES {
 		global.env[name] = SymbolInfo{
-
+			type = type,
 		}
 	}
 }
 
-define_variable :: proc(scope: ^Scope, id: Identifier, type: ^Type) -> (err: Error){
+define_variable :: proc(scope: ^Scope, id: Identifier, type: Type) -> (err: Error){
 	info, found := search_for_identifier(scope, id)
 	if found {
 		err = emit_error(.Redefinition, "Redefinition of symbol: %v", id)
@@ -123,7 +108,32 @@ define_variable :: proc(scope: ^Scope, id: Identifier, type: ^Type) -> (err: Err
 	return
 }
 
-evaluate_type :: proc(pt: ParserType) -> (type: ^Type){
+evaluate_type :: proc{
+	evaluate_parser_type,
+	evaluate_func_type,
+}
+
+evaluate_func_type :: proc(fd: FunctionDef) -> (type: Type) {
+	ret := evaluate_type(fd.return_type)
+	ft := FunctionType {
+		returns = new(Type),
+		args = make([]Type, len(fd.args))
+	}
+
+	ft.returns^ = ret
+	for arg, i in fd.args {
+		ft.args[i] = evaluate_type(arg.type)
+		ft.args[i].flags = {.Parameter}
+	}
+
+	type = Type {
+		backing_type = ft,
+		flags = {}
+	}
+	return
+}
+
+evaluate_parser_type :: proc(pt: ParserType) -> (type: Type){
 	if pt.name not_in BUILTIN_TYPE_NAMES {
 		unimplemented("TODO: Type aliasing")
 	}
@@ -133,14 +143,9 @@ evaluate_type :: proc(pt: ParserType) -> (type: ^Type){
 		return
 	}
 	else {
-		type = new(Type)
-		it := IndirectType {
+		type = Type {
+			backing_type = BUILTIN_TYPE_NAMES[pt.name].backing_type,
 			modifiers = pt.modifiers,
-			backing_type = BUILTIN_TYPE_NAMES[pt.name].definition.(PrimitiveType),
-		}
-		type^ = Type {
-			definition = it,
-			flags = {.Nullable},
 		}
 		return
 	}
@@ -148,21 +153,25 @@ evaluate_type :: proc(pt: ParserType) -> (type: ^Type){
 
 check_scope :: proc(scope: ^Scope) -> (err: Error){
 	for statement in scope.body {
-		switch stmt in statement {
+		switch &stmt in statement {
 		case InlineStatement:
 			var_decl, ok := stmt.(VarDeclaration)
-			// TODO: Init where possible
 			if ok {
 				t := evaluate_type(var_decl.type)
 				for id in var_decl.identifiers {
 					define_variable(scope, id, t) or_return
 				}
 			}
-		case If: unimplemented()
-		case For: unimplemented()
-		case Scope: unimplemented()
-		case FunctionDef: unimplemented()
-		case TypeDef: unimplemented()
+		case Scope:
+			check_scope(&stmt) or_return
+		case If:
+			// TODO: Check the condition
+			check_scope(&stmt.scope) or_return
+		case For:
+			// TODO: Check the condition
+			check_scope(&stmt.scope) or_return
+		case FunctionDef:
+			check_scope(&stmt.scope) or_return
 		}
 	}
 	return
@@ -172,17 +181,20 @@ init_scopes :: proc(current: ^Scope, previous: ^Scope){
 	current.parent = previous
 	current.env = env_make()
 
-	for statement in current.body {
+	// log.debugf("Current scope is %p, parent is %p", current, current.parent)
+	for &statement in current.body {
 		switch &scoped in statement {
 		case Scope:
 			init_scopes(&scoped, current)
 		case FunctionDef:
+			// log.debugf("(fn) Scoped parent is %p", scoped.scope.parent)
 			init_scopes(&scoped.scope, current)
+			log.debugf("(fn) Scoped parent is %p", scoped.scope.parent)
 		case If:
 			init_scopes(&scoped.scope, current)
 		case For:
 			init_scopes(&scoped.scope, current)
-		case InlineStatement, TypeDef: continue
+		case InlineStatement: continue
 		}
 	}
 }

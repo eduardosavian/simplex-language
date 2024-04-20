@@ -1,4 +1,8 @@
 my_global: int = 100;
 
-func main(){}
+func main() {
+	local : string = "Hello";
+	my_global = 200;
+}
+
 
