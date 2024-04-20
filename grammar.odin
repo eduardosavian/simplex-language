@@ -54,25 +54,20 @@ Return :: struct {
 Function :: struct {
 	name: Identifier,
 	args: []Field,
-	return_type: TypeExpression,
+	return_type: Type,
 	body: Scope,
 }
 
 VarDeclaration :: struct {
 	identifiers: []Identifier,
-	type: TypeExpression,
+	type: Type,
 	expressions: []^Expression, // NOTE: Only for decl+assign
-}
-
-TypeExpression :: struct {
-	name: Identifier,
-	qualifiers: []Qualifier,
 }
 
 // Can be the field of a struct or argument to a function
 Field :: struct {
 	name: Identifier,
-	type: TypeExpression,
+	type: Type,
 }
 
 Qualifier :: enum i8 {
@@ -85,13 +80,16 @@ Assignment :: struct {
 	right_side: []^Expression,
 }
 
-Expression :: union {
-	Primary,
-	Indexing,
-	FunctionCall,
-	Group,
-	Unary,
-	Binary,
+Expression :: struct {
+	type: Type,
+	value: union{
+		Primary,
+		Indexing,
+		FunctionCall,
+		Group,
+		Unary,
+		Binary,
+	}
 }
 
 Binary :: struct {
@@ -228,7 +226,7 @@ parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 
 parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Error){
 	args: []Field
-	return_type: TypeExpression
+	return_type: Type
 
 	name, ok := parser_expect_consume(parser, .Identifier)
 	if !ok {
@@ -237,16 +235,15 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Erro
 	}
 
 	if tk, ok := parser_expect_consume(parser, .ParenOpen); !ok {
-		err = emit_error(.UnexpectedToken, "Expected `(`, found %v", tk)
+		err = emit_error(.UnexpectedToken, "Expected `(`, found %v", tk.kind)
 		return
 	}
 
-
 	if parser_peek(parser).kind != .ParenClose {
-		args = parse_field_list(parser) or_return
+		args = parse_field_list(parser, allow_trailing_on = .ParenClose) or_return
 	}
 
-	if _, ok := parser_expect_consume(parser, .ParenClose); ok {
+	if tk, ok := parser_expect_consume(parser, .ParenClose); !ok {
 		err = .NoExpectedToken
 		return
 	}
@@ -255,6 +252,7 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Erro
 		return_type = parse_type_expression(parser) or_return
 	}
 
+	log.debug(parser.tokens[parser.current])
 	body := parse_scope(parser) or_return
 
 	func = Function {
@@ -271,6 +269,9 @@ parse_inline_statement :: proc(parser: ^Parser, force_semicolon := true) -> (sta
 	}
 	else if tk, ok := parser_match_consume(parser, .Continue); ok{
 		statement = InlineStatement(Continue{})
+	}
+	else if tk, ok := parser_match_consume(parser, .Return); ok{
+		statement = parse_return(parser) or_return
 	}
 	else if look_for_var_declaration(parser) {
 		decl := parse_var_declaration(parser) or_return
@@ -335,6 +336,15 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 	for !parser_end(parser^){
 		stmt : Statement
 
+		// New Sub-Scope
+		if parser_peek(parser, 0).kind == .CurlyOpen {
+			log.debug("Parsing an anonynmous scope")
+			stmt = parse_scope(parser) or_return
+			log.debug("Anon:", stmt)
+			append(&statements, stmt)
+			continue
+		}
+
 		// Close current scope
 		if _, ok := parser_match_consume(parser, .CurlyClose); ok {
 			closed = true
@@ -344,12 +354,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 		// Function definition
 		if _, ok := parser_match_consume(parser, .Func); ok {
 			stmt = parse_function_definition(parser) or_return
-		}
-
-		// New Sub-Scope
-		if _, ok := parser_match_consume(parser, .CurlyOpen); ok {
-			stmt = parse_scope(parser) or_return
-			append(&statements)
+			append(&statements, stmt)
 			continue
 		}
 
@@ -380,6 +385,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 	}
 
 	resize(&statements, len(statements))
+	log.debug("S: ", statements)
 
 	scope = Scope {
 		body = statements[:],
@@ -430,7 +436,7 @@ parse_assignment :: proc(parser: ^Parser) -> (assignment: Assignment, err: Error
 parse_var_declaration :: proc(parser: ^Parser) -> (declaration: VarDeclaration, err: Error) {
 	// idList: typeExpr ("=" exprList)?
 	ids := parse_identifier_list(parser) or_return
-	type: TypeExpression
+	type: Type
 	exprs: []^Expression
 
 	if _, ok := parser_expect_consume(parser, .Colon); ok {
@@ -509,7 +515,7 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	return
 }
 
-parse_type_expression :: proc(parser: ^Parser) -> (type_expr: TypeExpression, err: Error) {
+parse_type_expression :: proc(parser: ^Parser) -> (type_expr: Type, err: Error) {
 	// ("[]" | "^")* id
 	qualifiers := make([dynamic]Qualifier)
 	name: Identifier
@@ -534,10 +540,15 @@ parse_type_expression :: proc(parser: ^Parser) -> (type_expr: TypeExpression, er
 	}
 	resize(&qualifiers, len(qualifiers))
 
-	type_expr = TypeExpression {
-		name = name,
+	type := IndirectType {
+		named_type = NamedType(name),
 		qualifiers = qualifiers[:],
 	}
+
+	if len(type.qualifiers) == 0{
+		type_expr = NamedType(name)
+	}
+
 	return
 }
 
@@ -602,6 +613,7 @@ parse_expression_list :: proc(parser: ^Parser, allow_trailing_on : Maybe(TokenKi
 }
 
 parse_expression :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) {
+	// log.debug("Began parsing expression on: ", parser_peek(parser, 0))
 	e := parse_unary(parser) or_return
 	expression = parse_binary(parser, e, 0) or_return
 	return
@@ -616,7 +628,7 @@ parse_indexing :: proc(parser: ^Parser, object: ^Expression) -> (expression: ^Ex
 	}
 
 	expression = new(Expression)
-	expression^ = Indexing {
+	expression.value = Indexing {
 		object = object,
 		index = index,
 	}
@@ -640,7 +652,7 @@ parse_function_call :: proc(parser: ^Parser, func: ^Expression) -> (expression: 
 	}
 
 	expression = new(Expression)
-	expression^ = FunctionCall {
+	expression.value = FunctionCall {
 		func = func,
 		args = args,
 	}
@@ -690,7 +702,7 @@ parse_binary :: proc(parser: ^Parser, left: ^Expression, min_precedence: i16) ->
 		}
 		else {
 			expression = new(Expression)
-			expression^ = Binary {
+			expression.value = Binary {
 				left_side = left,
 				right_side = right,
 				operator = op.kind,
@@ -708,7 +720,7 @@ parse_unary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) {
 		operand  := parse_unary(parser) or_return
 
 		expression = new(Expression)
-		expression^ = Unary {
+		expression.value = Unary {
 			operator = operator.kind,
 			operand = operand,
 		}
@@ -730,7 +742,7 @@ parse_primary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) 
 		id := Identifier(tk.lexeme)
 
 		expression = new(Expression)
-		expression^ = Primary(id)
+		expression.value = Primary(id)
 		return
 	}
 
@@ -742,13 +754,14 @@ parse_primary :: proc(parser: ^Parser) -> (expression: ^Expression, err: Error) 
 		}
 
 		expression = new(Expression)
-		expression^ = Group {
+		expression.value = Group {
 			inner = inner,
 		}
 		return
 	}
 
 	log.warn("Unexpected Token:", parser_peek(parser, 0))
+	log.debugf("Current: %v/%v", parser.current, len(parser.tokens))
 	err = emit_error(.BadExpression, "Ill formed expression")
 	return
 }

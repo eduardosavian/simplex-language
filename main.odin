@@ -28,7 +28,7 @@ main :: proc() {
 	}
 	lex_time := time.since(lex_begin)
 
-	print_tokens(tokens)
+	// print_tokens(tokens)
 	log.info("Lexer took:", lex_time)
 
 	scope: Scope
@@ -39,8 +39,8 @@ main :: proc() {
 		scope       = parse(tokens)
 		parse_time  := time.since(parse_begin)
 		log.info("Parser took:", parse_time)
+		print_scope(scope)
 	}
-	print_scope(scope)
 }
 
 

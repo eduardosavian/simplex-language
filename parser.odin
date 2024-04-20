@@ -36,6 +36,7 @@ parse :: proc(tokens : []Token) -> Scope {
 
 	s, err := parse_scope(&parser)
 	if err != nil {
+		log.errorf("Parser exited with error: %v", err)
 		return Scope{}
 	}
 	return s
@@ -109,7 +110,7 @@ new_literal :: proc(tk: Token) -> ^Expression {
 	case: panic("Not a literal")
 	}
 
-	exp^ = p
+	exp.value = p
 	return exp
 }
 

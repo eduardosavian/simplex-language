@@ -1,14 +1,16 @@
 
-func fizzbuzz(n: int) -> string {
+func fizzbuzz(n: int) -> int {
 	msg: string = "";
+
 	if n % 3 == 0 {
 		msg = msg + "fizz";
 	}
+
 	if n % 5 == 0 {
 		msg = msg + "buzz";
 		return msg;
 	}
 
-	return intToString(n);
+	return intToString(n) ;
 }
 

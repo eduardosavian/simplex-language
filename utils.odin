@@ -2,16 +2,23 @@ package lang
 
 import "core:fmt"
 
-print_type :: proc(t: TypeExpression){
-	for q in t.qualifiers {
-		switch q {
-		case .Pointer:
-			fmt.print("pointer to ")
-		case .Slice:
-			fmt.print("slice of ")
+print_type :: proc(type: Type){
+	switch t in type {
+	case FunctionType:
+		fmt.print(t)
+	case NamedType:
+		fmt.print(t)
+	case IndirectType:
+		for q in t.qualifiers {
+			switch q {
+			case .Pointer:
+				fmt.print("pointer to ")
+			case .Slice:
+				fmt.print("slice of ")
+			}
 		}
+		fmt.print(t.named_type)
 	}
-	fmt.print(t.name)
 }
 
 printf :: proc(level: int, format: string, args: ..any){
@@ -140,7 +147,7 @@ print_scope :: proc(scope: Scope, n := 0){
 print_expression :: proc(expr: ^Expression){
 	if expr == nil { return }
 
-	switch e in expr {
+	switch e in expr.value {
 	case Primary:
 		#partial switch _ in e{
 		case String, Rune:
@@ -255,6 +262,7 @@ token_kind_to_string := map[TokenKind]string {
 	.Semicolon = ";",
 	.Equal     = "=",
 	.Caret     = "^",
+	.Arrow     = "->",
 
 	.EqualEqual   = "==",
 	.NotEqual     = "!=",

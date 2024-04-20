@@ -8,6 +8,7 @@ Real       :: f64
 Rune       :: rune
 Bool       :: bool
 
+// A builtin type is a named type with a predefined layout and semantics
 BultinType :: enum {
 	Identifier,
 	NilType,
@@ -18,17 +19,23 @@ BultinType :: enum {
 	Bool,
 }
 
-// TODO: unions and/or structured layout
-TypeInfo :: struct {
+NamedType :: distinct Identifier
+
+FunctionType :: struct {
+	return_type: ^Type,
+	args: []Type,
 }
 
-VariableInfo :: struct {
-	type: TypeExpression,
+IndirectType :: struct {
+	qualifiers: []Qualifier,
+	named_type: NamedType,
 }
 
-FunctionInfo :: struct {
-	return_type: TypeExpression,
-	args: []TypeExpression,
+// nil == Untyped
+Type :: union {
+	NamedType,
+	IndirectType,
+	FunctionType,
 }
 
 TypeFlag :: enum {
@@ -39,21 +46,33 @@ TypeFlag :: enum {
 
 TypeFlags :: bit_set[TypeFlag]
 
-Type :: struct {
-	info: union { VariableInfo, FunctionInfo, },
-	size: i16,
-	flags: TypeFlags,
+SymbolInfo :: struct {
+	kind: enum {
+		Variable, Function,
+	},
+	type: Type,
 }
 
-Environment :: struct {
-	definitions: map[Identifier]Type,
+Environment :: map[Identifier]SymbolInfo
+
+CheckerContext :: struct {
+	env_stack: [dynamic]Environment,
 }
 
-builtin_types := map[Identifier]TypeFlags{
-	"int"    = {.Bultin, .Primitive},
-	"real"   = {.Bultin, .Primitive},
-	"rune"   = {.Bultin, .Primitive},
-	"string" = {.Bultin},
-	"bool"   = {.Bultin, .Primitive},
+builtin_type_names := map[Identifier]bool {
+	"int"    = true,
+	"real"   = true,
+	"rune"   = true,
+	"string" = true,
+	"bool"   = true,
+}
+
+env_make :: proc() -> Environment {
+	env := make(map[Identifier]SymbolInfo)
+	return env
+}
+
+env_destroy :: proc(env: ^Environment){
+	delete(env^)
 }
 
