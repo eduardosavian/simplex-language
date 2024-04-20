@@ -1,4 +1,6 @@
 
+my_global: int = 100;
+
 func fizzbuzz(n: int) -> int {
 	msg: string = "";
 
@@ -13,4 +15,6 @@ func fizzbuzz(n: int) -> int {
 
 	return intToString(n) ;
 }
+
+func main(){}
 

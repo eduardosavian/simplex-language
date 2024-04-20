@@ -36,7 +36,11 @@ Type :: union {
 	NamedType,
 	IndirectType,
 	FunctionType,
+	NoType,
 }
+
+// Return type of functions without return
+NoType :: struct {}
 
 TypeFlag :: enum {
 	Bultin,
@@ -76,3 +80,28 @@ env_destroy :: proc(env: ^Environment){
 	delete(env^)
 }
 
+check_ast :: proc(global_scope: ^Scope) -> (err: Error) {
+	check_toplevel(global_scope^) or_return
+	return 
+}
+
+check_toplevel :: proc(scope: Scope) -> (err: Error) {
+	ok := true
+	for statement in scope.body {
+		#partial switch _ in statement {
+		case Function: continue
+
+		case InlineStatement:
+			#partial switch _ in statement.(InlineStatement) {
+			case VarDeclaration: continue
+			}
+		}
+
+		ok = false
+	}
+
+	if !ok {
+		err = emit_error(.DisallowedOnToplevel, "This type of statement is not allowed in the file scope")
+	}
+	return err
+}

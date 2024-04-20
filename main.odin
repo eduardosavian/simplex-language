@@ -34,13 +34,18 @@ main :: proc() {
 	scope: Scope
 	{
 		context.allocator = mem.arena_allocator(&parser_arena)
-
 		parse_begin := time.now()
 		scope       = parse(tokens)
 		parse_time  := time.since(parse_begin)
 		log.info("Parser took:", parse_time)
-		print_scope(scope)
 	}
+	print_scope(scope)
+
+	check_begin := time.now()
+	err := check_ast(&scope)
+	check_time  := time.since(check_begin)
+	log.info("Type Checker took:", check_time)
+
 }
 
 

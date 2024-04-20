@@ -4,6 +4,7 @@ import "core:fmt"
 
 print_type :: proc(type: Type){
 	switch t in type {
+	case NoType:
 	case FunctionType:
 		fmt.print(t)
 	case NamedType:

@@ -251,12 +251,16 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Erro
 	if _, ok := parser_match_consume(parser, .Arrow); ok {
 		return_type = parse_type_expression(parser) or_return
 	}
+	else {
+		return_type = NoType{}
+	}
 
 	log.debug(parser.tokens[parser.current])
 	body := parse_scope(parser) or_return
 
 	func = Function {
 		args = args,
+		name = Identifier(name.lexeme),
 		return_type = return_type,
 		body = body,
 	}
