@@ -57,7 +57,7 @@ SymbolKind :: enum {
 
 SymbolInfo :: struct {
 	kind: SymbolKind,
-	type: Type,
+	type: ^Type,
 }
 
 Environment :: map[Identifier]SymbolInfo
@@ -66,12 +66,18 @@ CheckerContext :: struct {
 	env_stack: [dynamic]Environment,
 }
 
-BUILTIN_TYPE_NAMES := map[Identifier]PrimitiveType {
-	"int"    = .Int,
-	"real"   = .Real,
-	"rune"   = .Rune,
-	"string" = .String,
-	"bool"   = .Bool,
+TYPE_INT    := Type{definition = PrimitiveType.Int,    flags = {.BuiltIn}}
+TYPE_REAL   := Type{definition = PrimitiveType.Real,   flags = {.BuiltIn}}
+TYPE_RUNE   := Type{definition = PrimitiveType.Rune,   flags = {.BuiltIn}}
+TYPE_STRING := Type{definition = PrimitiveType.String, flags = {.BuiltIn}}
+TYPE_BOOL   := Type{definition = PrimitiveType.Bool,   flags = {.BuiltIn}}
+
+BUILTIN_TYPE_NAMES := map[Identifier]^Type {
+	"int"    = &TYPE_INT,
+	"real"   = &TYPE_REAL,
+	"rune"   = &TYPE_RUNE,
+	"string" = &TYPE_STRING,
+	"bool"   = &TYPE_BOOL,
 }
 
 env_make :: proc() -> Environment {
@@ -99,12 +105,67 @@ type_equal :: proc(a, b: Type) -> bool {
 init_global_scope :: proc(global: ^Scope){
 	for name, type in BUILTIN_TYPE_NAMES {
 		global.env[name] = SymbolInfo{
-			type = Type{
-				definition = type,
-				flags = {.BuiltIn},
-			},
+
 		}
 	}
+}
+
+define_variable :: proc(scope: ^Scope, id: Identifier, type: ^Type) -> (err: Error){
+	info, found := search_for_identifier(scope, id)
+	if found {
+		err = emit_error(.Redefinition, "Redefinition of symbol: %v", id)
+		return
+	}
+	scope.env[id] = SymbolInfo {
+		kind = .Variable,
+		type = type,
+	}
+	return
+}
+
+evaluate_type :: proc(pt: ParserType) -> (type: ^Type){
+	if pt.name not_in BUILTIN_TYPE_NAMES {
+		unimplemented("TODO: Type aliasing")
+	}
+
+	if len(pt.modifiers) == 0 {
+		type = BUILTIN_TYPE_NAMES[pt.name]
+		return
+	}
+	else {
+		type = new(Type)
+		it := IndirectType {
+			modifiers = pt.modifiers,
+			backing_type = BUILTIN_TYPE_NAMES[pt.name].definition.(PrimitiveType),
+		}
+		type^ = Type {
+			definition = it,
+			flags = {.Nullable},
+		}
+		return
+	}
+}
+
+check_scope :: proc(scope: ^Scope) -> (err: Error){
+	for statement in scope.body {
+		switch stmt in statement {
+		case InlineStatement:
+			var_decl, ok := stmt.(VarDeclaration)
+			// TODO: Init where possible
+			if ok {
+				t := evaluate_type(var_decl.type)
+				for id in var_decl.identifiers {
+					define_variable(scope, id, t) or_return
+				}
+			}
+		case If: unimplemented()
+		case For: unimplemented()
+		case Scope: unimplemented()
+		case FunctionDef: unimplemented()
+		case TypeDef: unimplemented()
+		}
+	}
+	return
 }
 
 init_scopes :: proc(current: ^Scope, previous: ^Scope){

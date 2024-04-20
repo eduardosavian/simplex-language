@@ -22,6 +22,7 @@ ParserError :: enum byte {
 CheckerError :: enum byte {
 	DisallowedOnToplevel,
 	DisallowedOnInnerScope,
+	Redefinition,
 }
 
 Error :: union {
