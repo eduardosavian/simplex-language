@@ -341,7 +341,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 			log.debug("Parsing an anonynmous scope")
 			stmt = parse_scope(parser) or_return
 			log.debug("Anon:", stmt)
-			append(&statements, stmt)
+			append_elem(&statements, stmt)
 			continue
 		}
 
@@ -354,28 +354,28 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 		// Function definition
 		if _, ok := parser_match_consume(parser, .Func); ok {
 			stmt = parse_function_definition(parser) or_return
-			append(&statements, stmt)
+			append_elem(&statements, stmt)
 			continue
 		}
 
 		// If
 		if _, ok := parser_match_consume(parser, .If); ok {
 			stmt = parse_if_block(parser) or_return
-			append(&statements, stmt)
+			append_elem(&statements, stmt)
 			continue
 		}
 
 		// For
 		if _, ok := parser_match_consume(parser, .For); ok {
 			stmt = parse_for_block(parser) or_return
-			append(&statements, stmt)
+			append_elem(&statements, stmt)
 			continue
 		}
 
 		// Inline statement
 		{
 			stmt = parse_inline_statement(parser) or_return
-			append(&statements, stmt)
+			append_elem(&statements, stmt)
 		}
 	}
 
@@ -492,7 +492,7 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	fields := make([dynamic]Field)
 
 	first := parse_field_entry(parser) or_return
-	append(&fields, first)
+	append_elem(&fields, first)
 
 	for !parser_end(parser^) {
 		if _, ok := parser_match_consume(parser, .Comma); ok {
@@ -501,7 +501,7 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 			}
 			else {
 				field := parse_field_entry(parser) or_return
-				append(&fields, field)
+				append_elem(&fields, field)
 			}
 		}
 		else {
@@ -523,11 +523,11 @@ parse_type_expression :: proc(parser: ^Parser) -> (type_expr: Type, err: Error) 
 		tk := parser_advance(parser)
 		if tk.kind == .SquareOpen {
 			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
-				append(&qualifiers, Qualifier.Slice)
+				append_elem(&qualifiers, Qualifier.Slice)
 			}
 		}
 		else if tk.kind == .Caret {
-			append(&qualifiers, Qualifier.Pointer)
+			append_elem(&qualifiers, Qualifier.Pointer)
 		}
 		else if tk.kind == .Identifier {
 			name = Identifier(tk.lexeme)
@@ -556,7 +556,7 @@ parse_identifier_list :: proc(parser: ^Parser) -> (list: []Identifier, err: Erro
 	ids := make([dynamic]Identifier)
 
 	if tk, ok := parser_expect_consume(parser, .Identifier); ok {
-		append(&ids, Identifier(tk.lexeme))
+		append_elem(&ids, Identifier(tk.lexeme))
 	}
 	else {
 		err = .NoExpectedToken
@@ -566,7 +566,7 @@ parse_identifier_list :: proc(parser: ^Parser) -> (list: []Identifier, err: Erro
 	for !parser_end(parser^){
 		if _, ok := parser_match_consume(parser, .Comma); ok {
 			if id, ok := parser_expect_consume(parser, .Identifier); ok {
-				append(&ids, Identifier(id.lexeme))
+				append_elem(&ids, Identifier(id.lexeme))
 			}
 			else {
 				err = .NoExpectedToken
@@ -588,7 +588,7 @@ parse_expression_list :: proc(parser: ^Parser, allow_trailing_on : Maybe(TokenKi
 
 	// NOTE: An expression list must have at least one element
 	leading := parse_expression(parser) or_return
-	append(&exprs, leading)
+	append_elem(&exprs, leading)
 
 	for !parser_end(parser^){
 		if _, ok := parser_match_consume(parser, .Comma); ok {
@@ -597,7 +597,7 @@ parse_expression_list :: proc(parser: ^Parser, allow_trailing_on : Maybe(TokenKi
 			}
 			else {
 				exp := parse_expression(parser) or_return
-				append(&exprs, exp)
+				append_elem(&exprs, exp)
 			}
 		}
 		else {

@@ -137,130 +137,130 @@ tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 
 		switch r {
 		// Ignore whitespace, LineBreak is just for pretty printing
-		case '\n': append(&tokens, Token{kind = .LineBreak})
+		case '\n': append_elem(&tokens, Token{kind = .LineBreak})
 		case '\t', ' ', '\r': continue
 
-		case '(': append(&tokens, Token{kind = .ParenOpen})
-		case ')': append(&tokens, Token{kind = .ParenClose})
-		case '[': append(&tokens, Token{kind = .SquareOpen})
-		case ']': append(&tokens, Token{kind = .SquareClose})
-		case '{': append(&tokens, Token{kind = .CurlyOpen})
-		case '}': append(&tokens, Token{kind = .CurlyClose})
+		case '(': append_elem(&tokens, Token{kind = .ParenOpen})
+		case ')': append_elem(&tokens, Token{kind = .ParenClose})
+		case '[': append_elem(&tokens, Token{kind = .SquareOpen})
+		case ']': append_elem(&tokens, Token{kind = .SquareClose})
+		case '{': append_elem(&tokens, Token{kind = .CurlyOpen})
+		case '}': append_elem(&tokens, Token{kind = .CurlyClose})
 
-		case ':': append(&tokens, Token{kind = .Colon})
-		case ';': append(&tokens, Token{kind = .Semicolon})
-		case '.': append(&tokens, Token{kind = .Dot})
-		case ',': append(&tokens, Token{kind = .Comma})
-		case '^': append(&tokens, Token{kind = .Caret})
+		case ':': append_elem(&tokens, Token{kind = .Colon})
+		case ';': append_elem(&tokens, Token{kind = .Semicolon})
+		case '.': append_elem(&tokens, Token{kind = .Dot})
+		case ',': append_elem(&tokens, Token{kind = .Comma})
+		case '^': append_elem(&tokens, Token{kind = .Caret})
 
-		case '+': append(&tokens, Token{kind = .Plus})
+		case '+': append_elem(&tokens, Token{kind = .Plus})
 		case '-':
 			switch r, _ := lexer_peek(lex); r {
 			case '-':
-				append(&tokens, Token{kind = .Minus})
+				append_elem(&tokens, Token{kind = .Minus})
 			case '>':
-				append(&tokens, Token{kind = .Arrow})
+				append_elem(&tokens, Token{kind = .Arrow})
 				lexer_advance(lex)
 			}
 
-		case '*': append(&tokens, Token{kind = .Star})
-		case '%': append(&tokens, Token{kind = .Modulo})
+		case '*': append_elem(&tokens, Token{kind = .Star})
+		case '%': append_elem(&tokens, Token{kind = .Modulo})
 		case '/':
 			switch r, _ := lexer_peek(lex); r {
 			case '/':
 				lex.current -= n
-				append(&tokens, tokenize_line_comment(lex))
-				append(&tokens, Token{ kind = .LineBreak })
+				append_elem(&tokens, tokenize_line_comment(lex))
+				append_elem(&tokens, Token{ kind = .LineBreak })
 			case:
-				append(&tokens, Token{kind = .Slash})
+				append_elem(&tokens, Token{kind = .Slash})
 			}
 
 		case '&':
 			if _, _, ok := lexer_match_consume(lex, '&'); ok {
-				append(&tokens, Token{kind = .LogicAnd})
+				append_elem(&tokens, Token{kind = .LogicAnd})
 			}
 			else {
-				append(&tokens, Token{kind = .BitAnd})
+				append_elem(&tokens, Token{kind = .BitAnd})
 			}
 
 		case '|':
 			if _, _, ok := lexer_match_consume(lex, '|'); ok {
-				append(&tokens, Token{kind = .LogicOr})
+				append_elem(&tokens, Token{kind = .LogicOr})
 			}
 			else {
-				append(&tokens, Token{kind = .BitOr})
+				append_elem(&tokens, Token{kind = .BitOr})
 			}
 
 		case '~':
 			if _, _, ok := lexer_match_consume(lex, '~'); ok {
-				append(&tokens, Token{kind = .LogicXor})
+				append_elem(&tokens, Token{kind = .LogicXor})
 			}
 			else {
-				append(&tokens, Token{kind = .BitXor})
+				append_elem(&tokens, Token{kind = .BitXor})
 			}
 
 		case '>':
 			if _, _, ok := lexer_match_consume(lex, '>'); ok {
-				append(&tokens, Token{kind = .ShiftRight})
+				append_elem(&tokens, Token{kind = .ShiftRight})
 			}
 			else if _, _, ok := lexer_match_consume(lex, '='); ok {
-				append(&tokens, Token{kind = .GreaterEqual})
+				append_elem(&tokens, Token{kind = .GreaterEqual})
 			}
 			else {
-				append(&tokens, Token{kind = .Greater})
+				append_elem(&tokens, Token{kind = .Greater})
 			}
 
 		case '<':
 			if _, _, ok := lexer_match_consume(lex, '<'); ok {
-				append(&tokens, Token{kind = .ShiftLeft})
+				append_elem(&tokens, Token{kind = .ShiftLeft})
 			}
 			else if _, _, ok := lexer_match_consume(lex, '='); ok {
-				append(&tokens, Token{kind = .LesserEqual})
+				append_elem(&tokens, Token{kind = .LesserEqual})
 			}
 			else {
-				append(&tokens, Token{kind = .Lesser})
+				append_elem(&tokens, Token{kind = .Lesser})
 			}
 
 		case '=':
 			if _, _, ok := lexer_match_consume(lex, '='); ok {
-				append(&tokens, Token{kind = .EqualEqual})
+				append_elem(&tokens, Token{kind = .EqualEqual})
 			}
 			else {
-				append(&tokens, Token{kind = .Equal})
+				append_elem(&tokens, Token{kind = .Equal})
 			}
 
 		case '!':
 			if _, _, ok := lexer_match_consume(lex, '='); ok {
-				append(&tokens, Token{kind = .NotEqual})
+				append_elem(&tokens, Token{kind = .NotEqual})
 			}
 			else {
-				append(&tokens, Token{kind = .LogicNot})
+				append_elem(&tokens, Token{kind = .LogicNot})
 			}
 
 		case '"':
-			append(&tokens, tokenize_string(lex))
+			append_elem(&tokens, tokenize_string(lex))
 
 		case '\'':
-			append(&tokens, tokenize_rune(lex))
+			append_elem(&tokens, tokenize_rune(lex))
 
 		case:
 			switch {
 			case is_digit(r):
 				lex.current -= n
-				append(&tokens, tokenize_number(lex))
+				append_elem(&tokens, tokenize_number(lex))
 
 			case is_identifier(r, leading = true):
 				lex.current -= n
-				append(&tokens, tokenize_identifier(lex))
+				append_elem(&tokens, tokenize_identifier(lex))
 			case:
-				append(&tokens, BAD_TOKEN)
+				append_elem(&tokens, BAD_TOKEN)
 				emit_error(.UnknownRune, "Unknown rune: %q", r)
 			}
 		}
 	}
 
 	// Just to make the parser's life a bit easier in some edge cases
-	append(&tokens, Token{kind = .LineBreak})
+	append_elem(&tokens, Token{kind = .LineBreak})
 
 	resize(&tokens, len(tokens))
 	return tokens[:], lex.error_count == 0
@@ -309,10 +309,10 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 		r, n := lexer_advance(lex)
 
 		if is_digit_of_base(r, 10){
-			append_encoded(&digits, r)
+			append_elem_encoded(&digits, r)
 		}
 		else if r == '.' && !found_decimal {
-			append_encoded(&digits, r)
+			append_elem_encoded(&digits, r)
 			found_decimal := true
 		}
 		else if r == '_' {
@@ -363,7 +363,7 @@ tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
 		r, n := lexer_advance(lex)
 		// TODO: Better warnings against things such as `0b110012`
 		if is_digit_of_base(r, base) {
-			append_encoded(&digits, r)
+			append_elem_encoded(&digits, r)
 		}
 		else if r == '_' {
 			continue
@@ -482,7 +482,7 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 		if r == '\\' {
 			next, _ := lexer_advance(lex)
 			if esc, ok := escape_sequence(next); ok {
-				append_encoded(&buf, esc)
+				append_elem_encoded(&buf, esc)
 			}
 			else {
 				emit_error(.InvalidEscape, "Invalid escape sequence: %q", esc)
@@ -497,7 +497,7 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 			break
 		}
 		else {
-			append_encoded(&buf, r)
+			append_elem_encoded(&buf, r)
 		}
 	}
 
@@ -518,9 +518,9 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 	return tk
 }
 
-append_encoded :: proc(arr: ^[dynamic]byte, r: rune){
+append_elem_encoded :: proc(arr: ^[dynamic]byte, r: rune){
 	bytes, size := utf.encode_rune(r)
-	append(arr, ..bytes[:size])
+	append_elems(arr, ..bytes[:size])
 }
 
 lexer_end :: proc(using lex: ^Lexer) -> bool {
