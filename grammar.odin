@@ -11,7 +11,8 @@ Statement :: union {
 	If,
 	For,
 	Scope,
-	Function,
+	FunctionDef,
+	TypeDef,
 }
 
 InlineStatement :: union {
@@ -21,6 +22,11 @@ InlineStatement :: union {
 	Return,
 	Break,
 	Continue,
+}
+
+TypeDef :: struct {
+	name: Identifier,
+	what: ParserType,
 }
 
 Scope :: struct {
@@ -55,26 +61,33 @@ Return :: struct {
 	value: ^Expression,
 }
 
-Function :: struct {
+FunctionDef :: struct {
 	name: Identifier,
 	args: []Field,
-	return_type: Type,
+	return_type: ParserType,
 	scope: Scope,
 }
 
 VarDeclaration :: struct {
 	identifiers: []Identifier,
-	type: Type,
+	type: ParserType,
 	expressions: []^Expression, // NOTE: Only for decl+assign
 }
 
 // Can be the field of a struct or argument to a function
 Field :: struct {
 	name: Identifier,
-	type: Type,
+	type: ParserType,
 }
 
-Qualifier :: enum i8 {
+// A parser type has no useful semantic meaning, it is merely a way to make the
+// subsequent typechecking easier
+ParserType :: struct {
+	name: Identifier,
+	modifiers: []Modifier,
+}
+
+Modifier :: enum i8 {
 	Slice,
 	Pointer,
 }
@@ -134,7 +147,7 @@ Primary :: union {
 is_top_level_statement :: proc(stmt: Statement) -> bool {
 	v := false
 	switch body in stmt {
-	case Function: v = true
+	case FunctionDef, TypeDef: v = true
 	case If, For, Scope: v = false
 	case InlineStatement:
 		switch _ in body {
@@ -228,9 +241,9 @@ parse_for_block :: proc(parser: ^Parser) -> (statement: Statement, err: Error){
 	return
 }
 
-parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Error){
+parse_function_definition :: proc(parser: ^Parser) -> (func: FunctionDef, err: Error){
 	args: []Field
-	return_type: Type
+	return_type: ParserType
 
 	name, ok := parser_expect_consume(parser, .Identifier)
 	if !ok {
@@ -253,16 +266,16 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Erro
 	}
 
 	if _, ok := parser_match_consume(parser, .Arrow); ok {
-		return_type = parse_type_expression(parser) or_return
+		return_type = parse_type(parser) or_return
 	}
 	else {
-		return_type = NoType{}
+		return_type = ParserType{}
 	}
 
 	log.debug(parser.tokens[parser.current])
 	body := parse_scope(parser) or_return
 
-	func = Function {
+	func = FunctionDef {
 		args = args,
 		name = Identifier(name.lexeme),
 		return_type = return_type,
@@ -359,7 +372,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 			break
 		}
 
-		// Function definition
+		// FunctionDef definition
 		if _, ok := parser_match_consume(parser, .Func); ok {
 			stmt = parse_function_definition(parser) or_return
 			append_elem(&statements, stmt)
@@ -444,11 +457,11 @@ parse_assignment :: proc(parser: ^Parser) -> (assignment: Assignment, err: Error
 parse_var_declaration :: proc(parser: ^Parser) -> (declaration: VarDeclaration, err: Error) {
 	// idList: typeExpr ("=" exprList)?
 	ids := parse_identifier_list(parser) or_return
-	type: Type
+	type: ParserType
 	exprs: []^Expression
 
 	if _, ok := parser_expect_consume(parser, .Colon); ok {
-		type = parse_type_expression(parser) or_return
+		type = parse_type(parser) or_return
 	}
 	else {
 		err = .NoExpectedToken
@@ -487,7 +500,7 @@ parse_field_entry :: proc(parser: ^Parser) -> (field: Field, err: Error){
 		err = .NoExpectedToken
 		return
 	}
-	type := parse_type_expression(parser) or_return
+	type := parse_type(parser) or_return
 
 	field = Field {
 		name = Identifier(name.lexeme),
@@ -523,19 +536,36 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	return
 }
 
-parse_type_expression :: proc(parser: ^Parser) -> (type_expr: Type, err: Error) {
+parse_type_definition :: proc(parser: ^Parser) -> (typedef: TypeDef, err: Error){
+	name, ok := parser_expect_consume(parser, .Identifier)
+	if !ok {
+		err = .NoExpectedToken
+		return
+	}
+
+	type := parse_type(parser) or_return
+
+	typedef = TypeDef {
+		name = Identifier(name.lexeme),
+		what = type,
+	}
+
+	return
+}
+
+parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 	// ("[]" | "^")* id
-	qualifiers := make([dynamic]Qualifier)
+	modifiers := make([dynamic]Modifier)
 	name: Identifier
 	for !parser_end(parser^){
 		tk := parser_advance(parser)
 		if tk.kind == .SquareOpen {
 			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
-				append_elem(&qualifiers, Qualifier.Slice)
+				append_elem(&modifiers, Modifier.Slice)
 			}
 		}
 		else if tk.kind == .Caret {
-			append_elem(&qualifiers, Qualifier.Pointer)
+			append_elem(&modifiers, Modifier.Pointer)
 		}
 		else if tk.kind == .Identifier {
 			name = Identifier(tk.lexeme)
@@ -546,16 +576,11 @@ parse_type_expression :: proc(parser: ^Parser) -> (type_expr: Type, err: Error) 
 			return
 		}
 	}
-	resize(&qualifiers, len(qualifiers))
+	resize(&modifiers, len(modifiers))
 
-	assert(name in BUILTIN_TYPE_NAMES, "TODO: Type aliases")
-	type := IndirectType {
-		core_type = BUILTIN_TYPE_NAMES[name], // TODO: Support arbitrary named types here
-		qualifiers = qualifiers[:],
-	}
-
-	if len(type.qualifiers) == 0{
-		type_expr = BUILTIN_TYPE_NAMES[name]
+	type = ParserType {
+		name = name,
+		modifiers = modifiers[:],
 	}
 
 	return

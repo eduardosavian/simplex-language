@@ -1,20 +1,4 @@
-
 my_global: int = 100;
-
-func fizzbuzz(n: real) -> int {
-	msg: string = "";
-
-	if n % 3 == 0 {
-		msg = msg + "fizz";
-	}
-
-	if n % 5 == 0 {
-		msg = msg + "buzz";
-		return msg;
-	}
-
-	return intToString(n) ;
-}
 
 func main(){}
 

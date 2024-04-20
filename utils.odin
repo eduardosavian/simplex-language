@@ -2,24 +2,36 @@ package lang
 
 import "core:fmt"
 
-print_type :: proc(type: Type){
-	switch t in type {
-	case NoType:
-	case FunctionType:
-		fmt.print(t)
-	case BultinType:
-		fmt.print(t)
-	case IndirectType:
-		for q in t.qualifiers {
-			switch q {
-			case .Pointer:
-				fmt.print("pointer to ")
-			case .Slice:
-				fmt.print("slice of ")
-			}
+// print_type :: proc(type: Type){
+// 	switch t in type {
+// 	case NoType:
+// 	case FunctionType:
+// 		fmt.print(t)
+// 	case BultinType:
+// 		fmt.print(t)
+// 	case IndirectType:
+// 		for q in t.qualifiers {
+// 			switch q {
+// 			case .Pointer:
+// 				fmt.print("pointer to ")
+// 			case .Slice:
+// 				fmt.print("slice of ")
+// 			}
+// 		}
+// 		fmt.print(t.core_type)
+// 	}
+// }
+
+print_parser_type :: proc(type: ParserType){
+	for q in type.modifiers {
+		switch q {
+		case .Pointer:
+			fmt.print("pointer to ")
+		case .Slice:
+			fmt.print("slice of ")
 		}
-		fmt.print(t.core_type)
 	}
+	fmt.print(type.name)
 }
 
 printf :: proc(level: int, format: string, args: ..any){
@@ -59,14 +71,14 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 		if len(v.expressions) == 0 {
 			for id in v.identifiers {
 				printf(n + 1, "%s: ", id)
-				print_type(v.type)
+				print_parser_type(v.type)
 				fmt.println()
 			}
 		}
 		else {
 			for id, i in v.identifiers {
 				printf(n + 1, "%s: ", id)
-				print_type(v.type)
+				print_parser_type(v.type)
 				fmt.printf(" = ")
 				print_expression(v.expressions[i])
 				fmt.println()
@@ -89,15 +101,15 @@ print_scope :: proc(scope: Scope, n := 0){
 		case InlineStatement:
 			print_inline_stmt(s, n)
 
-		case Function:
+		case FunctionDef:
 			printf(n, "func %v ( ", s.name)
 			for a in s.args {
 				printf(n, "")
-				print_type(a.type)
+				print_parser_type(a.type)
 				fmt.print(" ")
 			}
 			fmt.print(") -> ")
-			print_type(s.return_type)
+			print_parser_type(s.return_type)
 			fmt.print("\n")
 			print_scope(s.scope, n + 1)
 
@@ -141,6 +153,9 @@ print_scope :: proc(scope: Scope, n := 0){
 
 		case Scope:
 			print_scope(s, n + 1)
+
+		case TypeDef:
+			printf(n, "type %v %v;", s.name, s.what)
 		}
 	}
 }
