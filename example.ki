@@ -1,7 +1,7 @@
 
 my_global: int = 100;
 
-func fizzbuzz(n: int) -> int {
+func fizzbuzz(n: real) -> int {
 	msg: string = "";
 
 	if n % 3 == 0 {

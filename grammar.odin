@@ -4,6 +4,8 @@ package lang
 import intr "base:intrinsics"
 import "core:log"
 
+// TODO: Make parser return a "ParsedType" That is converted into a proper type later.
+
 Statement :: union {
 	InlineStatement,
 	If,
@@ -24,6 +26,7 @@ InlineStatement :: union {
 Scope :: struct {
 	body: []Statement,
 
+	parent: ^Scope,
 	env: Environment,
 }
 
@@ -31,7 +34,7 @@ If :: struct {
 	condition: ^Expression,
 	else_branch: ^Statement, // NOTE: Can only be Scope or If
 
-	using scope: Scope,
+	scope: Scope,
 }
 
 For :: struct {
@@ -39,7 +42,7 @@ For :: struct {
 	pre_stmt:  ^Statement,
 	post_stmt: ^Statement,
 
-	using scope: Scope,
+	scope: Scope,
 }
 
 ExpressionStatement :: distinct ^Expression
@@ -56,7 +59,7 @@ Function :: struct {
 	name: Identifier,
 	args: []Field,
 	return_type: Type,
-	body: Scope,
+	scope: Scope,
 }
 
 VarDeclaration :: struct {
@@ -263,7 +266,7 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: Function, err: Erro
 		args = args,
 		name = Identifier(name.lexeme),
 		return_type = return_type,
-		body = body,
+		scope = body,
 	}
 	return
 }
@@ -545,13 +548,14 @@ parse_type_expression :: proc(parser: ^Parser) -> (type_expr: Type, err: Error) 
 	}
 	resize(&qualifiers, len(qualifiers))
 
+	assert(name in BUILTIN_TYPE_NAMES, "TODO: Type aliases")
 	type := IndirectType {
-		named_type = NamedType(name),
+		core_type = BUILTIN_TYPE_NAMES[name], // TODO: Support arbitrary named types here
 		qualifiers = qualifiers[:],
 	}
 
 	if len(type.qualifiers) == 0{
-		type_expr = NamedType(name)
+		type_expr = BUILTIN_TYPE_NAMES[name]
 	}
 
 	return

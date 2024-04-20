@@ -7,7 +7,7 @@ print_type :: proc(type: Type){
 	case NoType:
 	case FunctionType:
 		fmt.print(t)
-	case NamedType:
+	case BultinType:
 		fmt.print(t)
 	case IndirectType:
 		for q in t.qualifiers {
@@ -18,7 +18,7 @@ print_type :: proc(type: Type){
 				fmt.print("slice of ")
 			}
 		}
-		fmt.print(t.named_type)
+		fmt.print(t.core_type)
 	}
 }
 
@@ -99,7 +99,7 @@ print_scope :: proc(scope: Scope, n := 0){
 			fmt.print(") -> ")
 			print_type(s.return_type)
 			fmt.print("\n")
-			print_scope(s.body, n + 1)
+			print_scope(s.scope, n + 1)
 
 		case If:
 			printf(n, "if ")
