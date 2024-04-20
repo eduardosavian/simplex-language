@@ -21,9 +21,10 @@ InlineStatement :: union {
 	Continue,
 }
 
-
 Scope :: struct {
 	body: []Statement,
+
+	env: Environment,
 }
 
 If :: struct {
