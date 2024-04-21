@@ -3,6 +3,7 @@ package lang
 import "core:fmt"
 
 print_env :: proc(scope: ^Scope, n := 0){
+	printf(n, "--- >> ---\n")
 	for name, sym in scope.env {
 		printf(n, "%v: ", name)
 		for mod in sym.type.modifiers {
@@ -13,6 +14,7 @@ print_env :: proc(scope: ^Scope, n := 0){
 		}
 		fmt.printf("%v\n", sym.type.backing_type)
 	}
+	printf(n, "--- << ---\n")
 
 	for stmt in scope.body {
 		#partial switch &v in stmt {

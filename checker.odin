@@ -27,6 +27,7 @@ PrimitiveType :: enum {
 	Rune,
 	Bool,
 	String,
+	Nil,
 }
 
 FunctionType :: struct {
@@ -73,7 +74,7 @@ env_destroy :: proc(env: ^Environment){
 }
 
 check_ast :: proc(global_scope: ^Scope) -> (err: Error) {
-	check_toplevel(global_scope^) or_return
+	//check_toplevel(global_scope^) or_return
 
 	init_scopes(global_scope, nil)
 
@@ -91,8 +92,26 @@ init_global_scope :: proc(global: ^Scope){
 	}
 }
 
+@require_results
+define_function ::  proc(scope: ^Scope, def: FunctionDef) -> (err: Error) {
+	type := evaluate_type(def)
+	_, found := search_for_identifier(scope, def.name)
+	if found {
+		err = emit_error(.Redefinition, "Redefinition of symbol: %v", def.name)
+		return
+	}
+
+	scope.env[def.name] = SymbolInfo {
+		type = type,
+		kind = .Function,
+	}
+
+	return
+}
+
+@require_results
 define_variable :: proc(scope: ^Scope, id: Identifier, type: Type) -> (err: Error){
-	info, found := search_for_identifier(scope, id)
+	_, found := search_for_identifier(scope, id)
 	if found {
 		err = emit_error(.Redefinition, "Redefinition of symbol: %v", id)
 		return
@@ -110,7 +129,15 @@ evaluate_type :: proc{
 }
 
 evaluate_func_type :: proc(fd: FunctionDef) -> (type: Type) {
-	ret := evaluate_type(fd.return_type)
+	ret: Type
+	if fd.return_type.name == "" {
+		ret = Type {
+			backing_type = PrimitiveType.Nil,
+		}
+	}
+	else {
+		ret = evaluate_type(fd.return_type)
+	}
 	ft := FunctionType {
 		returns = new(Type),
 		args = make([]Type, len(fd.args))
@@ -131,6 +158,7 @@ evaluate_func_type :: proc(fd: FunctionDef) -> (type: Type) {
 
 evaluate_parser_type :: proc(pt: ParserType) -> (type: Type){
 	if pt.name not_in BUILTIN_TYPE_NAMES {
+		log.warn(pt.name)
 		unimplemented("TODO: Type aliasing")
 	}
 
@@ -207,7 +235,9 @@ check_scope :: proc(scope: ^Scope) -> (err: Error){
 			case ExpressionStatement:
 			case Break: unimplemented()
 			case Continue: unimplemented()
-			case Return: unimplemented()
+			case Return:
+			   // TODO: Mark when the scope is part of a function body
+				unimplemented()
 			}
 		case Scope:
 			check_scope(&stmt) or_return
@@ -218,6 +248,13 @@ check_scope :: proc(scope: ^Scope) -> (err: Error){
 			// TODO: Check the condition
 			check_scope(&stmt.scope) or_return
 		case FunctionDef:
+			define_function(&stmt.scope, stmt) or_return
+			log.debug("name:", stmt.name, "args:", len(stmt.args))
+			for arg, i in stmt.args {
+				log.debug(i, arg.type)
+				t := evaluate_type(arg.type)
+				define_variable(&stmt.scope, arg.name, t) or_return
+			}
 			check_scope(&stmt.scope) or_return
 		}
 	}
@@ -278,9 +315,7 @@ init_scopes :: proc(current: ^Scope, previous: ^Scope){
 		case Scope:
 			init_scopes(&scoped, current)
 		case FunctionDef:
-			// log.debugf("(fn) Scoped parent is %p", scoped.scope.parent)
 			init_scopes(&scoped.scope, current)
-			log.debugf("(fn) Scoped parent is %p", scoped.scope.parent)
 		case If:
 			init_scopes(&scoped.scope, current)
 		case For:
@@ -304,6 +339,3 @@ search_for_identifier :: proc(scope: ^Scope, id: Identifier) -> (sym: SymbolInfo
 	}
 }
 
-check_toplevel :: proc(scope: Scope) -> (err: Error) {
-	return
-}

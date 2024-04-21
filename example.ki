@@ -1,8 +1,12 @@
 my_global: int = 100;
 
-func main() {
-	local : string = "Hello";
-	my_global = 200;
+func mean(a: real, b: real) -> real {
+	res: real = (a + b) / 2;
 }
 
+func main() {
+	local : string = "Hello";
+	foo: int;
+	my_global = foo;
+}
 
