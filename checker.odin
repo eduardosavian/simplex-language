@@ -82,10 +82,6 @@ check_ast :: proc(global_scope: ^Scope) -> (err: Error) {
 	return 
 }
 
-type_equal :: proc(a, b: Type) -> bool {
-	return false
-}
-
 @private
 init_global_scope :: proc(global: ^Scope){
 	for name, type in BUILTIN_TYPE_NAMES {
@@ -151,16 +147,67 @@ evaluate_parser_type :: proc(pt: ParserType) -> (type: Type){
 	}
 }
 
+is_assignable :: proc(e: ^Expression) -> bool {
+	// TODO: Pointer deref
+	if _, ok := e.value.(Primary).(Identifier); ok {
+		return true
+	}
+
+	if idx, ok := e.value.(Indexing); ok {
+		obj := idx.object
+		if _, ok := obj.value.(Primary).(Identifier); ok {
+			return true;
+		}
+	}
+
+	return false
+}
+
+type_equal :: proc(a, b: Type) -> bool {
+	same_mods := slice.equal(a.modifiers, b.modifiers)
+
+	if fn_a, ok := a.backing_type.(FunctionType); ok {
+		unimplemented("Compare function types")
+	}
+	else {
+		aa, aok := a.backing_type.(PrimitiveType)
+		bb, bok := b.backing_type.(PrimitiveType)
+		if !aok || !bok {
+			return false
+		}
+		return aa == bb
+	}
+
+}
+
 check_scope :: proc(scope: ^Scope) -> (err: Error){
 	for statement in scope.body {
 		switch &stmt in statement {
 		case InlineStatement:
-			var_decl, ok := stmt.(VarDeclaration)
-			if ok {
-				t := evaluate_type(var_decl.type)
-				for id in var_decl.identifiers {
+			switch &in_stmt in stmt {
+			case VarDeclaration:
+				t := evaluate_type(in_stmt.type)
+				for id in in_stmt.identifiers {
 					define_variable(scope, id, t) or_return
 				}
+
+			case Assignment:
+				for _, i in in_stmt.left_side {
+					left := in_stmt.left_side[i]
+					right := in_stmt.right_side[i]
+					// TODO: is_lvalue
+					check_expression(scope, left) or_return
+					check_expression(scope, right) or_return
+					log.debugf("L: %v, R: %v", left.type, right.type)
+					if !type_equal(left.type, right.type){
+						err = emit_error(.MismatchedTypes, "Mismatched types for assignment")
+					}
+				}
+
+			case ExpressionStatement:
+			case Break: unimplemented()
+			case Continue: unimplemented()
+			case Return: unimplemented()
 			}
 		case Scope:
 			check_scope(&stmt) or_return
@@ -172,6 +219,50 @@ check_scope :: proc(scope: ^Scope) -> (err: Error){
 			check_scope(&stmt.scope) or_return
 		case FunctionDef:
 			check_scope(&stmt.scope) or_return
+		}
+	}
+	return
+}
+
+check_expression :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error){
+	switch &v in expr.value {
+	case Indexing:
+		unimplemented()
+
+	case Group:
+		check_expression(scope, v.inner)
+
+	case Binary:
+		unimplemented()
+
+	case Unary:
+		unimplemented()
+
+	case FunctionCall:
+		_, ok := v.func.value.(Primary).(Identifier)
+		err = emit_error(.NonCallable, "Cannot call non-function object")
+
+	case Primary:
+		switch x in v {
+		case Identifier:
+			sym, ok := search_for_identifier(scope, x)
+			if !ok {
+				err = emit_error(.NotDefined, "Symbol %v not defined", x)
+				return
+			}
+			expr.type = sym.type
+		case Integer:
+			expr.type = Type { backing_type = .Int, }
+		case Real:
+			expr.type = Type { backing_type = .Real, }
+		case Rune:
+			expr.type = Type { backing_type = .Rune, }
+		case String:
+			expr.type = Type { backing_type = .String, }
+		case Bool:
+			expr.type = Type { backing_type = .Bool, }
+		case NilType:
+			unimplemented()
 		}
 	}
 	return

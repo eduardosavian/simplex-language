@@ -23,6 +23,10 @@ CheckerError :: enum byte {
 	DisallowedOnToplevel,
 	DisallowedOnInnerScope,
 	Redefinition,
+	NotDefined,
+	NonCallable,
+	NonIndexable,
+	MismatchedTypes,
 }
 
 Error :: union {
