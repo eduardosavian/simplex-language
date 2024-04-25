@@ -102,7 +102,7 @@ new_literal :: proc(tk: Token) -> ^Expression {
 	#partial switch tk.kind {
 	case .True:   p = true
 	case .False:  p = false
-	case .Nil:    p = NilType{}
+	case .Nil:    p = nil
 	case .Int:    p = tk.payload.(i64)
 	case .Real:   p = tk.payload.(f64)
 	case .Rune:   p = tk.payload.(rune)

@@ -5,6 +5,10 @@ import "core:fmt"
 print_env :: proc(scope: ^Scope, n := 0){
 	printf(n, "--- >> ---\n")
 	for name, sym in scope.env {
+		if sym.kind == .Type {
+			printf(n, "%v: type\n", name)
+			continue
+		}
 		printf(n, "%v: ", name)
 		for mod in sym.type.modifiers {
 			switch mod {
@@ -12,7 +16,7 @@ print_env :: proc(scope: ^Scope, n := 0){
 			case .Slice: fmt.print("[]")
 			}
 		}
-		fmt.printf("%v\n", sym.type.backing_type)
+		fmt.printf("%v\n", sym.type.primitive)
 	}
 	printf(n, "--- << ---\n")
 

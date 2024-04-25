@@ -1,341 +1,147 @@
 package lang
 
 import "core:log"
-import "core:reflect"
-import "core:slice"
 
-Identifier :: distinct string
-NilType    :: struct {}
-String     :: string
-Integer    :: i64
-Real       :: f64
-Rune       :: rune
-Bool       :: bool
+// TODO: Func pointer type
+
+BuiltinType :: enum {
+	Bool, Int, Real, Rune, String,
+}
+
+PrimitiveType :: union {
+	BuiltinType,
+	// Struct,
+}
 
 Type :: struct {
 	modifiers: []Modifier,
-	backing_type: union {
-		PrimitiveType,
-		FunctionType,
-	},
-	flags: TypeFlags,
-}
-
-PrimitiveType :: enum {
-	Int,
-	Real,
-	Rune,
-	Bool,
-	String,
-	Nil,
-}
-
-FunctionType :: struct {
-	args: []Type,
-	returns: ^Type,
-}
-
-// Return type of functions without return
-NoType :: struct {}
-
-TypeFlags :: bit_set[TypeFlag]
-TypeFlag :: enum {
-	BuiltIn,
-	Nullable,
-	Parameter,
-}
-
-SymbolKind :: enum {
-	Variable, Function,
+	primitive: PrimitiveType,
 }
 
 SymbolInfo :: struct {
 	kind: SymbolKind,
 	type: Type,
+	args: []Type,
+	body: Scope,
+}
+
+SymbolKind :: enum {
+	Variable, Parameter, Function, Type,
 }
 
 Environment :: map[Identifier]SymbolInfo
 
-BUILTIN_TYPE_NAMES := map[Identifier]Type {
-	"int"    = {backing_type = .Int},
-	"real"   = {backing_type = .Real},
-	"rune"   = {backing_type = .Rune},
-	"string" = {backing_type = .String},
-	"bool"   = {backing_type = .Bool},
-}
-
-env_make :: proc() -> Environment {
-	env := make(map[Identifier]SymbolInfo)
-	return env
-}
-
-env_destroy :: proc(env: ^Environment){
-	delete(env^)
-}
-
-check_ast :: proc(global_scope: ^Scope) -> (err: Error) {
-	//check_toplevel(global_scope^) or_return
-
-	init_scopes(global_scope, nil)
-
-	check_scope(global_scope)
-
-	return 
-}
-
-@private
-init_global_scope :: proc(global: ^Scope){
-	for name, type in BUILTIN_TYPE_NAMES {
-		global.env[name] = SymbolInfo{
-			type = type,
-		}
-	}
-}
-
-@require_results
-define_function ::  proc(scope: ^Scope, def: FunctionDef) -> (err: Error) {
-	type := evaluate_type(def)
-	_, found := search_for_identifier(scope, def.name)
-	if found {
-		err = emit_error(.Redefinition, "Redefinition of symbol: %v", def.name)
+define_symbol :: proc(scope: ^Scope, name: Identifier, value: SymbolInfo) -> (err: Error){
+	_, exists := search_symbol(scope, name)
+	if exists {
+		err = emit_error(.Redefinition, "Identifier '%v' already in use.", name)
 		return
 	}
 
-	scope.env[def.name] = SymbolInfo {
-		type = type,
-		kind = .Function,
+	scope.env[name] = value
+	return
+}
+
+search_symbol :: proc(scope: ^Scope, name: Identifier) -> (sym: SymbolInfo, found: bool) {
+	if scope == nil { return }
+
+	if name in scope.env {
+		return scope.env[name], true
 	}
+
+	return search_symbol(scope.parent, name)
+}
+
+eval_parser_type :: proc(scope: ^Scope, ptype: ParserType) -> (type: Type, err: Error){
+	assert(scope != nil, "Cannot evaluate on nil scope")
+	// type.primitive = ptype.name
+	sym, ok := search_symbol(scope, ptype.name)
+
+	if !ok {
+		err = emit_error(.NotDefined, "Undefined type: %v", ptype.name)
+		return
+	}
+
+	// NOTE: This does *NOT* handle type aliasing
+	type.modifiers = ptype.modifiers
+	type.primitive = sym.type.primitive
 
 	return
 }
 
-@require_results
-define_variable :: proc(scope: ^Scope, id: Identifier, type: Type) -> (err: Error){
-	_, found := search_for_identifier(scope, id)
-	if found {
-		err = emit_error(.Redefinition, "Redefinition of symbol: %v", id)
-		return
-	}
-	scope.env[id] = SymbolInfo {
-		kind = .Variable,
-		type = type,
-	}
-	return
-}
+// Initialize environments in scopes, does not typecheck, only defines the symbols
+init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
+	if scope == nil { return }
 
-evaluate_type :: proc{
-	evaluate_parser_type,
-	evaluate_func_type,
-}
-
-evaluate_func_type :: proc(fd: FunctionDef) -> (type: Type) {
-	ret: Type
-	if fd.return_type.name == "" {
-		ret = Type {
-			backing_type = PrimitiveType.Nil,
-		}
-	}
-	else {
-		ret = evaluate_type(fd.return_type)
-	}
-	ft := FunctionType {
-		returns = new(Type),
-		args = make([]Type, len(fd.args))
+	if scope.env == nil {
+		scope.env = env_create()
 	}
 
-	ft.returns^ = ret
-	for arg, i in fd.args {
-		ft.args[i] = evaluate_type(arg.type)
-		ft.args[i].flags = {.Parameter}
-	}
+	scope.parent = previous
 
-	type = Type {
-		backing_type = ft,
-		flags = {}
-	}
-	return
-}
+	for &entry in scope.body {
+		switch &stmt in entry {
+		case Scope:
+			init_scopes(&stmt, scope)
 
-evaluate_parser_type :: proc(pt: ParserType) -> (type: Type){
-	if pt.name not_in BUILTIN_TYPE_NAMES {
-		log.warn(pt.name)
-		unimplemented("TODO: Type aliasing")
-	}
+		case FunctionDef:
+			body := &stmt.scope
+			for arg in stmt.args {
+				t := eval_parser_type(scope, arg.type) or_return
+				define_symbol(body, arg.name, SymbolInfo{
+					kind = .Parameter,
+					type = t,
+				})
+			}
+			init_scopes(body, scope)
 
-	if len(pt.modifiers) == 0 {
-		type = BUILTIN_TYPE_NAMES[pt.name]
-		return
-	}
-	else {
-		type = Type {
-			backing_type = BUILTIN_TYPE_NAMES[pt.name].backing_type,
-			modifiers = pt.modifiers,
-		}
-		return
-	}
-}
-
-is_assignable :: proc(e: ^Expression) -> bool {
-	// TODO: Pointer deref
-	if _, ok := e.value.(Primary).(Identifier); ok {
-		return true
-	}
-
-	if idx, ok := e.value.(Indexing); ok {
-		obj := idx.object
-		if _, ok := obj.value.(Primary).(Identifier); ok {
-			return true;
-		}
-	}
-
-	return false
-}
-
-type_equal :: proc(a, b: Type) -> bool {
-	same_mods := slice.equal(a.modifiers, b.modifiers)
-
-	if fn_a, ok := a.backing_type.(FunctionType); ok {
-		unimplemented("Compare function types")
-	}
-	else {
-		aa, aok := a.backing_type.(PrimitiveType)
-		bb, bok := b.backing_type.(PrimitiveType)
-		if !aok || !bok {
-			return false
-		}
-		return aa == bb
-	}
-
-}
-
-check_scope :: proc(scope: ^Scope) -> (err: Error){
-	for statement in scope.body {
-		switch &stmt in statement {
+		case If: log.warn("if")
+		case For: log.warn("for")
 		case InlineStatement:
-			switch &in_stmt in stmt {
-			case VarDeclaration:
-				t := evaluate_type(in_stmt.type)
-				for id in in_stmt.identifiers {
-					define_variable(scope, id, t) or_return
-				}
-
-			case Assignment:
-				for _, i in in_stmt.left_side {
-					left := in_stmt.left_side[i]
-					right := in_stmt.right_side[i]
-					// TODO: is_lvalue
-					check_expression(scope, left) or_return
-					check_expression(scope, right) or_return
-					log.debugf("L: %v, R: %v", left.type, right.type)
-					if !type_equal(left.type, right.type){
-						err = emit_error(.MismatchedTypes, "Mismatched types for assignment")
-					}
-				}
-
-			case ExpressionStatement:
-			case Break: unimplemented()
-			case Continue: unimplemented()
-			case Return:
-			   // TODO: Mark when the scope is part of a function body
-				unimplemented()
+			decl, ok := stmt.(VarDeclaration)
+			if !ok { continue }
+			log.debugf("Current scope: %p", scope)
+			for id, i in decl.identifiers {
+				t := eval_parser_type(scope, decl.type) or_return
+				define_symbol(scope, id, SymbolInfo{
+					kind = .Variable,
+					type = t,
+				})
 			}
-		case Scope:
-			check_scope(&stmt) or_return
-		case If:
-			// TODO: Check the condition
-			check_scope(&stmt.scope) or_return
-		case For:
-			// TODO: Check the condition
-			check_scope(&stmt.scope) or_return
-		case FunctionDef:
-			define_function(&stmt.scope, stmt) or_return
-			log.debug("name:", stmt.name, "args:", len(stmt.args))
-			for arg, i in stmt.args {
-				log.debug(i, arg.type)
-				t := evaluate_type(arg.type)
-				define_variable(&stmt.scope, arg.name, t) or_return
-			}
-			check_scope(&stmt.scope) or_return
 		}
 	}
+
 	return
 }
 
-check_expression :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error){
-	switch &v in expr.value {
-	case Indexing:
-		unimplemented()
-
-	case Group:
-		check_expression(scope, v.inner)
-
-	case Binary:
-		unimplemented()
-
-	case Unary:
-		unimplemented()
-
-	case FunctionCall:
-		_, ok := v.func.value.(Primary).(Identifier)
-		err = emit_error(.NonCallable, "Cannot call non-function object")
-
-	case Primary:
-		switch x in v {
-		case Identifier:
-			sym, ok := search_for_identifier(scope, x)
-			if !ok {
-				err = emit_error(.NotDefined, "Symbol %v not defined", x)
-				return
-			}
-			expr.type = sym.type
-		case Integer:
-			expr.type = Type { backing_type = .Int, }
-		case Real:
-			expr.type = Type { backing_type = .Real, }
-		case Rune:
-			expr.type = Type { backing_type = .Rune, }
-		case String:
-			expr.type = Type { backing_type = .String, }
-		case Bool:
-			expr.type = Type { backing_type = .Bool, }
-		case NilType:
-			unimplemented()
-		}
-	}
+check_ast :: proc(scope: ^Scope) -> (err: Error){
+	init_global_env(scope)
+	init_scopes(scope, nil)
 	return
 }
 
-init_scopes :: proc(current: ^Scope, previous: ^Scope){
-	current.parent = previous
-	current.env = env_make()
+env_create :: proc() -> Environment {
+	e, err := make(Environment)
+	assert(err == nil, "Memory error on environment creation")
+	return e
+}
 
-	// log.debugf("Current scope is %p, parent is %p", current, current.parent)
-	for &statement in current.body {
-		switch &scoped in statement {
-		case Scope:
-			init_scopes(&scoped, current)
-		case FunctionDef:
-			init_scopes(&scoped.scope, current)
-		case If:
-			init_scopes(&scoped.scope, current)
-		case For:
-			init_scopes(&scoped.scope, current)
-		case InlineStatement: continue
-		}
+env_destroy :: proc(env: ^Environment) {
+	delete(env^)
+	env^ = nil
+}
+
+init_global_env:: proc(s: ^Scope){
+	for name, val in BUILTIN_TYPES {
+		info := SymbolInfo{kind = .Type, type = Type{primitive = val}}
+		define_symbol(s, name, info)
 	}
 }
 
-search_for_identifier :: proc(scope: ^Scope, id: Identifier) -> (sym: SymbolInfo, found: bool) {
-	if scope == nil {
-		return
-	}
-
-	sym, found = scope.env[id]
-	if !found {
-		return search_for_identifier(scope.parent, id)
-	}
-	else {
-		return
-	}
+BUILTIN_TYPES := map[Identifier]BuiltinType{
+	"int"    = .Int,
+	"real"   = .Real,
+	"bool"   = .Bool,
+	"rune"   = .Rune,
+	"string" = .String,
 }
-

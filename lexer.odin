@@ -347,7 +347,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 		return Token {
 			kind = .Int,
 			lexeme = lexeme,
-			payload = Integer(num),
+			payload = Int(num),
 		}
 	}
 }

@@ -23,10 +23,17 @@ InlineStatement :: union {
 	Continue,
 }
 
-TypeDef :: struct {
-	name: Identifier,
-	what: ParserType,
-}
+Identifier :: distinct string
+Int :: i64
+Real :: f64
+String :: string
+Rune :: rune
+Bool :: bool
+
+// TypeDef :: struct {
+// 	name: Identifier,
+// 	what: ParserType,
+// }
 
 Scope :: struct {
 	body: []Statement,
@@ -133,14 +140,14 @@ Group :: struct {
 	inner: ^Expression,
 }
 
+
 Primary :: union {
 	Identifier,
-	Integer,
+	Int,
 	String,
 	Real,
 	Rune,
 	Bool,
-	NilType,
 }
 
 is_top_level_statement :: proc(stmt: Statement) -> bool {
@@ -535,22 +542,22 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	return
 }
 
-parse_type_definition :: proc(parser: ^Parser) -> (typedef: TypeDef, err: Error){
-	name, ok := parser_expect_consume(parser, .Identifier)
-	if !ok {
-		err = .NoExpectedToken
-		return
-	}
-
-	type := parse_type(parser) or_return
-
-	typedef = TypeDef {
-		name = Identifier(name.lexeme),
-		what = type,
-	}
-
-	return
-}
+// parse_type_definition :: proc(parser: ^Parser) -> (typedef: TypeDef, err: Error){
+// 	name, ok := parser_expect_consume(parser, .Identifier)
+// 	if !ok {
+// 		err = .NoExpectedToken
+// 		return
+// 	}
+//
+// 	type := parse_type(parser) or_return
+//
+// 	typedef = TypeDef {
+// 		name = Identifier(name.lexeme),
+// 		what = type,
+// 	}
+//
+// 	return
+// }
 
 parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 	// ("[]" | "^")* id
