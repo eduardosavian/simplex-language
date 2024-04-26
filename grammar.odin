@@ -4,8 +4,6 @@ package lang
 import intr "base:intrinsics"
 import "core:log"
 
-// TODO: Make parser return a "ParsedType" That is converted into a proper type later.
-
 Statement :: union {
 	InlineStatement,
 	If,

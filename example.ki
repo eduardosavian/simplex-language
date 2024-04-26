@@ -8,5 +8,14 @@ func main() {
 	local : string = "Hello";
 	foo: int;
 	my_global = foo;
+	if foo == 3 {
+		AAAA: int;
+	}
+	else if local == 1 {
+		BBBB: int;
+	}
+	else {
+		CCCC: real;
+	}
 }
 

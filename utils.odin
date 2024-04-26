@@ -24,6 +24,8 @@ print_env :: proc(scope: ^Scope, n := 0){
 		#partial switch &v in stmt {
 		case For:
 			print_env(&v.scope, n + 1)
+		case If:
+			print_env(&v.scope, n + 1)
 		case FunctionDef:
 			print_env(&v.scope, n + 1)
 		case Scope:

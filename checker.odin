@@ -95,19 +95,66 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 			}
 			init_scopes(body, scope)
 
-		case If: log.warn("if")
-		case For: log.warn("for")
-		case InlineStatement:
-			decl, ok := stmt.(VarDeclaration)
-			if !ok { continue }
-			log.debugf("Current scope: %p", scope)
-			for id, i in decl.identifiers {
-				t := eval_parser_type(scope, decl.type) or_return
-				define_symbol(scope, id, SymbolInfo{
-					kind = .Variable,
-					type = t,
-				})
+		case If:
+			init_scopes(&stmt.scope, scope)
+
+		case For:
+			if stmt.post_stmt != nil || stmt.pre_stmt != nil {
+				log.warnf("Deal with triple for loop definition creation & checking")
 			}
+			else {
+				init_scopes(&stmt.scope, scope)
+			}
+
+		case InlineStatement:
+			switch &in_stmt in stmt {
+			case Assignment:
+				for id, i in in_stmt.left_side {
+				}
+
+			case VarDeclaration:
+				for id, i in in_stmt.identifiers {
+					t := eval_parser_type(scope, in_stmt.type) or_return
+					define_symbol(scope, id, SymbolInfo{
+						kind = .Variable,
+						type = t,
+					})
+				}
+
+			case Return: log.warn("return")
+			case ExpressionStatement: log.warn("exprstmt")
+			case Break, Continue: continue
+			}
+		}
+	}
+
+	return
+}
+
+eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
+	switch &expression in expr.value {
+	case Binary: log.warn("Binary")
+	case Unary: log.warn("unar")
+	case Indexing: log.warn("indx")
+	case FunctionCall: log.warn("fn cal")
+	case Group:
+		eval_expression_type(scope, expression.inner)
+		expr.type = expression.inner.type
+	case Primary:
+		switch _ in expression {
+		case Bool:   expr.type.primitive = .Bool
+		case Rune:   expr.type.primitive = .Rune
+		case String: expr.type.primitive = .String
+		case Int:    expr.type.primitive = .Int
+		case Real:   expr.type.primitive = .Real
+		case Identifier:
+			id, _ := expression.(Identifier)
+			info, ok := search_symbol(scope, id)
+			if !ok {
+				err = emit_error(.NotDefined, "Undefined identifier: %v", id)
+				return
+			}
+			expr.type = info.type
 		}
 	}
 
