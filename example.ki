@@ -8,6 +8,7 @@ func main() {
 	local : string = "Hello";
 	foo: int;
 	my_global = foo;
+
 	if foo == 3 {
 		N: int;
 	}
@@ -17,6 +18,7 @@ func main() {
 	else {
 		N: real;
 	}
+
 	N: int;
 }
 

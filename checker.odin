@@ -151,10 +151,33 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 	case Binary: log.warn("Binary")
 	case Unary: log.warn("unar")
 	case Indexing: log.warn("indx")
-	case FunctionCall: log.warn("fn cal")
+
+   // TODO: Function expression
+	case FunctionCall:
+		p, ok := expression.func.value.(Primary)
+		if !ok {
+			err = emit_error(.NonCallable, "Non primary expression is not callable.")
+			return
+		}
+		id, ok2 := p.(Identifier)
+		if !ok2 {
+			err = emit_error(.NonCallable, "Non identifier is not callable")
+		}
+
+		fn, found := search_symbol(scope, id)
+		if !found {
+			err = emit_error(.NotDefined, "Unknown function: %v", id)
+		}
+
+		if fn.kind == .Function {
+			// CHECK
+			log.warnf("TODO: Check args")
+		}
+
 	case Group:
 		eval_expression_type(scope, expression.inner)
 		expr.type = expression.inner.type
+
 	case Primary:
 		switch _ in expression {
 		case Bool:   expr.type.primitive = .Bool
