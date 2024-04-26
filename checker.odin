@@ -70,6 +70,7 @@ eval_parser_type :: proc(scope: ^Scope, ptype: ParserType) -> (type: Type, err: 
 }
 
 // Initialize environments in scopes, does not typecheck, only defines the symbols
+@(require_results)
 init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	if scope == nil { return }
 
@@ -82,7 +83,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	for &entry in scope.body {
 		switch &stmt in entry {
 		case Scope:
-			init_scopes(&stmt, scope)
+			init_scopes(&stmt, scope) or_return
 
 		case FunctionDef:
 			body := &stmt.scope
@@ -93,17 +94,31 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 					type = t,
 				})
 			}
-			init_scopes(body, scope)
+			init_scopes(body, scope) or_return
 
 		case If:
-			init_scopes(&stmt.scope, scope)
+			init_scopes(&stmt.scope, scope) or_return
+			current := stmt.else_branch
+			for current != nil {
+				#partial switch &branch in current {
+				case If:
+					init_scopes(&branch.scope, scope) or_return
+					current = branch.else_branch
+				case Scope:
+					log.debug("Init else branch")
+					init_scopes(&branch, scope) or_return
+					current = nil
+
+				case: unreachable()
+				}
+			}
 
 		case For:
 			if stmt.post_stmt != nil || stmt.pre_stmt != nil {
 				log.warnf("Deal with triple for loop definition creation & checking")
 			}
 			else {
-				init_scopes(&stmt.scope, scope)
+				init_scopes(&stmt.scope, scope) or_return
 			}
 
 		case InlineStatement:
@@ -163,7 +178,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 
 check_ast :: proc(scope: ^Scope) -> (err: Error){
 	init_global_env(scope)
-	init_scopes(scope, nil)
+	init_scopes(scope, nil) or_return
 	return
 }
 

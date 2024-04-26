@@ -25,7 +25,27 @@ print_env :: proc(scope: ^Scope, n := 0){
 		case For:
 			print_env(&v.scope, n + 1)
 		case If:
+			printf(n+1, "IF\n")
 			print_env(&v.scope, n + 1)
+			current := v.else_branch
+			for current != nil {
+				if_stmt, is_if := current.(If)
+				else_stmt, is_else := current.(Scope)
+				if is_if {
+					printf(n+1, "ELSE IF\n")
+					print_env(&if_stmt.scope, n + 1)
+					current = if_stmt.else_branch
+				}
+				else if is_else {
+					printf(n+1, "ELSE\n")
+					print_env(&else_stmt, n + 1)
+					current = nil
+				}
+				else {
+					unreachable()
+				}
+			}
+
 		case FunctionDef:
 			print_env(&v.scope, n + 1)
 		case Scope:
