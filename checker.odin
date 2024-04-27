@@ -156,11 +156,37 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	return
 }
 
-UNARY_COMPAT := map[TokenKind][]BuiltinType {
-	.Minus = {.Int, .Real},
-	.Plus = {.Int, .Real},
+UNARY_COMPAT := map[TokenKind][]PrimitiveType {
+	.Minus    = {.Int, .Real},
+	.Plus     = {.Int, .Real},
+	.BitXor   = {.Int},
 	.LogicNot = {.Bool},
-	.BitXor = {.Int},
+}
+
+BINARY_COMPAT := map[TokenKind][]PrimitiveType {
+	.EqualEqual   = {.Bool, .Int, .Real, .Rune, .String},
+	.NotEqual     = {.Bool, .Int, .Real, .Rune, .String},
+	.GreaterEqual = {.Bool, .Int, .Real, .Rune, .String},
+	.LesserEqual  = {.Bool, .Int, .Real, .Rune, .String},
+	.Greater      = {.Bool, .Int, .Real, .Rune, .String},
+	.Lesser       = {.Bool, .Int, .Real, .Rune, .String},
+
+	.BitXor     = {.Int},
+	.BitAnd     = {.Int},
+	.BitOr      = {.Int},
+	.ShiftLeft  = {.Int},
+	.ShiftRight = {.Int},
+
+	.Plus   = {.Int, .Real},
+	.Minus  = {.Int, .Real},
+	.Star   = {.Int, .Real},
+	.Slash  = {.Int, .Real},
+	.Modulo = {.Int},
+
+	.LogicAnd = {.Bool},
+	.LogicNot = {.Bool},
+	.LogicOr  = {.Bool},
+	.LogicXor = {.Bool},
 }
 
 
@@ -183,11 +209,34 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 			}
 		}
 		else {
-			return emit_error(.MismatchedTypes, "Cannto apply unary operation to type: %v", primitive)
+			return emit_error(.MismatchedTypes, "Cannot apply unary operation to type: %v", primitive)
 		}
 
 	case Binary:
-		log.warn("Binary")
+		compat_types := BINARY_COMPAT[expression.operator]
+		eval_expression_type(scope, expression.left_side) or_return
+		eval_expression_type(scope, expression.right_side) or_return
+
+		// TODO: Struct
+		lhs := expression.left_side
+		rhs := expression.right_side
+		if !is_pure_primitive(lhs.type) || !is_pure_primitive(rhs.type){
+			return emit_error(.MismatchedTypes, "Cannot apply binary operation to non primitive types: %v and %v", lhs.type, rhs.type)
+		}
+
+		operator_supported := contains(compat_types, lhs.type.primitive) && contains(compat_types, rhs.type.primitive)
+
+		if operator_supported {
+			// Ensure same type
+			if !same_type(lhs.type, rhs.type){
+				return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", lhs.type, rhs.type)
+			}
+			expr.type = lhs.type
+			// log.debug("Binary expression has type: ", expr.type.primitive)
+		}
+		else {
+			return emit_error(.MismatchedTypes, "Cannot apply binary operation to non primitive types")
+		}
 
 	case Indexing:
 		eval_expression_type(scope, expression.index) or_return
@@ -296,4 +345,24 @@ check_lvalue :: proc(e: ^Expression) -> Error {
 	return nil
 }
 
+import "core:slice"
 
+@(private="file")
+same_type :: proc(a, b: Type) -> bool {
+	// TODO: Struct
+	same_mods := false
+	if len(a.modifiers) + len(b.modifiers) == 0 {
+		same_mods = true
+	}
+	else {
+		// WARN: TEST THIS BETTER LATER!
+		same_mods = slice.equal(a.modifiers, b.modifiers)
+	}
+	same_prim := a.primitive == b.primitive
+	return  same_mods && same_prim
+}
+
+
+is_pure_primitive :: proc(t: Type) -> bool {
+	return len(t.modifiers) == 0
+}
