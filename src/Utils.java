@@ -40,15 +40,15 @@ public class Utils {
 
         ParseTreeWalker walker = new ParseTreeWalker();
 
-        //SimplexWalker listener = new SimplexWalker();
+        // SimplexWalker listener = new SimplexWalker();
 
-        //walker.walk(listener, tree);
+        // walker.walk(listener, tree);
     }
 
     public void antlrCommand(String grammarName, String startRuleName, String inputFilePath, String args) {
         try {
             String[] argArray = args.split("\\s+");
-            
+
             String[] fullArgs = new String[argArray.length + 3];
             fullArgs[0] = grammarName;
             fullArgs[1] = startRuleName;
@@ -58,12 +58,12 @@ public class Utils {
             for (String arg : fullArgs) {
                 System.out.println(arg);
             }
-            
+
             Class<?> testRigClass = Class.forName("org.antlr.v4.gui.TestRig");
             Method mainMethod = testRigClass.getMethod("main", String[].class);
-            mainMethod.invoke(null, new Object[]{fullArgs});
+            mainMethod.invoke(null, new Object[] { fullArgs });
         } catch (Exception e) {
             System.out.println("");
         }
     }
-} 
+}

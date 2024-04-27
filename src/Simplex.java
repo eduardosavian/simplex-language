@@ -28,14 +28,14 @@ public class Simplex {
                 break;
             }
         }
-        
+
         switch (operationFlag) {
             case TOKENIZE:
-                
+
                 break;
             case PARSE:
                 // Logic for parsing
-                //verify
+                // verify
                 if (args.length < 3) {
                     System.err.println("Usage: java Main -parse <input_file> <print_type>");
                     System.exit(1);
