@@ -35,6 +35,7 @@ main :: proc() {
 	{
 		context.allocator = mem.arena_allocator(&parser_arena)
 		parse_begin := time.now()
+		log.debug(tokens)
 		scope       = parse(tokens)
 		parse_time  := time.since(parse_begin)
 		log.info("Parser took:", parse_time)

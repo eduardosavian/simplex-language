@@ -27,6 +27,7 @@ CheckerError :: enum byte {
 	NonCallable,
 	NonIndexable,
 	MismatchedTypes,
+	NonAssignable,
 }
 
 Error :: union {

@@ -125,9 +125,26 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 			switch &in_stmt in stmt {
 			case Assignment:
 				// Only allows assigning to indexing or identifier
-				log.warnf("assignment")
+				for &left in in_stmt.left_side {
+					eval_expression_type(scope, left) or_return
+					#partial switch _ in left.value {
+					case Indexing:
+					case Primary:
+						_, ok := left.value.(Primary).(Identifier)
+						if !ok {
+							err = emit_error(.NonAssignable,"Cannot assign to non identifier")
+							return
+						}
+					case:
+						err = emit_error(.NonAssignable, "Cannot assign to a non lvalue expression")
+						return
+					}
+				}
+
 
 			case VarDeclaration:
+				if len(in_stmt.expressions) > 0 { unimplemented("decl init") }
+
 				for id, i in in_stmt.identifiers {
 					t := eval_parser_type(scope, in_stmt.type) or_return
 					define_symbol(scope, id, SymbolInfo{
@@ -146,9 +163,6 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	}
 
 	return
-}
-
-type_check :: proc(scope: ^Scope){
 }
 
 eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {

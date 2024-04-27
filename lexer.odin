@@ -156,11 +156,11 @@ tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 		case '+': append_elem(&tokens, Token{kind = .Plus})
 		case '-':
 			switch r, _ := lexer_peek(lex); r {
-			case '-':
-				append_elem(&tokens, Token{kind = .Minus})
 			case '>':
 				append_elem(&tokens, Token{kind = .Arrow})
 				lexer_advance(lex)
+			case:
+				append_elem(&tokens, Token{kind = .Minus})
 			}
 
 		case '*': append_elem(&tokens, Token{kind = .Star})
