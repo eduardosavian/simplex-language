@@ -2,23 +2,10 @@ my_global: int = 100;
 
 func mean(a: real, b: real) -> real {
 	res: real = (a + b) / 2;
+	return res;
 }
 
 func main() {
-	local : string = "Hello";
-	foo: int;
-	my_global = foo;
-
-	if foo == 3 {
-		N: int;
-	}
-	else if local == 1 {
-		N: string;
-	}
-	else {
-		N: real;
-	}
-
-	N: int;
+	a: int = (a[1])(-3.2, 5.4);
 }
 

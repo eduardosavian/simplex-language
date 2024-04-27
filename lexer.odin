@@ -313,7 +313,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 		}
 		else if r == '.' && !found_decimal {
 			append_elem_encoded(&digits, r)
-			found_decimal := true
+			found_decimal = true
 		}
 		else if r == '_' {
 			continue
@@ -329,7 +329,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 	if found_decimal {
 		num, ok := strconv.parse_f64(string(digits[:]))
 		if !ok {
-			emit_error(.ConversionError, "Could not convert %q to numeric literal", string(digits[:]))
+			emit_error(.ConversionError, "Could not convert %q to real literal", string(digits[:]),)
 			return BAD_TOKEN
 		}
 		return Token {
@@ -341,7 +341,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 	else {
 		num, ok := strconv.parse_int(string(digits[:]), 10)
 		if !ok {
-			emit_error(.ConversionError, "Could not convert %q to numeric literal", string(digits[:]))
+			emit_error(.ConversionError, "Could not convert %q to integer literal", string(digits[:]))
 			return BAD_TOKEN
 		}
 		return Token {

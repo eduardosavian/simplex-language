@@ -124,8 +124,8 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 		case InlineStatement:
 			switch &in_stmt in stmt {
 			case Assignment:
-				for id, i in in_stmt.left_side {
-				}
+				// Only allows assigning to indexing or identifier
+				log.warnf("assignment")
 
 			case VarDeclaration:
 				for id, i in in_stmt.identifiers {
@@ -136,7 +136,9 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 					})
 				}
 
-			case Return: log.warn("return")
+			case Return:
+				log.warn("return")
+
 			case ExpressionStatement: log.warn("exprstmt")
 			case Break, Continue: continue
 			}
@@ -144,6 +146,9 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	}
 
 	return
+}
+
+type_check :: proc(scope: ^Scope){
 }
 
 eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
