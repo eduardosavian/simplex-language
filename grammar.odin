@@ -659,9 +659,7 @@ parse_expression :: proc(parser: ^Parser) -> (expression: ^Expression, err: Erro
 
 parse_indexing :: proc(parser: ^Parser, object: ^Expression) -> (expression: ^Expression, err:Error) {
 	// expr "[" expr "]"
-	log.debug("IDX IN: ", parser_peek(parser, 0))
 	index := parse_expression(parser) or_return
-	log.debug("IDX OUT: ", parser_peek(parser, 0))
 
 	if _, ok := parser_expect_consume(parser, .SquareClose); !ok {
 		err = .NoExpectedToken

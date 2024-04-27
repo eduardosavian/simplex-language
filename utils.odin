@@ -2,6 +2,15 @@ package lang
 
 import "core:fmt"
 
+contains :: proc(s: $T/[]$E, e: E) -> bool {
+	for x in  s {
+		if x == e {
+			return true
+		}
+	}
+	return false
+}
+
 print_env :: proc(scope: ^Scope, n := 0){
 	printf(n, "--- >> ---\n")
 	for name, sym in scope.env {

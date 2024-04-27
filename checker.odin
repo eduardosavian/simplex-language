@@ -125,22 +125,13 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 			switch &in_stmt in stmt {
 			case Assignment:
 				// Only allows assigning to indexing or identifier
-				for &left in in_stmt.left_side {
+				for &left, i in in_stmt.left_side {
+					right := in_stmt.right_side[i]
+					eval_expression_type(scope, right) or_return
+					check_lvalue(left) or_return
 					eval_expression_type(scope, left) or_return
-					#partial switch _ in left.value {
-					case Indexing:
-					case Primary:
-						_, ok := left.value.(Primary).(Identifier)
-						if !ok {
-							err = emit_error(.NonAssignable,"Cannot assign to non identifier")
-							return
-						}
-					case:
-						err = emit_error(.NonAssignable, "Cannot assign to a non lvalue expression")
-						return
-					}
 				}
-
+				log.warn("assign compat")
 
 			case VarDeclaration:
 				if len(in_stmt.expressions) > 0 { unimplemented("decl init") }
@@ -165,13 +156,48 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	return
 }
 
+UNARY_COMPAT := map[TokenKind][]BuiltinType {
+	.Minus = {.Int, .Real},
+	.Plus = {.Int, .Real},
+	.LogicNot = {.Bool},
+	.BitXor = {.Int},
+}
+
+
+@(require_results)
 eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 	switch &expression in expr.value {
-	case Binary: log.warn("Binary")
-	case Unary: log.warn("unar")
-	case Indexing: log.warn("indx")
+	case Unary:
+		compat_types := UNARY_COMPAT[expression.operator]
+		eval_expression_type(scope, expression.operand) or_return
 
-   // TODO: Function expression
+		if len(expression.operand.type.modifiers) != 0 {
+			return emit_error(.MismatchedTypes, "Cannot apply unary operation to non concrete type")
+		}
+
+		// TODO: Struct
+		primitive := expression.operand.type.primitive.(BuiltinType)
+		if contains(compat_types, primitive) {
+			expr.type = Type {
+				primitive = primitive,
+			}
+		}
+		else {
+			return emit_error(.MismatchedTypes, "Cannto apply unary operation to type: %v", primitive)
+		}
+
+	case Binary:
+		log.warn("Binary")
+
+	case Indexing:
+		eval_expression_type(scope, expression.index) or_return
+		if !is_valid_index(expression.index.type){
+			err = emit_error(.MismatchedTypes, "Index must be an integer.")
+			return
+		}
+		eval_expression_type(scope, expression.object) or_return
+
+	// TODO: Function expression
 	case FunctionCall:
 		p, ok := expression.func.value.(Primary)
 		if !ok {
@@ -189,12 +215,11 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		}
 
 		if fn.kind == .Function {
-			// CHECK
 			log.warnf("TODO: Check args")
 		}
 
 	case Group:
-		eval_expression_type(scope, expression.inner)
+		eval_expression_type(scope, expression.inner) or_return
 		expr.type = expression.inner.type
 
 	case Primary:
@@ -249,3 +274,26 @@ BUILTIN_TYPES := map[Identifier]BuiltinType{
 	"rune"   = .Rune,
 	"string" = .String,
 }
+
+@(private="file")
+is_valid_index :: proc(t: Type) -> bool {
+	return len(t.modifiers) == 0 && t.primitive == .Int
+}
+
+@(private="file")
+check_lvalue :: proc(e: ^Expression) -> Error {
+	#partial switch _ in e.value {
+	case Indexing:
+	case Primary:
+		_, ok := e.value.(Primary).(Identifier)
+		if !ok {
+			return emit_error(.NonAssignable, "Cannot assign to a non lvalue expression")
+		}
+	case:
+		return emit_error(.NonAssignable, "Cannot assign to a non lvalue expression")
+	}
+
+	return nil
+}
+
+
