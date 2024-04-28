@@ -27,3 +27,7 @@ java -jar simplex.jar -parse tests/principal.expr -gui
 - [ANTLR Tutorial](https://github.com/antlr/antlr4/blob/master/doc/index.md)
 
 - [ANTLR Lab](http://lab.antlr.org/)
+
+- [Stack Overflow 1](https://stackoverflow.com/questions/29971097/how-to-create-ast-with-antlr4)
+
+- [Stack Overflow 2](https://stackoverflow.com/questions/21534316/is-there-a-simple-example-of-using-antlr4-to-create-an-ast-from-java-source-code?lq=1)
