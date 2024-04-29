@@ -33,17 +33,34 @@
     </target>
 
     <!-- Build task -->
-    <target name="build" depends="clean, init, generate, compile, jar">
+    <target name="build1" depends="clean, init, parser, compile, jar">
+        <echo message="Build completed"/>
+    </target>
+
+    <!-- Build task -->
+    <target name="build2" depends="clean, init, visitor, compile, jar">
         <echo message="Build completed"/>
     </target>
 
     <!-- ANTLR task -->
-    <target name="generate">
+    <target name="parser">
         <java classname="org.antlr.v4.Tool" fork="true" classpath="${antlr4_path}:${CLASSPATH}">
             <arg value="${simplex.dir}/SimplexLexer.g4"/>
             <arg value="${simplex.dir}/SimplexParser.g4"/>
             <arg value="-o"/>
             <arg value="${src.dir}"/>
+        </java>
+    </target>
+
+    <!-- ANTLR task -->
+    <target name="visitor">
+        <java classname="org.antlr.v4.Tool" fork="true" classpath="${antlr4_path}:${CLASSPATH}">
+            <arg value="${simplex.dir}/SimplexLexer.g4"/>
+            <arg value="${simplex.dir}/SimplexParser.g4"/>
+            <arg value="-o"/>
+            <arg value="${src.dir}"/>
+            <arg value="-no-listener"/>
+            <arg value="-visitor"/>
         </java>
     </target>
 
