@@ -153,7 +153,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				}
 
 			case Return:
-				log.warn("return")
+				log.warn("return check")
 
 			case ExpressionStatement: log.warn("exprstmt")
 			case Break, Continue: continue
@@ -247,9 +247,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		}
 
 	case Indexing:
-		/*
-		   Index must be an integer, Indexed object must be a slice.
-		 */
+		// Index must be an integer, Indexed object must be a slice.
 		eval_expression_type(scope, expression.index) or_return
 		if !is_valid_index(expression.index.type){
 			return emit_error(.MismatchedTypes, "Index must be an integer.")
@@ -260,6 +258,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		if !ok || mod != .Slice {
 			return emit_error(.NonIndexable, "Cannot index type")
 		}
+
 		expr.type = expression.object.type
 		mod_count := len(expr.type.modifiers)
 		expr.type.modifiers = []Modifier{} if mod_count < 2 else expr.type.modifiers[1:]
