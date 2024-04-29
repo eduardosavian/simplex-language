@@ -1,5 +1,6 @@
 package lang
 
+import "core:slice"
 import "core:log"
 
 // TODO: Func pointer type
@@ -239,12 +240,22 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		}
 
 	case Indexing:
+		/*
+		   Index must be an integer, Indexed object must be a slice.
+		 */
 		eval_expression_type(scope, expression.index) or_return
 		if !is_valid_index(expression.index.type){
-			err = emit_error(.MismatchedTypes, "Index must be an integer.")
-			return
+			return emit_error(.MismatchedTypes, "Index must be an integer.")
 		}
 		eval_expression_type(scope, expression.object) or_return
+
+		mod, ok := pop_mod(expression.object.type)
+		if !ok || mod != .Slice {
+			return emit_error(.NonIndexable, "Cannot index type")
+		}
+		expr.type = expression.object.type
+		mod_count := len(expr.type.modifiers)
+		expr.type.modifiers = []Modifier{} if mod_count < 2 else expr.type.modifiers[1:]
 
 	// TODO: Function expression
 	case FunctionCall:
@@ -345,8 +356,6 @@ check_lvalue :: proc(e: ^Expression) -> Error {
 	return nil
 }
 
-import "core:slice"
-
 @(private="file")
 same_type :: proc(a, b: Type) -> bool {
 	// TODO: Struct
@@ -365,4 +374,11 @@ same_type :: proc(a, b: Type) -> bool {
 
 is_pure_primitive :: proc(t: Type) -> bool {
 	return len(t.modifiers) == 0
+}
+
+pop_mod :: proc(t: Type) -> (Modifier, bool) {
+	if len(t.modifiers) == 0 {
+		return Modifier{}, false
+	}
+	return t.modifiers[0], true
 }

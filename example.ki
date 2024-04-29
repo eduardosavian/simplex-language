@@ -6,7 +6,8 @@
 // }
 
 func main() {
-	a: int;
-	a = 1 + (-a);
+	a: []int;
+	b: int;
+	b = 1 + a[0];
 }
 
