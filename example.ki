@@ -1,13 +1,13 @@
 //my_global: int = 100;
 
-// func mean(a: real, b: real) -> real {
-// 	res: real = (a + b) / 2;
-// 	return res;
-// }
+func mean(a: real, b: real) -> real {
+	res: real = (a + b) / 2.0;
+	return res;
+}
 
 func main() {
 	a: []int;
-	b: int;
+	b: int = 10;
 	b = 1 + a[0];
 }
 

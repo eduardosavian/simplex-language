@@ -3,7 +3,7 @@ package lang
 import "core:slice"
 import "core:log"
 
-// TODO: Func pointer type
+// TODO: Make literals untyped
 
 BuiltinType :: enum {
 	Bool, Int, Real, Rune, String,
@@ -135,14 +135,21 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				log.warn("assign compat")
 
 			case VarDeclaration:
-				if len(in_stmt.expressions) > 0 { unimplemented("decl init") }
-
 				for id, i in in_stmt.identifiers {
 					t := eval_parser_type(scope, in_stmt.type) or_return
 					define_symbol(scope, id, SymbolInfo{
 						kind = .Variable,
 						type = t,
 					})
+				}
+				if len(in_stmt.expressions) > 0 {
+					for &exp, i in in_stmt.expressions {
+						eval_expression_type(scope, exp) or_return
+						sym, _ := search_symbol(scope, in_stmt.identifiers[i])
+						if !same_type(sym.type, exp.type){
+							return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", sym.type, exp.type)
+						}
+					}
 				}
 
 			case Return:
@@ -236,7 +243,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 			// log.debug("Binary expression has type: ", expr.type.primitive)
 		}
 		else {
-			return emit_error(.MismatchedTypes, "Cannot apply binary operation to non primitive types")
+			return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", lhs.type, rhs.type)
 		}
 
 	case Indexing:
