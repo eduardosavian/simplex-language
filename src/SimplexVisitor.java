@@ -40,12 +40,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
     }
 
     @Override
-    public Integer visitEchoStatement(SimplexParser.EchoStatementContext ctx) {
-        // TODO Auto-generated method stub
-        return super.visitEchoStatement(ctx);
-    }
-
-    @Override
     public Integer visitExprStatement(SimplexParser.ExprStatementContext ctx) {
         // TODO Auto-generated method stub
         return super.visitExprStatement(ctx);
@@ -154,12 +148,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
     }
 
     @Override
-    public Integer visitReadStatement(SimplexParser.ReadStatementContext ctx) {
-        // TODO Auto-generated method stub
-        return super.visitReadStatement(ctx);
-    }
-
-    @Override
     public Integer visitReal(SimplexParser.RealContext ctx) {
         // TODO Auto-generated method stub
         return super.visitReal(ctx);
@@ -227,6 +215,7 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
 
     @Override
     public Integer visitVarDeclaration(SimplexParser.VarDeclarationContext ctx) {
+        System.out.println(ctx.children.get(0).getText() + " = " + ctx.children.get(2).getText() + ";");
         // TODO Auto-generated method stub
         return super.visitVarDeclaration(ctx);
     }

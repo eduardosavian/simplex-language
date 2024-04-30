@@ -219,16 +219,4 @@ public interface SimplexParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIndexing(SimplexParser.IndexingContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SimplexParser#echoStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitEchoStatement(SimplexParser.EchoStatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SimplexParser#readStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitReadStatement(SimplexParser.ReadStatementContext ctx);
 }
