@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -7,7 +8,8 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
-    Map<String, Integer> symbols = new HashMap<String, Integer>();
+    Map<String, String> symbols = new HashMap<>();
+    List<String> types = List.of("int", "real", "bool", "string");
 
     @Override
     public Integer visitBitShift(SimplexParser.BitShiftContext ctx) {
@@ -216,14 +218,19 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
     @Override
     public Integer visitVarDeclaration(SimplexParser.VarDeclarationContext ctx) {
         String id = ctx.getChild(0).getText();
-        String type = ctx.getChild(1).getText();
-
-        if (symbols.containsKey(id)) {
-            System.err.println("Variable " + id + " already declared");
-            System.exit(1);
+        String type = ctx.getChild(2).getText();
+        
+        if (!types.contains(type)) {
+            System.out.println("Error: Type " + type + " is not defined");
+            return 0;
         }
 
-        symbols.put(id, 0);
+        if (symbols.containsKey(id)) {
+            System.out.println("Error: Variable " + id + " is already defined");
+            return 0;
+        }
+
+        symbols.put(id, type);
         return super.visitVarDeclaration(ctx);
     }
 
