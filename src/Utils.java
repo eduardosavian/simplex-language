@@ -38,11 +38,9 @@ public class Utils {
 
         ParseTree tree = parser.program();
 
-        ParseTreeWalker walker = new ParseTreeWalker();
-
-        // SimplexWalker listener = new SimplexWalker();
-
-        // walker.walk(listener, tree);
+        SimplexVisitor simplex = new SimplexVisitor();
+        
+        simplex.visit(tree);
     }
 
     public void antlrCommand(String grammarName, String startRuleName, String inputFilePath, String args) {

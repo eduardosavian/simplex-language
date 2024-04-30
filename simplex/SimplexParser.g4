@@ -35,8 +35,6 @@ statement
 	| ifStatement
 	| funcDeclaration
 	| scope
-	| echoStatement // TODO: Remove
-	| readStatement
 ;
 
 varDeclaration
@@ -169,13 +167,4 @@ real
 
 indexing
 	: ID SQUARE_OPEN expression SQUARE_CLOSE
-;
-
-// TODO: Remove this later
-echoStatement
-	: ECHO expression EOS
-;
-
-readStatement
-	: READ ID EOS
 ;
