@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
-    Map<String, Integer> memory = new HashMap<String, Integer>();
+    Map<String, Integer> symbols = new HashMap<String, Integer>();
 
     @Override
     public Integer visitBitShift(SimplexParser.BitShiftContext ctx) {
@@ -215,8 +215,15 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
 
     @Override
     public Integer visitVarDeclaration(SimplexParser.VarDeclarationContext ctx) {
-        System.out.println(ctx.children.get(0).getText() + " = " + ctx.children.get(2).getText() + ";");
-        // TODO Auto-generated method stub
+        String id = ctx.getChild(0).getText();
+        String type = ctx.getChild(1).getText();
+
+        if (symbols.containsKey(id)) {
+            System.err.println("Variable " + id + " already declared");
+            System.exit(1);
+        }
+
+        symbols.put(id, 0);
         return super.visitVarDeclaration(ctx);
     }
 
