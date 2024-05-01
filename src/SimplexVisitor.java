@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,8 +9,7 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
-    Map<String, String> symbols = new HashMap<>();
-    List<String> types = List.of("int", "real", "bool", "string");
+    ArrayList<Symbol> symbols = new ArrayList<Symbol>();
 
     @Override
     public Integer visitBitShift(SimplexParser.BitShiftContext ctx) {
@@ -219,18 +219,27 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer>{
     public Integer visitVarDeclaration(SimplexParser.VarDeclarationContext ctx) {
         String id = ctx.getChild(0).getText();
         String type = ctx.getChild(2).getText();
+    
         
-        if (!types.contains(type)) {
-            System.out.println("Error: Type " + type + " is not defined");
-            return 0;
-        }
+        // verify scope all
+        // this.name = name;
+        // this.type = type;
+        // this.initialized = initialized;
+        // this.used = used;
+        // this.scoped = scoped;
+        // this.param = param;
+        // this.array = array;
+        // this.matrix = matrix;
+        // this.ref = ref;
+        // this.func = func;
 
-        if (symbols.containsKey(id)) {
-            System.out.println("Error: Variable " + id + " is already defined");
-            return 0;
-        }
+        // verify is initialized
 
-        symbols.put(id, type);
+
+        
+
+    
+        
         return super.visitVarDeclaration(ctx);
     }
 

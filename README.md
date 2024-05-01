@@ -15,7 +15,7 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 ### Java Run
 
 ```bash
-java -jar simplex.jar -parse tests/principal.expr -gui
+java -jar simplex.jar -parse tests/test.expr -runWalk
 ```
 
 ## Reference
