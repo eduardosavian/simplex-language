@@ -1,8 +1,4 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 public class Simplex {
     public enum Operation {
@@ -37,84 +33,90 @@ public class Simplex {
 
         switch (operationFlag) {
             case TOKENIZE:
-
+                // Logic for tokenize operation
                 break;
             case PARSE:
-                // Logic for parsing
-                // verify
                 if (args.length < 3) {
                     System.err.println("Usage: java Main -parse <input_file> <print_type>");
                     System.exit(1);
                 }
 
-                Utils parser = new Utils();
-
                 String inputFilePath = args[1];
-                StringBuilder fileContents = new StringBuilder();
-
-                try (BufferedReader reader = new BufferedReader(new FileReader(inputFilePath))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        fileContents.append(line).append("\n");
-                    }
-                } catch (IOException e) {
-                    System.err.println("Error reading file: " + e.getMessage());
-                    System.exit(1);
-                }
-
-                // Check if file contents need modification
-                String trimmedContents = fileContents.toString().trim();
-                if (!trimmedContents.startsWith("{")) {
-                    fileContents.insert(0, "{\n");
-                }
-                if (!trimmedContents.endsWith("}")) {
-                    fileContents.append("\n}");
-                }
-
-                // Write modified file back to the same location
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(inputFilePath))) {
-                    writer.write(fileContents.toString());
-                } catch (IOException e) {
-                    System.err.println("Error writing file: " + e.getMessage());
-                    System.exit(1);
-                }
-
                 String printType = args[2];
 
-                switch (printType) {
-                    case "-tree":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-gui":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-tokens":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-trace":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-diagnostics":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-ps":
-                        parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                        break;
-                    case "-runTree":
-                        parser.printTree(inputFilePath);
-                        break;
-                    case "-runWalk":
-                        parser.printWalk(inputFilePath);
-                        break;
-                    default:
-                        System.out.println("Invalid print type");
-                        break;
-                }
+                handleParseOperation(inputFilePath, printType);
                 break;
             case GENERATE_TREE:
-                // Logic for generating syntax tree
+                // Logic for generate tree operation
+                break;
+            default:
+                System.out.println("Invalid operation");
                 break;
         }
+    }
 
+    private static void handleParseOperation(String inputFilePath, String printType) {
+        Utils parser = new Utils();
+
+        try {
+            StringBuilder fileContents = readFile(inputFilePath);
+
+            // Ensure file contents are wrapped with curly braces if needed
+            wrapWithCurlyBracesIfNeeded(fileContents);
+
+            // Write modified file contents back to the same file
+            writeFile(inputFilePath, fileContents.toString());
+
+            // Perform parsing based on printType
+            switch (printType) {
+                case "-tree":
+                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
+                    break;
+                case "-gui":
+                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
+                    break;
+                case "-tokens":
+                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
+                    break;
+                case "-semantic":
+                    parser.semantic(inputFilePath);
+                    break;
+                default:
+                    System.out.println("Invalid print type");
+                    break;
+            }
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    private static StringBuilder readFile(String filePath) throws IOException {
+        StringBuilder fileContents = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                fileContents.append(line).append("\n");
+            }
+        }
+
+        return fileContents;
+    }
+
+    private static void writeFile(String filePath, String content) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            writer.write(content);
+        }
+    }
+
+    private static void wrapWithCurlyBracesIfNeeded(StringBuilder fileContents) {
+        String trimmedContents = fileContents.toString().trim();
+        if (!trimmedContents.startsWith("{")) {
+            fileContents.insert(0, "{\n");
+        }
+        if (!trimmedContents.endsWith("}")) {
+            fileContents.append("\n}");
+        }
     }
 }

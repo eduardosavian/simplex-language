@@ -24,7 +24,7 @@ public class Utils {
         System.out.println(tree.toStringTree(parser));
     }
 
-    public void printWalk(String inputFilePath) throws IOException {
+    public void semantic(String inputFilePath) throws IOException {
         InputStream inputStream = new FileInputStream(inputFilePath);
 
         @SuppressWarnings("deprecation")
@@ -39,7 +39,7 @@ public class Utils {
         ParseTree tree = parser.program();
 
         SimplexVisitor simplex = new SimplexVisitor();
-        
+
         simplex.visit(tree);
     }
 
