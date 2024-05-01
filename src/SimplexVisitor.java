@@ -217,22 +217,18 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         String id = ctx.getChild(0).getText();
         String type = ctx.getChild(2).getText();
 
-        // verify is alreaty exits
         System.out.println("id: " + id + " type: " + type);
 
-        // verify scope all
-        // this.name = name;
-        // this.type = type;
-        // this.initialized = initialized;
-        // this.used = used;
-        // this.scoped = scoped;
-        // this.param = param;
-        // this.array = array;
-        // this.matrix = matrix;
-        // this.ref = ref;
-        // this.func = func;
-
-        // verify is initialized
+        // name;
+        // type;
+        // initialized;
+        // used;
+        // scoped;
+        // param;
+        // array;
+        // matrix;
+        // ref;
+        // func;
 
         return super.visitVarDeclaration(ctx);
     }
