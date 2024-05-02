@@ -1,38 +1,54 @@
 import java.lang.reflect.Method;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
-
 public class Sintatic {
-    public void printTree(String inputFilePath) throws IOException {
-        InputStream inputStream = new FileInputStream(inputFilePath);
+    public enum Operation {
+        GUI("-gui"),
+        TREE("-tree"),
+        TOKENS("-tokens");
 
-        @SuppressWarnings("deprecation")
-        ANTLRInputStream input = new ANTLRInputStream(inputStream);
+        private final String flag;
 
-        SimplexLexer lexer = new SimplexLexer(input);
+        Operation(String flag) {
+            this.flag = flag;
+        }
 
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        SimplexParser parser = new SimplexParser(tokens);
-
-        ParseTree tree = parser.program();
-
-        System.out.println(tree.toStringTree(parser));
+        public String getFlag() {
+            return flag;
+        }
     }
 
-    public void antlrCommand(String grammarName, String startRuleName, String inputFilePath, String args) {
+    public void execute(String inputFilePath, String printType) {
+        Operation operationFlag = null;
+        for (Operation operation : Operation.values()) {
+            if (operation.getFlag().equals(printType)) {
+                operationFlag = operation;
+                break;
+            }
+        }
+
+        switch (operationFlag) {
+            case TREE:
+                antlrCommand(inputFilePath, printType);
+                break;
+            case GUI:
+                antlrCommand(inputFilePath, printType);
+                break;
+            case TOKENS:
+                antlrCommand(inputFilePath, printType);
+                break;
+            default:
+                System.out.println("Invalid print type");
+                break;
+        }
+    }
+
+    private void antlrCommand(String inputFilePath, String args) {
         try {
             String[] argArray = args.split("\\s+");
 
             String[] fullArgs = new String[argArray.length + 3];
-            fullArgs[0] = grammarName;
-            fullArgs[1] = startRuleName;
+            fullArgs[0] = "Simplex";
+            fullArgs[1] = "program";
             fullArgs[2] = inputFilePath;
             System.arraycopy(argArray, 0, fullArgs, 3, argArray.length);
 

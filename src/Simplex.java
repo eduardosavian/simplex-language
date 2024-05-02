@@ -1,9 +1,7 @@
-import java.io.*;
-
 public class Simplex {
     public enum Operation {
         PARSER("-parser"),
-        TYPE_CHECKER("-generate-tree");
+        TYPE_CHECKER("-type-checker");
 
         private final String flag;
 
@@ -40,79 +38,24 @@ public class Simplex {
                 String inputFilePath = args[1];
                 String printType = args[2];
 
-                handleParseOperation(inputFilePath, printType);
+                Sintatic sintatic = new Sintatic();
+                sintatic.execute(inputFilePath, printType);
                 break;
             case TYPE_CHECKER:
-                // Logic for generate tree operation
+                if (args.length < 2) {
+                    System.err.println("Usage: java Main -generate-tree <input_file>");
+                    System.exit(1);
+                }
+
+                String inputFilePath2 = args[1];
+
+                Semantic semantic = new Semantic();
+                semantic.execute(inputFilePath2);
+
                 break;
             default:
                 System.out.println("Invalid operation");
                 break;
-        }
-    }
-
-    private static void handleParseOperation(String inputFilePath, String printType) {
-        Utils parser = new Utils();
-
-        try {
-            StringBuilder fileContents = readFile(inputFilePath);
-
-            // Ensure file contents are wrapped with curly braces if needed
-            wrapWithCurlyBracesIfNeeded(fileContents);
-
-            // Write modified file contents back to the same file
-            writeFile(inputFilePath, fileContents.toString());
-
-            // Perform parsing based on printType
-            switch (printType) {
-                case "-tree":
-                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                    break;
-                case "-gui":
-                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                    break;
-                case "-tokens":
-                    parser.antlrCommand("Simplex", "program", inputFilePath, printType);
-                    break;
-                case "-semantic":
-                    parser.semantic(inputFilePath);
-                    break;
-                default:
-                    System.out.println("Invalid print type");
-                    break;
-            }
-        } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
-            System.exit(1);
-        }
-    }
-
-    private static StringBuilder readFile(String filePath) throws IOException {
-        StringBuilder fileContents = new StringBuilder();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                fileContents.append(line).append("\n");
-            }
-        }
-
-        return fileContents;
-    }
-
-    private static void writeFile(String filePath, String content) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write(content);
-        }
-    }
-
-    private static void wrapWithCurlyBracesIfNeeded(StringBuilder fileContents) {
-        String trimmedContents = fileContents.toString().trim();
-        if (!trimmedContents.startsWith("{")) {
-            fileContents.insert(0, "{\n");
-        }
-        if (!trimmedContents.endsWith("}")) {
-            fileContents.append("\n}");
         }
     }
 }
