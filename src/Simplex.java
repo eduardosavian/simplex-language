@@ -2,9 +2,8 @@ import java.io.*;
 
 public class Simplex {
     public enum Operation {
-        TOKENIZE("-tokenize"),
-        PARSE("-parse"),
-        GENERATE_TREE("-generate-tree");
+        PARSER("-parser"),
+        TYPE_CHECKER("-generate-tree");
 
         private final String flag;
 
@@ -32,10 +31,7 @@ public class Simplex {
         }
 
         switch (operationFlag) {
-            case TOKENIZE:
-                // Logic for tokenize operation
-                break;
-            case PARSE:
+            case PARSER:
                 if (args.length < 3) {
                     System.err.println("Usage: java Main -parse <input_file> <print_type>");
                     System.exit(1);
@@ -46,7 +42,7 @@ public class Simplex {
 
                 handleParseOperation(inputFilePath, printType);
                 break;
-            case GENERATE_TREE:
+            case TYPE_CHECKER:
                 // Logic for generate tree operation
                 break;
             default:
