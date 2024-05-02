@@ -356,24 +356,4 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIndexing(SimplexParser.IndexingContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#echoStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterEchoStatement(SimplexParser.EchoStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#echoStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitEchoStatement(SimplexParser.EchoStatementContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SimplexParser#readStatement}.
-	 * @param ctx the parse tree
-	 */
-	void enterReadStatement(SimplexParser.ReadStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SimplexParser#readStatement}.
-	 * @param ctx the parse tree
-	 */
-	void exitReadStatement(SimplexParser.ReadStatementContext ctx);
 }

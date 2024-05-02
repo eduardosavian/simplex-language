@@ -431,30 +431,6 @@ public class SimplexParserBaseListener implements SimplexParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIndexing(SimplexParser.IndexingContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterEchoStatement(SimplexParser.EchoStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitEchoStatement(SimplexParser.EchoStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterReadStatement(SimplexParser.ReadStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitReadStatement(SimplexParser.ReadStatementContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

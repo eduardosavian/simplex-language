@@ -9,13 +9,13 @@ Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
 ### Ant build
 
 ```bash
- ant build
+ant build
 ```
 
 ### Java Run
 
 ```bash
-java -jar simplex.jar -parse tests/principal.expr -gui
+java -jar simplex.jar -parser tests/test.expr -semantic
 ```
 
 ## Reference

@@ -3,9 +3,6 @@ lexer grammar SimplexLexer;
 // Whitespace rule to skip spaces, tabs, and line breaks
 WS : [ \t\r\n]+ -> skip;
 
-
-ECHO : 'ECHO';
-
 // Branching keywords
 IF : 'if';
 ELSE : 'else';

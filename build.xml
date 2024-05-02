@@ -16,7 +16,7 @@
     </path>
 
     <!-- Compile task -->
-    <target name="compile">
+    <target name="compile" depends="init" unless="skip.build">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" classpathref="classpath" debug="true" nowarn="true"/>
     </target>
@@ -33,22 +33,24 @@
     </target>
 
     <!-- Build task -->
-    <target name="build" depends="clean, init, generate, compile, jar">
+    <target name="build" depends="clean, compile, jar">
         <echo message="Build completed"/>
     </target>
 
     <!-- ANTLR task -->
-    <target name="generate">
+    <target name="parser" depends="init">
         <java classname="org.antlr.v4.Tool" fork="true" classpath="${antlr4_path}:${CLASSPATH}">
             <arg value="${simplex.dir}/SimplexLexer.g4"/>
             <arg value="${simplex.dir}/SimplexParser.g4"/>
             <arg value="-o"/>
             <arg value="${src.dir}"/>
+            <arg value="-listener"/>
+            <arg value="-visitor"/>
         </java>
     </target>
 
     <!-- Jar task -->
-    <target name="jar">
+    <target name="jar" depends="compile">
         <jar destfile="${jar.file}" basedir="${build.dir}">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
@@ -58,5 +60,13 @@
         </jar>
     </target>
 
+    <!-- Check if build is up to date -->
+    <target name="check-up-to-date">
+        <uptodate property="skip.build" targetfile="${build.dir}">
+            <srcfiles dir="${src.dir}">
+                <include name="**/*.java"/>
+            </srcfiles>
+        </uptodate>
+    </target>
 
 </project>
