@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 public class Simplex {
     public enum Operation {
         PARSER("-parser"),
@@ -15,46 +17,51 @@ public class Simplex {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 1) {
-            System.err.println("Usage: java Main <operation>");
+        String runError = "Usage: java -jar simplex.jar <file_path> <operation_flag>";
+        if (args.length < 2) {
+            System.err.println(runError);
             System.exit(1);
         }
 
         Operation operationFlag = null;
         for (Operation operation : Operation.values()) {
-            if (operation.getFlag().equals(args[0])) {
+            if (operation.getFlag().equals(args[1])) {
                 operationFlag = operation;
-                break;
-            }
+                Menu(args, operationFlag, runError);
+                return;
+            } 
         }
+
+        System.out.println("Invalid operation");
+        System.out.println("Valid operations are: -parser, -type-checker");
+
+    }
+
+    private static void Menu(String[] args, Operation operationFlag, String runError) throws IOException {
+        String inputFilePath = args[0];
+        File file = new File(inputFilePath);
 
         switch (operationFlag) {
             case PARSER:
                 if (args.length < 3) {
-                    System.err.println("Usage: java Main -parse <input_file> <print_type>");
+                    runError += " <print_type>";
+                    System.err.println(runError);
                     System.exit(1);
                 }
 
-                String inputFilePath = args[1];
-                String printType = args[2];
+                String printFlag = args[2];
 
                 Sintatic sintatic = new Sintatic();
-                sintatic.execute(inputFilePath, printType);
+                sintatic.execute(file, printFlag);
                 break;
             case TYPE_CHECKER:
-                if (args.length < 2) {
-                    System.err.println("Usage: java Main -generate-tree <input_file>");
-                    System.exit(1);
-                }
-
-                String inputFilePath2 = args[1];
-
                 Semantic semantic = new Semantic();
-                semantic.execute(inputFilePath2);
+                semantic.execute(file);
 
                 break;
             default:
                 System.out.println("Invalid operation");
+                System.out.println("Valid operations are: -parser, -type-checker");
                 break;
         }
     }
