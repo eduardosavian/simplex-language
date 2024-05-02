@@ -15,7 +15,7 @@ ant build
 ### Java Run
 
 ```bash
-java -jar simplex.jar -parser tests/test.expr -semantic
+java -jar simplex.jar -parser tests/test.expr -tree
 ```
 
 ## Reference
