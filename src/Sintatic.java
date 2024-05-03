@@ -1,14 +1,15 @@
 import java.lang.reflect.Method;
 
+
 public class Sintatic {
-    public enum Operation {
+    public enum PrintFlag {
         GUI("-gui"),
         TREE("-tree"),
         TOKENS("-tokens");
 
         private final String flag;
 
-        Operation(String flag) {
+        PrintFlag(String flag) {
             this.flag = flag;
         }
 
@@ -17,44 +18,26 @@ public class Sintatic {
         }
     }
 
-    public void execute(String inputFilePath, String printType) {
-        Operation operationFlag = null;
-        for (Operation operation : Operation.values()) {
-            if (operation.getFlag().equals(printType)) {
-                operationFlag = operation;
-                break;
+    public void execute(File file, String printFlag) {
+        PrintFlag PrintFlag = null;
+        for (PrintFlag flag : Sintatic.PrintFlag.values()) {
+            if (flag.getFlag().equals(printFlag)) {
+                PrintFlag = flag;
+                antlrCommand(file.getPath(), PrintFlag);
+                return;
             }
         }
-
-        switch (operationFlag) {
-            case TREE:
-                antlrCommand(inputFilePath, printType);
-                break;
-            case GUI:
-                antlrCommand(inputFilePath, printType);
-                break;
-            case TOKENS:
-                antlrCommand(inputFilePath, printType);
-                break;
-            default:
-                System.out.println("Invalid print type");
-                break;
-        }
+        System.out.println("Invalid print type");
+        System.out.println("Valid print types are: -gui, -tree, -tokens");
     }
 
-    private void antlrCommand(String inputFilePath, String args) {
+    private void antlrCommand(String inputFilePath, PrintFlag printType) {
         try {
-            String[] argArray = args.split("\\s+");
-
-            String[] fullArgs = new String[argArray.length + 3];
+            String[] fullArgs = new String[4];
             fullArgs[0] = "Simplex";
             fullArgs[1] = "program";
             fullArgs[2] = inputFilePath;
-            System.arraycopy(argArray, 0, fullArgs, 3, argArray.length);
-
-            for (String arg : fullArgs) {
-                System.out.println(arg);
-            }
+            fullArgs[3] = printType.getFlag();
 
             Class<?> testRigClass = Class.forName("org.antlr.v4.gui.TestRig");
             Method mainMethod = testRigClass.getMethod("main", String[].class);
