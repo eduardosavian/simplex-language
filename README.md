@@ -1,6 +1,6 @@
 # The Simplex Language or Slang
 
-Made by Eduardo Savian, Pablo Marques e Marcos Fehlauer
+Made by Eduardo Savian, Marcos Fehlauer e Pablo Marques
 
 **Only works on Linux and with Java and JDK 17**
 
@@ -15,7 +15,33 @@ ant build
 ### Java Run
 
 ```bash
-java -jar simplex.jar -parser tests/test.expr -semantic
+java -jar simplex.jar <file_path> <operation> <opcional: print_type>
+```
+
+## Available flags
+
+### Operations types
+
+```
+-parser
+```
+
+```
+-type-checker
+```
+
+### Print types
+
+```
+-tree
+```
+
+```
+-gui
+```
+
+```
+-tokens
 ```
 
 ## Reference
