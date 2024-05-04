@@ -10,3 +10,5 @@ simplex.jar
 
 # Unignore Main.java
 !Main.java
+
+simplex.jar

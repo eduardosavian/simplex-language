@@ -13,7 +13,7 @@ public class Symbol {
     private Boolean func = false;
 
     public List<String> types = List.of("int", "real", "bool", "string");
-    
+
     public Symbol(String name, String type) {
         this.name = name;
         this.type = type;
@@ -25,20 +25,6 @@ public class Symbol {
         this.matrix = false;
         this.ref = false;
         this.func = false;
-    }
-
-    public Symbol(String name, String type, Boolean initialized, Boolean used, Boolean scoped, Boolean param,
-            Boolean array, Boolean matrix, Boolean ref, Boolean func) {
-        this.name = name;
-        this.type = type;
-        this.initialized = initialized;
-        this.used = used;
-        this.scoped = scoped;
-        this.param = param;
-        this.array = array;
-        this.matrix = matrix;
-        this.ref = ref;
-        this.func = func;
     }
 
     public String getName() {
