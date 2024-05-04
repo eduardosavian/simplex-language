@@ -76,7 +76,7 @@ public class Simplex {
                 parser(inputFilePath, printFlag);
                 break;
             case TYPE_CHECKER:
-                String fileContent = setContent(inputFilePath);
+                String fileContent = readFile(inputFilePath);
                 typeChecker(fileContent);
 
                 break;
@@ -135,7 +135,7 @@ public class Simplex {
         simplex.visit(tree);
     }
 
-    private static String setContent(String filePath) {
+    private static String readFile(String filePath) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             StringBuilder stringBuilder = new StringBuilder();
@@ -149,8 +149,8 @@ public class Simplex {
 
             reader.close();
 
-            stringBuilder.insert(0, "{");
-            stringBuilder.append("}");
+            stringBuilder.insert(0, "{\n");
+            stringBuilder.append("\n}");
 
             return stringBuilder.toString();
         } catch (IOException e) {

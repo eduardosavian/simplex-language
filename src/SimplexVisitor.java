@@ -76,18 +76,24 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
     @Override
     public Integer visitFuncDeclaration(SimplexParser.FuncDeclarationContext ctx) {
+        // TODO Auto-generated method stub
+
+        // System.out.println(ctx.getText());
 
         return super.visitFuncDeclaration(ctx);
     }
 
     @Override
     public Integer visitFunctionCall(SimplexParser.FunctionCallContext ctx) {
+        // TODO Auto-generated method stub
+        // System.out.println(ctx.getText());
 
         return super.visitFunctionCall(ctx);
     }
 
     @Override
     public Integer visitGroup(SimplexParser.GroupContext ctx) {
+        // TODO Auto-generated method stub
 
         return super.visitGroup(ctx);
     }
@@ -160,6 +166,8 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
     @Override
     public Integer visitScope(SimplexParser.ScopeContext ctx) {
+        // TODO Auto-generated method stub
+        // System.out.println("scope: " + ctx.getText());
 
         return super.visitScope(ctx);
     }
@@ -214,13 +222,66 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
     @Override
     public Integer visitVarDeclaration(SimplexParser.VarDeclarationContext ctx) {
-        String id = ctx.getChild(0).getText();
-        String type = ctx.getChild(2).getText();
+        // TODO Auto-generated method stub
 
-        System.out.println("id: " + id + " type: " + type);
+        String ctxText = ctx.getText();
+        Integer childCount = ctx.getChildCount();
+        System.out.println("Text: " + ctxText + "\nChild Count: " + childCount.toString());
 
-        // name;
-        // type;
+        ParseTree ids = ctx.getChild(0);
+        String idsText = ids.getText();
+        Integer idsCount = ids.getChildCount();
+
+        ParseTree type = ctx.getChild(2);
+
+        ParseTree expressions;
+        Integer expressionsCount;
+        String expressionsText;
+
+        if (childCount == 5) {
+            expressions = ctx.getChild(4);
+            expressionsCount = expressions.getChildCount();
+            expressionsText = expressions.getText();
+
+            if (idsCount != expressionsCount) {
+                System.err.println(
+                                    "The ids list size '" + idsText 
+                                + "' is different from expressions list size " + expressionsText 
+                                + "'");
+                System.exit(1);
+            }
+        }
+
+        
+        // ParseTree equal = ctx.getChild(3);
+        // ParseTree value = ctx.getChild(4);
+
+        ArrayList<Symbol> idsList = new ArrayList<>();
+
+        for (int i = 0; i < idsCount; i++) {
+            if (i % 2 == 0) {
+
+            }
+        }
+
+        // switch (childCount) {
+        // case 3:
+        // symbol.setInitialized(true);
+        // break;
+        // case 5:
+        // symbol.setInitialized(false);
+        // break;
+        // default:
+        // System.out.println(System.err);
+        // break;
+        // }
+
+        // if(type.contains("[")) {
+        // symbol.setArray(true);
+        // } else {
+        // symbol.setArray(false);
+        // }
+
         // initialized;
         // used;
         // scoped;
@@ -292,22 +353,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
     protected void finalize() throws Throwable {
 
         super.finalize();
-    }
-
-    @Override
-    public int hashCode() {
-
-        return super.hashCode();
-    }
-
-    @Override
-    public String toString() {
-
-        return super.toString();
-    }
-
-    public String verifyScope() {
-        return "";
     }
 
 }

@@ -1,12 +1,13 @@
-a : int = 10;
+a : int = 1;
 
-a : int = 10;
+b, c : int;
 
+d, e : int = 10, 10,10;
 
-b : int = 10;
+f: []int;
 
-c : int = 10;
+g: []int = funcaoQueRetornaLista();
 
-b : int = 10;
-
-b : int = 10 + 10;
+{
+   h : int = 4;
+}

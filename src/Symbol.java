@@ -14,19 +14,6 @@ public class Symbol {
 
     public List<String> types = List.of("int", "real", "bool", "string");
 
-    public Symbol(String name, String type) {
-        this.name = name;
-        this.type = type;
-        this.initialized = false;
-        this.used = false;
-        this.scoped = false;
-        this.param = false;
-        this.array = false;
-        this.matrix = false;
-        this.ref = false;
-        this.func = false;
-    }
-
     public String getName() {
         return name;
     }
