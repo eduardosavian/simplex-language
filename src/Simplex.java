@@ -130,9 +130,10 @@ public class Simplex {
 
         ParseTree tree = parser.program();
 
-        SimplexVisitor simplex = new SimplexVisitor();
+        SimplexVisitor visitor = new SimplexVisitor();
 
-        simplex.visit(tree);
+        visitor.visit(tree);
+        visitor.printSymbols();
     }
 
     private static String readFile(String filePath) {
@@ -150,7 +151,7 @@ public class Simplex {
             reader.close();
 
             stringBuilder.insert(0, "{\n");
-            stringBuilder.append("\n}");
+            stringBuilder.append("\n} debug;");
 
             return stringBuilder.toString();
         } catch (IOException e) {

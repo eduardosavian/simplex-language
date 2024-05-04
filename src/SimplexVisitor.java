@@ -227,7 +227,7 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
         String ctxText = ctx.getText();
         Integer childCount = ctx.getChildCount();
-        System.out.println("Text: " + ctxText + "\nChild Count: " + childCount.toString());
+        //System.out.println("Text: " + ctxText + "\nChild Count: " + childCount.toString());
 
         ParseTree ids = ctx.getChild(0);
         String idsText = ids.getText();
@@ -263,10 +263,7 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         for (int i = 0; i < varsSize; i++) {
             if (i % 2 == 0) {
                 String id = ids.getChild(i).getText();
-                Symbol symbol = new Symbol(id, typeText);
-
-                symbol.setInitialized(expressionsExist);
-
+                Symbol symbol = new Symbol(id, typeText, expressionsExist);
                 vars.add(symbol);
             }
         }
@@ -301,6 +298,8 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         return super.visitVarDeclaration(ctx);
     }
 
+    
+
     @Override
     protected Integer aggregateResult(Integer aggregate, Integer nextResult) {
 
@@ -321,7 +320,7 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
     @Override
     public Integer visit(ParseTree tree) {
-
+    
         return super.visit(tree);
     }
 
@@ -360,6 +359,13 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
     protected void finalize() throws Throwable {
 
         super.finalize();
+    }
+
+    public void printSymbols() {
+        for(Symbol symbol : symbols) {
+            System.out.println("safas");
+            symbol.print();
+        }
     }
 
 }

@@ -35,6 +35,11 @@ statement
 	| ifStatement
 	| funcDeclaration
 	| scope
+	| debuger
+;
+
+debuger
+	: DEBUG
 ;
 
 varDeclaration

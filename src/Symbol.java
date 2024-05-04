@@ -18,24 +18,25 @@ public class Symbol {
         }
     }
 
-    private String id = "";
+    private String identifier = "";
     private Type type;
-    private Boolean initialized = false;
+    private Boolean isInitialized = false;
     private Boolean used = false;
-    private Boolean scoped = false;
-    private Boolean param = false;
-    private Boolean array = false;
-    private Boolean matrix = false;
-    private Boolean ref = false;
-    private Boolean func = false;
+    private String scoped = "";
+    private Boolean isParameter = false;
+    private Boolean isArray = false;
+    private Boolean isMatrix = false;
+    private Boolean isReference = false;
+    private Boolean isFunction = false;
 
-    Symbol(String id, String type) {
-        this.id = id;
+    Symbol(String identifier, String type, Boolean expressionsExist) {
+        this.identifier = identifier;
 
         Boolean typeExists = false;
 
         for (Type typeSymbol : Type.values()) {
             if (type.contains(typeSymbol.getType())) {
+                this.type = typeSymbol;
                 typeExists = true;
                 break;
             }
@@ -43,27 +44,30 @@ public class Symbol {
 
         if (!typeExists) {
             System.err.println(
-                    "The id '" + id
+                    "The id '" + identifier
                             + type + "' type doesn't exist");
             System.exit(1);
         }
-        this.initialized = false;
+
+        this.isMatrix = (type.contains("["));
+
+        this.isInitialized = expressionsExist;
+        
         this.used = false;
-        this.scoped = false;
-        this.param = false;
-        this.array = false;
-        this.matrix = false;
-        this.ref = false;
-        this.func = false;
+        this.scoped = "";
+        this.isParameter = false;
+        this.isArray = false;
+        this.isReference = false;
+        this.isFunction = false;
 
     }
 
-    public String getId() {
-        return id;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public Type getType() {
@@ -74,12 +78,12 @@ public class Symbol {
         this.type = type;
     }
 
-    public Boolean getInitialized() {
-        return initialized;
+    public Boolean getIsInitialized() {
+        return isInitialized;
     }
 
-    public void setInitialized(Boolean initialized) {
-        this.initialized = initialized;
+    public void setISInitialized(Boolean initialized) {
+        this.isInitialized = initialized;
     }
 
     public Boolean getUsed() {
@@ -90,52 +94,66 @@ public class Symbol {
         this.used = used;
     }
 
-    public Boolean getScoped() {
+    public String getScoped() {
         return scoped;
     }
 
-    public void setScoped(Boolean scoped) {
+    public void setScoped(String scoped) {
         this.scoped = scoped;
     }
 
-    public Boolean getParam() {
-        return param;
+    public Boolean getIsParameter() {
+        return isParameter;
     }
 
-    public void setParam(Boolean param) {
-        this.param = param;
+    public void setIsParameter(Boolean isParameter) {
+        this.isParameter = isParameter;
     }
 
-    public Boolean getArray() {
-        return array;
+    public Boolean getIsArray() {
+        return isArray;
     }
 
-    public void setArray(Boolean array) {
-        this.array = array;
+    public void setIsArray(Boolean isArray) {
+        this.isArray = isArray;
     }
 
-    public Boolean getMatrix() {
-        return matrix;
+    public Boolean getIsMatrix() {
+        return isMatrix;
     }
 
-    public void setMatrix(Boolean matrix) {
-        this.matrix = matrix;
+    public void setIsMatrix(Boolean isMatrix) {
+        this.isMatrix = isMatrix;
     }
 
-    public Boolean getRef() {
-        return ref;
+    public Boolean getIsReference() {
+        return isReference;
     }
 
-    public void setRef(Boolean ref) {
-        this.ref = ref;
+    public void setIsReference(Boolean isReference) {
+        this.isReference = isReference;
     }
 
-    public Boolean getFunc() {
-        return func;
+    public Boolean getIsFunction() {
+        return isFunction;
     }
 
-    public void setFunc(Boolean func) {
-        this.func = func;
+    public void setIsFunction(Boolean isFunction) {
+        this.isFunction = isFunction;
+    }
+
+    
+    public void print() {
+        System.out.println("Identifier: " + identifier);
+        System.out.println("Type: " + type.getType());
+        System.out.println("Initialized: " + isInitialized);
+        System.out.println("Used: " + used);
+        System.out.println("Scoped: " + scoped);
+        System.out.println("Parameter: " + isParameter);
+        System.out.println("Array: " + isArray);
+        System.out.println("Matrix: " + isMatrix);
+        System.out.println("Reference: " + isReference);
+        System.out.println("Function: " + isFunction);
     }
 
 }
