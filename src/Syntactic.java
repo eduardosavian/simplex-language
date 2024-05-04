@@ -1,7 +1,7 @@
 import java.lang.reflect.Method;
 
 
-public class Sintatic {
+public class Syntactic {
     public enum PrintFlag {
         GUI("-gui"),
         TREE("-tree"),
@@ -20,7 +20,7 @@ public class Sintatic {
 
     public void execute(File file, String printFlag) {
         PrintFlag PrintFlag = null;
-        for (PrintFlag flag : Sintatic.PrintFlag.values()) {
+        for (PrintFlag flag : Syntactic.PrintFlag.values()) {
             if (flag.getFlag().equals(printFlag)) {
                 PrintFlag = flag;
                 antlrCommand(file.getPath(), PrintFlag);

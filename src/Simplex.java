@@ -51,8 +51,8 @@ public class Simplex {
 
                 String printFlag = args[2];
 
-                Sintatic sintatic = new Sintatic();
-                sintatic.execute(file, printFlag);
+                Syntactic syntactic = new Syntactic();
+                syntactic.execute(file, printFlag);
                 break;
             case TYPE_CHECKER:
                 Semantic semantic = new Semantic();
