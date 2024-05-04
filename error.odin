@@ -47,15 +47,15 @@ error_name :: proc(e: Error) -> string {
 	return msg
 }
 
-emit_error :: proc(e: Error, format: string = "", args: ..any) -> Error {
+emit_error :: proc(e: Error, format: string, args: ..any) -> Error {
 	assert(e != nil, "Cannot emmit a nil error")
-	if len(format) > 0 {
-		f := fmt.tprintf("\e[1;31m%sError\e[0m: %s", error_name(e), format)
-		fmt.printf(f, ..args)
-	}
-	else {
-		fmt.printf("%s: %s", error_name(e), e)
-	}
+	f := fmt.tprintf("\e[1;31m%sError\e[0m: %s", error_name(e), format)
+	fmt.printfln(f, ..args)
 	return e
+}
+
+emit_warning :: proc(format: string, args: ..any){
+	f := fmt.tprintf("\e[1;33mWarning\e[0m: %s", format)
+	fmt.printfln(f, ..args)
 }
 

@@ -4,7 +4,7 @@ func square(x: int) -> int {
 	return res;
 }
 
-func pog() -> string {
+func pog() -> int {
 	return 69;
 }
 

@@ -356,9 +356,14 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 	return
 }
 
+check_symbol_usage :: proc(scope: ^Scope){
+	emit_warning("TODO: Check usage")
+}
+
 check_ast :: proc(scope: ^Scope) -> (err: Error){
 	init_global_env(scope)
 	init_scopes(scope, nil) or_return
+	check_symbol_usage(scope)
 	return
 }
 
