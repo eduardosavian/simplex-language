@@ -39,22 +39,22 @@ Error :: union {
 error_name :: proc(e: Error) -> string {
 	msg : string
 	switch _ in e {
-	case LexerError:   msg = "Lexing Error"
-	case ParserError:  msg = "Syntax Error"
-	case CheckerError: msg = "Semantic Error"
-	case: msg = "Error"
+	case LexerError:   msg = "Lexing "
+	case ParserError:  msg = "Syntax "
+	case CheckerError: msg = "Semantic "
+	case: msg = " "
 	}
 	return msg
 }
 
-emit_error :: proc(e: Error, format: string = "", args: ..any, loc := #caller_location) -> Error {
+emit_error :: proc(e: Error, format: string = "", args: ..any) -> Error {
 	assert(e != nil, "Cannot emmit a nil error")
 	if len(format) > 0 {
-		f := fmt.tprintf("%s: %s", error_name(e), format)
-		log.errorf(f, ..args, location = loc)
+		f := fmt.tprintf("\e[1;31m%sError\e[0m: %s", error_name(e), format)
+		fmt.printf(f, ..args)
 	}
 	else {
-		log.errorf("%s: %s", error_name(e), e, location = loc)
+		fmt.printf("%s: %s", error_name(e), e)
 	}
 	return e
 }

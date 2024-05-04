@@ -83,13 +83,13 @@ parser_match_consume :: proc(using parser: ^Parser, accept: ..TokenKind) -> (Tok
 	return tk, false
 }
 
-parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind, loc := #caller_location) -> (Token, bool){
+parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind) -> (Token, bool){
 	tk := parser_peek(parser, 0)
 	if tk.kind == expect {
 		parser_advance(parser)
 		return tk, true
 	}
-	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind, loc = loc)
+	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind)
 	return tk, false
 }
 
