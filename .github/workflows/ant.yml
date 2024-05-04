@@ -25,4 +25,4 @@ jobs:
       run: ant -noinput -buildfile build.xml
 
     - name: Run with Java
-      run: java -jar simplex.jar -parse tests/principal.expr -gui
+      run: java -jar simplex.jar codes/principal.expr -parser -tokens
