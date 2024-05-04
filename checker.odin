@@ -24,6 +24,8 @@ SymbolInfo :: struct {
 	type: Type,
 	args: []Type,
 	body: Scope,
+
+	uses: int, // TODO: Remove
 }
 
 SymbolKind :: enum {
@@ -47,7 +49,10 @@ search_symbol :: proc(scope: ^Scope, name: Identifier) -> (sym: SymbolInfo, foun
 	if scope == nil { return }
 
 	if name in scope.env {
-		return scope.env[name], true
+		info := scope.env[name]
+		info.uses += 1
+		scope.env[name] = info
+		return info, true
 	}
 
 	return search_symbol(scope.parent, name)
