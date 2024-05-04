@@ -70,7 +70,6 @@ eval_parser_type :: proc(scope: ^Scope, ptype: ParserType) -> (type: Type, err: 
 	return
 }
 
-// Initialize environments in scopes, does not typecheck, only defines the symbols
 @(require_results)
 init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	if scope == nil { return }
@@ -195,6 +194,14 @@ BINARY_COMPAT := map[TokenKind][]PrimitiveType {
 	.LogicNot = {.Bool},
 	.LogicOr  = {.Bool},
 	.LogicXor = {.Bool},
+}
+
+BUILTIN_TYPES := map[Identifier]BuiltinType{
+	"int"    = .Int,
+	"real"   = .Real,
+	"bool"   = .Bool,
+	"rune"   = .Rune,
+	"string" = .String,
 }
 
 
@@ -331,14 +338,6 @@ init_global_env:: proc(s: ^Scope){
 		info := SymbolInfo{kind = .Type, type = Type{primitive = val}}
 		define_symbol(s, name, info)
 	}
-}
-
-BUILTIN_TYPES := map[Identifier]BuiltinType{
-	"int"    = .Int,
-	"real"   = .Real,
-	"bool"   = .Bool,
-	"rune"   = .Rune,
-	"string" = .String,
 }
 
 @(private="file")

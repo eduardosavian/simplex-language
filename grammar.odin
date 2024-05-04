@@ -28,11 +28,6 @@ String :: string
 Rune :: rune
 Bool :: bool
 
-// TypeDef :: struct {
-// 	name: Identifier,
-// 	what: ParserType,
-// }
-
 Scope :: struct {
 	body: []Statement,
 
