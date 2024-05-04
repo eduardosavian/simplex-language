@@ -37,8 +37,7 @@ Environment :: map[Identifier]SymbolInfo
 define_symbol :: proc(scope: ^Scope, name: Identifier, value: SymbolInfo) -> (err: Error){
 	_, exists := search_symbol(scope, name)
 	if exists {
-		err = emit_error(.Redefinition, "Identifier '%v' already in use.", name)
-		return
+		return emit_error(.Redefinition, "Identifier '%v' already in use.", name)
 	}
 
 	scope.env[name] = value
@@ -316,10 +315,6 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 
 		// expr.type = fn.type
 		if fn.kind == .Function {
-			log.warnf("Check args")
-			log.debugf("EXPRESSION: %#v", expression)
-			log.debugf("FUNCTION: %#v", fn)
-
 			enough_args := len(expression.args) == len(fn.args)
 			if !enough_args {
 				return emit_error(.ArgMismatch, "Mismatched number of arguments %v = %v", len(expression.args), len(fn.args))
@@ -354,8 +349,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 			id, _ := expression.(Identifier)
 			info, ok := search_symbol(scope, id)
 			if !ok {
-				err = emit_error(.NotDefined, "Undefined identifier: %v", id)
-				return
+				return emit_error(.NotDefined, "Undefined identifier: %v", id)
 			}
 			expr.type = info.type
 		}
