@@ -10,6 +10,15 @@ contains :: proc(s: $T/[]$E, e: E) -> bool {
 	}
 	return false
 }
+print_type :: proc(t: Type){
+	for mod in t.modifiers {
+		switch mod {
+		case .Pointer: fmt.print("^")
+		case .Slice: fmt.print("[]")
+		}
+	}
+	fmt.printf("%v", t.primitive)
+}
 
 print_env :: proc(scope: ^Scope, n := 0){
 	printf(n, "--- >> ---\n")
@@ -18,14 +27,23 @@ print_env :: proc(scope: ^Scope, n := 0){
 			printf(n, "%v: type\n", name)
 			continue
 		}
-		printf(n, "%v: ", name)
-		for mod in sym.type.modifiers {
-			switch mod {
-			case .Pointer: fmt.print("^")
-			case .Slice: fmt.print("[]")
+
+		if sym.kind == .Function {
+			printf(n, "%v: (", name)
+			for arg in sym.args {
+				print_type(arg)
+				printf(0, " ")
 			}
+
+			printf(0, ") -> ")
+			print_type(sym.type)
+			fmt.println()
+			continue
 		}
-		fmt.printf("%v\n", sym.type.primitive)
+
+		printf(n, "%v: ", name)
+		print_type(sym.type)
+		fmt.println()
 	}
 	printf(n, "--- << ---\n")
 
