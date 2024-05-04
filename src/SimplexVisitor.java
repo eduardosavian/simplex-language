@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -233,8 +234,9 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         Integer idsCount = ids.getChildCount();
 
         ParseTree type = ctx.getChild(2);
+        String typeText = type.getText();
 
-        ParseTree expressions;
+        ParseTree expressions = null;
         Integer expressionsCount;
         String expressionsText;
 
@@ -252,15 +254,17 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
             }
         }
 
-        
-        // ParseTree equal = ctx.getChild(3);
-        // ParseTree value = ctx.getChild(4);
+        Integer varsSize = idsCount;
 
-        ArrayList<Symbol> idsList = new ArrayList<>();
+        List<Symbol> vars = new ArrayList<Symbol>();
 
-        for (int i = 0; i < idsCount; i++) {
+        for (int i = 0; i < varsSize; i++) {
             if (i % 2 == 0) {
-
+                String id = ids.getChild(i).getText();
+                //String expression = expressions.getChild(i).getText();
+                
+                Symbol symbol = new Symbol(id, typeText);
+                vars.add(symbol);
             }
         }
 

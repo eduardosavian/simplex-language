@@ -2,11 +2,11 @@ a : int = 1;
 
 b, c : int;
 
-d, e : int = 10, 10,10;
+d, e : int = 10, 10;
 
-f: []int;
+f : []int;
 
-g: []int = funcaoQueRetornaLista();
+g : []int = funcaoQueRetornaLista();
 
 {
    h : int = 4;

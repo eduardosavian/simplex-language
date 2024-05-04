@@ -1,8 +1,25 @@
 import java.util.List;
 
 public class Symbol {
-    private String name = "";
-    private String type = "";
+    public enum Type {
+        INT("int"),
+        REAL("real"),
+        BOOL("bool"),
+        STRING("string");
+
+        private final String type;
+
+        Type(String type) {
+            this.type = type;
+        }
+
+        public String getType() {
+            return type;
+        }
+    }
+
+    private String id = "";
+    private Type type;
     private Boolean initialized = false;
     private Boolean used = false;
     private Boolean scoped = false;
@@ -12,21 +29,48 @@ public class Symbol {
     private Boolean ref = false;
     private Boolean func = false;
 
-    public List<String> types = List.of("int", "real", "bool", "string");
+    Symbol(String id, String type) {
+        this.id = id;
 
-    public String getName() {
-        return name;
+        Boolean typeExists = false;
+
+        for (Type typeSymbol : Type.values()) {
+            if (type.contains(typeSymbol.getType())) {
+                typeExists = true;
+                break;
+            }
+        }
+
+        if (!typeExists) {
+            System.err.println(
+                    "The id '" + id
+                            + type + "' type doesn't exist");
+            System.exit(1);
+        }
+        this.initialized = false;
+        this.used = false;
+        this.scoped = false;
+        this.param = false;
+        this.array = false;
+        this.matrix = false;
+        this.ref = false;
+        this.func = false;
+
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getId() {
+        return id;
     }
 
-    public String getType() {
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Type getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Type type) {
         this.type = type;
     }
 
@@ -92,14 +136,6 @@ public class Symbol {
 
     public void setFunc(Boolean func) {
         this.func = func;
-    }
-
-    public List<String> getTypes() {
-        return types;
-    }
-
-    public void setTypes(List<String> types) {
-        this.types = types;
     }
 
 }
