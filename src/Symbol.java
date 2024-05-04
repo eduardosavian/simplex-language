@@ -1,5 +1,3 @@
-import java.util.List;
-
 public class Symbol {
     public enum Type {
         INT("int"),

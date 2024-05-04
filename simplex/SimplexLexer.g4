@@ -86,5 +86,3 @@ ML_COMMENT : '/*' .*? '*/' -> skip; // Multi-line comments
 
 // Rule for identifying identifiers (variable names, function names, etc.)
 ID : [_a-zA-Z][a-zA-Z0-9_]*;
-
-DEBUG : 'debug';

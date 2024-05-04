@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -117,6 +118,7 @@ public class Simplex {
     }
 
     private static void typeChecker(String fileContent) throws IOException {
+        
         InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
 
         @SuppressWarnings("deprecation")
@@ -133,7 +135,6 @@ public class Simplex {
         SimplexVisitor visitor = new SimplexVisitor();
 
         visitor.visit(tree);
-        visitor.printSymbols();
     }
 
     private static String readFile(String filePath) {
@@ -151,7 +152,7 @@ public class Simplex {
             reader.close();
 
             stringBuilder.insert(0, "{\n");
-            stringBuilder.append("\n} debug;");
+            stringBuilder.append("\n}\ndebug;");
 
             return stringBuilder.toString();
         } catch (IOException e) {

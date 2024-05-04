@@ -32,13 +32,8 @@
         <mkdir dir="${build.dir}"/>
     </target>
 
-    <!-- Build task -->
-    <target name="build" depends="clean, compile, jar">
-        <echo message="Build completed"/>
-    </target>
-
     <!-- ANTLR task -->
-    <target name="parser" depends="init">
+    <target name="parser">
         <java classname="org.antlr.v4.Tool" fork="true" classpath="${antlr4_path}:${CLASSPATH}">
             <arg value="${simplex.dir}/SimplexLexer.g4"/>
             <arg value="${simplex.dir}/SimplexParser.g4"/>
@@ -48,6 +43,17 @@
             <arg value="-visitor"/>
         </java>
     </target>
+
+    <!-- Check if build is up to date -->
+    <target name="check-up-to-date">
+        <uptodate property="skip.build" targetfile="${build.dir}">
+            <srcfiles dir="${src.dir}">
+                <include name="**/*.java"/>
+            </srcfiles>
+        </uptodate>
+    </target>
+
+
 
     <!-- Jar task -->
     <target name="jar" depends="compile">
@@ -60,13 +66,10 @@
         </jar>
     </target>
 
-    <!-- Check if build is up to date -->
-    <target name="check-up-to-date">
-        <uptodate property="skip.build" targetfile="${build.dir}">
-            <srcfiles dir="${src.dir}">
-                <include name="**/*.java"/>
-            </srcfiles>
-        </uptodate>
+
+    <!-- Build task -->
+    <target name="build" depends="clean, init, parser, compile, jar">
+        <echo message="Build completed"/>
     </target>
 
 </project>

@@ -46,6 +46,12 @@ public interface SimplexParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatement(SimplexParser.StatementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SimplexParser#debuger}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDebuger(SimplexParser.DebugerContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SimplexParser#varDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

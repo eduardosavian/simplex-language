@@ -298,8 +298,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         return super.visitVarDeclaration(ctx);
     }
 
-    
-
     @Override
     protected Integer aggregateResult(Integer aggregate, Integer nextResult) {
 

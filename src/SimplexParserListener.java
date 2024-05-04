@@ -67,6 +67,16 @@ public interface SimplexParserListener extends ParseTreeListener {
 	 */
 	void exitStatement(SimplexParser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SimplexParser#debuger}.
+	 * @param ctx the parse tree
+	 */
+	void enterDebuger(SimplexParser.DebugerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SimplexParser#debuger}.
+	 * @param ctx the parse tree
+	 */
+	void exitDebuger(SimplexParser.DebugerContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SimplexParser#varDeclaration}.
 	 * @param ctx the parse tree
 	 */

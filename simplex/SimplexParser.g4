@@ -3,7 +3,8 @@ parser grammar SimplexParser;
 options { tokenVocab=SimplexLexer; }
 
 program
-	: statement*
+	: debuger
+	| statement*
 ;
 
 inlineStatement
@@ -35,7 +36,6 @@ statement
 	| ifStatement
 	| funcDeclaration
 	| scope
-	| debuger
 ;
 
 debuger
