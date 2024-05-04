@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
-    ArrayList<Symbol> symbols = new ArrayList<Symbol>();
+    ArrayList<Symbol> vars = new ArrayList<Symbol>();
 
     @Override
     public Integer visitBitShift(SimplexParser.BitShiftContext ctx) {
@@ -258,8 +258,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
 
         Integer varsSize = idsCount;
 
-        List<Symbol> vars = new ArrayList<Symbol>();
-
         for (int i = 0; i < varsSize; i++) {
             if (i % 2 == 0) {
                 String id = ids.getChild(i).getText();
@@ -267,18 +265,6 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
                 vars.add(symbol);
             }
         }
-
-        // switch (childCount) {
-        // case 3:
-        // symbol.setInitialized(true);
-        // break;
-        // case 5:
-        // symbol.setInitialized(false);
-        // break;
-        // default:
-        // System.out.println(System.err);
-        // break;
-        // }
 
         // if(type.contains("[")) {
         // symbol.setArray(true);
@@ -360,8 +346,7 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
     }
 
     public void printSymbols() {
-        for(Symbol symbol : symbols) {
-            System.out.println("safas");
+        for(Symbol symbol : vars) {
             symbol.print();
         }
     }

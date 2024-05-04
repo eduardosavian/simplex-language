@@ -142,15 +142,24 @@ public class Symbol {
 
     
     public void print() {
-        System.out.println("Identifier: " + identifier);
-        System.out.println("Type: " + type.getType());
-        System.out.println("Initialized: " + isInitialized);
-        System.out.println("Used: " + used);
-        System.out.println("Scoped: " + scoped);
-        System.out.println("Parameter: " + isParameter);
-        System.out.println("Array: " + isArray);
-        System.out.println("Matrix: " + isMatrix);
-        System.out.println("Reference: " + isReference);
+        System.out.print("Identifier: " + identifier);
+        System.out.print(" | ");
+        System.out.print("Type: " + type.getType());
+        System.out.print(" | ");
+        System.out.print("Initialized: " + isInitialized);
+        System.out.print(" | ");
+        System.out.print("Used: " + used);
+        System.out.print(" | ");
+        System.out.print("Scoped: " + scoped);
+        System.out.print(" | ");
+        System.out.print("Parameter: " + isParameter);
+        System.out.print(" | ");
+        System.out.print("Array: " + isArray);
+        System.out.print(" | ");
+        System.out.print("Matrix: " + isMatrix);
+        System.out.print(" | ");
+        System.out.print("Reference: " + isReference);
+        System.out.print(" | ");
         System.out.println("Function: " + isFunction);
     }
 
