@@ -240,7 +240,9 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         Integer expressionsCount;
         String expressionsText;
 
-        if (childCount == 5) {
+        Boolean expressionsExist = (childCount == 5);
+
+        if (expressionsExist) {
             expressions = ctx.getChild(4);
             expressionsCount = expressions.getChildCount();
             expressionsText = expressions.getText();
@@ -261,9 +263,10 @@ public class SimplexVisitor extends SimplexParserBaseVisitor<Integer> {
         for (int i = 0; i < varsSize; i++) {
             if (i % 2 == 0) {
                 String id = ids.getChild(i).getText();
-                //String expression = expressions.getChild(i).getText();
-                
                 Symbol symbol = new Symbol(id, typeText);
+
+                symbol.setInitialized(expressionsExist);
+
                 vars.add(symbol);
             }
         }
