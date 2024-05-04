@@ -26,6 +26,7 @@ CheckerError :: enum byte {
 	NotDefined,
 	NonCallable,
 	NonIndexable,
+	ArgMismatch,
 	MismatchedTypes,
 	NonAssignable,
 }

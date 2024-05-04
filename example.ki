@@ -1,6 +1,14 @@
-my_global: []int = 100;
+
+func square(x: int) -> int {
+	res: int = x * x;
+	return res;
+}
+
+func pog() -> string {
+	return 69;
+}
 
 func main() {
-	x: int = 30 + my_global;
+	x: int = square(pog());
 }
 

@@ -87,13 +87,35 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 
 		case FunctionDef:
 			body := &stmt.scope
+
+			return_type : Type
+			if len(stmt.return_type.name) > 0 {
+				return_type = eval_parser_type(scope, stmt.return_type) or_return
+			}
+			else {
+				return_type.primitive = nil
+			}
+
+			fn_info := SymbolInfo{
+				kind = .Function,
+				type = return_type
+			}
+			arg_types := make([dynamic]Type)
+
 			for arg in stmt.args {
 				t := eval_parser_type(scope, arg.type) or_return
-				define_symbol(body, arg.name, SymbolInfo{
+				append_elem(&arg_types, t)
+				define_symbol(body, arg.name, SymbolInfo {
 					kind = .Parameter,
 					type = t,
-				})
+				}) or_return
 			}
+
+			resize(&arg_types, len(arg_types))
+			fn_info.args = arg_types[:]
+
+			define_symbol(scope, stmt.name, fn_info) or_return
+
 			init_scopes(body, scope) or_return
 
 		case If:
@@ -274,21 +296,42 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 	case FunctionCall:
 		p, ok := expression.func.value.(Primary)
 		if !ok {
-			err = emit_error(.NonCallable, "Non primary expression is not callable.")
-			return
+			return emit_error(.NonCallable, "Non primary expression is not callable.")
 		}
+
 		id, ok2 := p.(Identifier)
 		if !ok2 {
-			err = emit_error(.NonCallable, "Non identifier is not callable")
+			return emit_error(.NonCallable, "Non identifier is not callable")
 		}
 
 		fn, found := search_symbol(scope, id)
 		if !found {
-			err = emit_error(.NotDefined, "Unknown function: %v", id)
+			return emit_error(.NotDefined, "Unknown function: %v", id)
 		}
 
+		// expr.type = fn.type
 		if fn.kind == .Function {
-			log.warnf("TODO: Check args")
+			log.warnf("Check args")
+			log.debugf("EXPRESSION: %#v", expression)
+			log.debugf("FUNCTION: %#v", fn)
+
+			enough_args := len(expression.args) == len(fn.args)
+			if !enough_args {
+				return emit_error(.ArgMismatch, "Mismatched number of arguments %v = %v", len(expression.args), len(fn.args))
+			}
+			expr.type = fn.type
+
+			for &arg, i in expression.args {
+				eval_expression_type(scope, arg) or_return
+				log.warnf("CALL CHECK")
+				if !same_type(arg.type, fn.args[i]){
+					return emit_error(.MismatchedTypes, "Cannot pass argument of type %v to parameter of type %v", arg.type, fn.args[i])
+				}
+			}
+
+		}
+		else {
+			return emit_error(.NonCallable, "Non function is not callable")
 		}
 
 	case Group:
