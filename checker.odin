@@ -323,12 +323,10 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 
 			for &arg, i in expression.args {
 				eval_expression_type(scope, arg) or_return
-				log.warnf("CALL CHECK")
 				if !same_type(arg.type, fn.args[i]){
 					return emit_error(.MismatchedTypes, "Cannot pass argument of type %v to parameter of type %v", arg.type, fn.args[i])
 				}
 			}
-
 		}
 		else {
 			return emit_error(.NonCallable, "Non function is not callable")
