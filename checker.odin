@@ -90,8 +90,6 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 			init_scopes(&stmt, scope) or_return
 
 		case FunctionDef:
-			body := &stmt.scope
-
 			return_type : Type
 			if len(stmt.return_type.name) > 0 {
 				return_type = eval_parser_type(scope, stmt.return_type) or_return
@@ -109,7 +107,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 			for arg in stmt.args {
 				t := eval_parser_type(scope, arg.type) or_return
 				append_elem(&arg_types, t)
-				define_symbol(body, arg.name, SymbolInfo {
+				define_symbol(&stmt.scope, arg.name, SymbolInfo {
 					kind = .Parameter,
 					type = t,
 				}) or_return
@@ -120,7 +118,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 
 			define_symbol(scope, stmt.name, fn_info) or_return
 
-			init_scopes(body, scope) or_return
+			init_scopes(&stmt.scope, scope) or_return
 
 		case If:
 			init_scopes(&stmt.scope, scope) or_return
