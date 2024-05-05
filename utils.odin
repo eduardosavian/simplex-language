@@ -133,7 +133,7 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 	switch v in s {
 	case ExpressionStatement:
 		printf(n, "")
-		print_expression(cast(^Expression)v)
+		print_expression(v.inner)
 		fmt.print(";\n")
 	case Return:
 		printf(n, "return ")

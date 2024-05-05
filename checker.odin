@@ -34,8 +34,8 @@ SymbolKind :: enum {
 
 Environment :: map[Identifier]SymbolInfo
 
-define_symbol :: proc(scope: ^Scope, name: Identifier, value: SymbolInfo) -> (err: Error){
-	_, exists := search_symbol(scope, name)
+define_symbol :: proc(scope: ^Scope, name: Identifier, value: SymbolInfo, increase_usage := true) -> (err: Error){
+	_, exists := search_symbol(scope, name, increase_usage)
 	if exists {
 		return emit_error(.Redefinition, "Identifier '%v' already in use.", name)
 	}
@@ -152,7 +152,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				case Assignment:
 					check_assignment(&stmt.scope, s)
 				case ExpressionStatement:
-					eval_expression_type(&stmt.scope, transmute(^Expression)(&s.value)) or_return
+					eval_expression_type(&stmt.scope, s.inner) or_return
 				}
 
 				eval_expression_type(&stmt.scope, stmt.condition) or_return
@@ -168,10 +168,10 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
 				case Assignment:
 					check_assignment(&stmt.scope, s)
-				case VarDeclaration:
-					check_var_declaration(&stmt.scope, s)
 				case ExpressionStatement:
-					eval_expression_type(&stmt.scope, transmute(^Expression)(&s.value)) or_return
+					eval_expression_type(&stmt.scope, s.inner) or_return
+				case VarDeclaration:
+					return emit_error(.DisallowedOnForLoop, "Cannot declare variable as side effect.")
 				}
 			}
 			else { /* Simple for */
@@ -191,11 +191,11 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				check_assignment(scope, in_stmt)
 			case VarDeclaration:
 				check_var_declaration(scope, in_stmt)
+			case ExpressionStatement:
+				eval_expression_type(scope, in_stmt.inner) or_return
+			case Break, Continue: continue
 			case Return:
 				log.warn("return check")
-			case ExpressionStatement:
-				eval_expression_type(scope, transmute(^Expression)(&in_stmt.value)) or_return
-			case Break, Continue: continue
 			}
 		}
 	}
@@ -359,6 +359,9 @@ check_symbol_usage :: proc(scope: ^Scope){
 		if info.uses == 0 && info.kind == .Variable {
 			emit_warning("Unused variable: %v", name)
 		}
+		if !info.init && info.kind == .Variable {
+			emit_warning("Uninitialized variable: %v", name)
+		}
 	}
 	for entry in scope.body {
 		switch &stmt in entry {
@@ -468,21 +471,37 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 }
 
 check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Error){
+	t := eval_parser_type(scope, stmt.type) or_return
 	for id, i in stmt.identifiers {
-		t := eval_parser_type(scope, stmt.type) or_return
 		define_symbol(scope, id, SymbolInfo{
 			kind = .Variable,
 			type = t,
 			uses = 0,
-		})
+		}, increase_usage = false)
 	}
+
 	if len(stmt.expressions) > 0 {
 		for &exp, i in stmt.expressions {
 			eval_expression_type(scope, exp) or_return
-			sym, _ := search_symbol(scope, stmt.identifiers[i], increase_usage = false)
+			sym, _ := search_symbol(scope, stmt.identifiers[i], false)
+			// if !same_type(sym.type, exp.type){
+			// 	return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
+			// }
+			/* TODO: REMOVE THIS */
 			if !same_type(sym.type, exp.type){
-				return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
+				if !permissively_compare_numeric_types_to_yield_bad_buggy_code(sym.type, exp.type){
+					return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v",
+						format_type(sym.type), format_type(exp.type))
+				}
+				else {
+					emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(sym.type), format_type(exp.type))
+				}
 			}
+
+			/* TODO: REMOVE */
+			info := scope.env[stmt.identifiers[i]]
+			info.init = true
+			scope.env[stmt.identifiers[i]] = info
 		}
 	}
 	return

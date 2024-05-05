@@ -1,4 +1,3 @@
-
 func toString(_: int) -> string {}
 func print(_: string){}
 
@@ -19,8 +18,8 @@ func fizzbuzz(max: int){
 
 func main() {
 	a: real = 1.5;
-	b: int = 2;
-	a = b;
+	b: int = 1.9;
+	fizzbuzz(b + a);
 }
 
 

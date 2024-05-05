@@ -50,7 +50,9 @@ For :: struct {
 	scope: Scope,
 }
 
-ExpressionStatement :: distinct ^Expression
+ExpressionStatement :: struct {
+	inner: ^Expression,
+}
 
 Break :: struct {}
 
@@ -301,8 +303,8 @@ parse_inline_statement :: proc(parser: ^Parser, force_semicolon := true) -> (sta
 		statement = InlineStatement(assign)
 	}
 	else {
-		expr := ExpressionStatement(parse_expression(parser) or_return)
-		statement = InlineStatement(expr)
+		expr := parse_expression(parser) or_return
+		statement = InlineStatement(ExpressionStatement {inner = expr})
 	}
 
 	if force_semicolon {
