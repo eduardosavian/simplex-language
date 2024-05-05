@@ -3,8 +3,6 @@ package lang
 import "core:slice"
 import "core:log"
 
-// TODO: Make literals untyped
-
 BuiltinType :: enum {
 	Bool, Int, Real, Rune, String,
 }
