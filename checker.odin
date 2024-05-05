@@ -144,10 +144,13 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				switch &s in pre {
 				case Break, Continue, Return:
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
+				case VarDeclaration:
+					// Initialize environment ahead of time to allow for local index variable
+					stmt.scope.env = env_create()
+					stmt.scope.parent = scope
+					check_var_declaration(&stmt.scope, s)
 				case Assignment:
 					check_assignment(scope, s)
-				case VarDeclaration:
-					check_var_declaration(scope, s)
 				case ExpressionStatement:
 					eval_expression_type(scope, transmute(^Expression)(&s.value)) or_return
 				}

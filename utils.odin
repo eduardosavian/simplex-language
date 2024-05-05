@@ -35,8 +35,18 @@ print_type :: proc(t: Type){
 	fmt.printf("%v", t.primitive)
 }
 
-print_env :: proc(scope: ^Scope, n := 0){
-	printf(n, "--- >> ---\n")
+print_env :: proc(scope: ^Scope){
+	print_env_rec(scope, 0, "<Global>")
+}
+
+print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
+	if len(header) == 0 {
+		printf(n, "---| <Scope> |---\n", header)
+	}
+	else {
+		printf(n, "---| %v |---\n", header)
+	}
+
 	for name, sym in scope.env {
 		if sym.kind == .Type {
 			printf(n, "%v: type\n", name)
@@ -56,31 +66,35 @@ print_env :: proc(scope: ^Scope, n := 0){
 			continue
 		}
 
+		if sym.kind == .Parameter {
+			printf(n, "(arg) %v: ", name)
+			print_type(sym.type)
+			fmt.println()
+			continue
+		}
+
 		printf(n, "%v: ", name)
 		print_type(sym.type)
 		fmt.println()
 	}
-	printf(n, "--- << ---\n")
+	printf(n, "----------\n")
 
 	for stmt in scope.body {
 		#partial switch &v in stmt {
 		case For:
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, "<For>")
 		case If:
-			printf(n+1, "IF\n")
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, "<If>")
 			current := v.else_branch
 			for current != nil {
 				if_stmt, is_if := current.(If)
 				else_stmt, is_else := current.(Scope)
 				if is_if {
-					printf(n+1, "ELSE IF\n")
-					print_env(&if_stmt.scope, n + 1)
+					print_env_rec(&if_stmt.scope, n + 1, "<Elif>")
 					current = if_stmt.else_branch
 				}
 				else if is_else {
-					printf(n+1, "ELSE\n")
-					print_env(&else_stmt, n + 1)
+					print_env_rec(&else_stmt, n + 1, "<Else>")
 					current = nil
 				}
 				else {
@@ -89,9 +103,9 @@ print_env :: proc(scope: ^Scope, n := 0){
 			}
 
 		case FunctionDef:
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, string(stmt.(FunctionDef).name))
 		case Scope:
-			print_env(&v, n + 1)
+			print_env_rec(&v, n + 1)
 		}
 	}
 }

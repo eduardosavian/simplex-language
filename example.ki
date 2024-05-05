@@ -1,12 +1,21 @@
 
-// func square(x: int) -> int {
-// 	res: int = x * x;
-// 	return res;
-// }
-// 
-// func pog() -> int {
-// 	return 69;
-// }
+func toString(_: int) -> string {}
+func print(_: string){}
+
+func fizzbuzz(max: int){
+	for i: int = 0; i < max; i = i + 1 {
+		if i % 3 == 0 {
+			print("Fizz");
+		}
+		else if i % 5 == 0 {
+			print("Buzz");
+		}
+		else {
+			print(toString(i));
+		}
+
+	}
+}
 
 func main() {
 	a: real = 1.5;
