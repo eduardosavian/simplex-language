@@ -133,7 +133,6 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 					init_scopes(&branch.scope, scope) or_return
 					current = branch.else_branch
 				case Scope:
-					log.debug("Init else branch")
 					init_scopes(&branch, scope) or_return
 					current = nil
 
@@ -356,7 +355,6 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 check_symbol_usage :: proc(scope: ^Scope){
 	if scope == nil { return }
 	for name, info in scope.env {
-		log.debug(name, info.uses)
 		if info.uses == 0 && info.kind == .Variable {
 			emit_warning("Unused variable: %v", name)
 		}
