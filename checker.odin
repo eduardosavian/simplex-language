@@ -141,21 +141,23 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 		case For:
 			if stmt.post_stmt != nil || stmt.pre_stmt != nil {
 				pre := stmt.pre_stmt.(InlineStatement)
+
+				// Initialize environment ahead of time to allow for local index variable
+				stmt.scope.env = env_create()
+				stmt.scope.parent = scope
+
 				switch &s in pre {
 				case Break, Continue, Return:
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
 				case VarDeclaration:
-					// Initialize environment ahead of time to allow for local index variable
-					stmt.scope.env = env_create()
-					stmt.scope.parent = scope
 					check_var_declaration(&stmt.scope, s)
 				case Assignment:
-					check_assignment(scope, s)
+					check_assignment(&stmt.scope, s)
 				case ExpressionStatement:
-					eval_expression_type(scope, transmute(^Expression)(&s.value)) or_return
+					eval_expression_type(&stmt.scope, transmute(^Expression)(&s.value)) or_return
 				}
 
-				eval_expression_type(scope, stmt.condition) or_return
+				eval_expression_type(&stmt.scope, stmt.condition) or_return
 				primitive := is_pure_primitive(stmt.condition.type)
 				ok := primitive && stmt.condition.type.primitive == .Bool
 				if !ok	{
@@ -167,11 +169,11 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				case Break, Continue, Return:
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
 				case Assignment:
-					check_assignment(scope, s)
+					check_assignment(&stmt.scope, s)
 				case VarDeclaration:
-					check_var_declaration(scope, s)
+					check_var_declaration(&stmt.scope, s)
 				case ExpressionStatement:
-					eval_expression_type(scope, transmute(^Expression)(&s.value)) or_return
+					eval_expression_type(&stmt.scope, transmute(^Expression)(&s.value)) or_return
 				}
 			}
 			else { /* Simple for */
