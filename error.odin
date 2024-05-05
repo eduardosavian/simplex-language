@@ -10,6 +10,7 @@ LexerError :: enum byte {
 	InvalidEscape,
 	NoExpectedRune,
 	ConversionError,
+	OtherLexError,
 }
 
 ParserError :: enum byte {

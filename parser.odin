@@ -14,7 +14,7 @@ should_ignore :: proc(tk: Token) -> bool {
 	}
 }
 
-parse :: proc(tokens : []Token) -> Scope {
+parse :: proc(tokens : []Token) -> (scope: Scope, err: Error) {
 	parser_tokens := make([dynamic]Token)
 	defer delete(parser_tokens)
 
@@ -33,12 +33,8 @@ parse :: proc(tokens : []Token) -> Scope {
 		tokens = parser_tokens[:],
 	}
 
-	s, err := parse_scope(&parser)
-	if err != nil {
-		log.errorf("Parser exited with error: %v", err)
-		return Scope{}
-	}
-	return s
+	scope = parse_scope(&parser) or_return
+	return
 }
 
 parser_end :: proc(using parser: Parser) -> bool {
