@@ -11,7 +11,7 @@
 func main() {
 	a: real = 1.5;
 	b: int = 2;
-	b = a;
+	a = b;
 }
 
 

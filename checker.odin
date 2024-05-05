@@ -46,12 +46,12 @@ define_symbol :: proc(scope: ^Scope, name: Identifier, value: SymbolInfo) -> (er
 	return
 }
 
-search_symbol :: proc(scope: ^Scope, name: Identifier) -> (sym: SymbolInfo, found: bool) {
+search_symbol :: proc(scope: ^Scope, name: Identifier, increase_usage := true) -> (sym: SymbolInfo, found: bool) {
 	if scope == nil { return }
 
 	if name in scope.env {
 		info := scope.env[name]
-		info.uses += 1
+		info.uses += int(increase_usage)
 		scope.env[name] = info
 		return info, true
 	}
@@ -218,7 +218,7 @@ is_comparison :: proc(op: TokenKind) -> bool {
 }
 
 @(require_results)
-eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
+eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage := true) -> (err: Error) {
 	switch &expression in expr.value {
 	case Unary:
 		compat_types := UNARY_COMPAT[expression.operator]
@@ -342,7 +342,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		case Real:   expr.type.primitive = .Real
 		case Identifier:
 			id, _ := expression.(Identifier)
-			info, ok := search_symbol(scope, id)
+			info, ok := search_symbol(scope, id, increase_usage)
 			if !ok {
 				return emit_error(.NotDefined, "Undefined identifier: %v", id)
 			}
@@ -354,7 +354,22 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 }
 
 check_symbol_usage :: proc(scope: ^Scope){
-	emit_warning("TODO: Check usage")
+	if scope == nil { return }
+	for name, info in scope.env {
+		log.debug(name, info.uses)
+		if info.uses == 0 && info.kind == .Variable {
+			emit_warning("Unused variable: %v", name)
+		}
+	}
+	for entry in scope.body {
+		switch &stmt in entry {
+		case If: check_symbol_usage(&stmt.scope)
+		case For: check_symbol_usage(&stmt.scope)
+		case FunctionDef: check_symbol_usage(&stmt.scope)
+		case Scope: check_symbol_usage(&stmt)
+		case InlineStatement:
+		}
+	}
 }
 
 check_ast :: proc(scope: ^Scope) -> (err: Error){
@@ -436,7 +451,7 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 		right := stmt.right_side[i]
 		eval_expression_type(scope, right) or_return
 		check_lvalue(left) or_return
-		eval_expression_type(scope, left) or_return
+		eval_expression_type(scope, left, increase_usage = false) or_return
 
 		/* TODO: REMOVE */
 		if !same_type(left.type, right.type){
@@ -459,12 +474,13 @@ check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Erro
 		define_symbol(scope, id, SymbolInfo{
 			kind = .Variable,
 			type = t,
+			uses = 0,
 		})
 	}
 	if len(stmt.expressions) > 0 {
 		for &exp, i in stmt.expressions {
 			eval_expression_type(scope, exp) or_return
-			sym, _ := search_symbol(scope, stmt.identifiers[i])
+			sym, _ := search_symbol(scope, stmt.identifiers[i], increase_usage = false)
 			if !same_type(sym.type, exp.type){
 				return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
 			}
