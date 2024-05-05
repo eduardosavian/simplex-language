@@ -1,6 +1,7 @@
 package lang
 
 import "core:fmt"
+import str "core:strings"
 
 contains :: proc(s: $T/[]$E, e: E) -> bool {
 	for x in  s {
@@ -10,6 +11,20 @@ contains :: proc(s: $T/[]$E, e: E) -> bool {
 	}
 	return false
 }
+
+format_type :: proc(t: Type) -> string {
+	sb := str.builder_make(allocator = context.temp_allocator)
+	for mod in t.modifiers {
+		switch mod {
+		case .Pointer: fmt.sbprint(&sb, "^")
+		case .Slice: fmt.sbprint(&sb, "[]")
+		}
+	}
+	fmt.sbprintf(&sb, "%v", t.primitive)
+	resize(&sb.buf, len(sb.buf))
+	return string(sb.buf[:])
+}
+
 print_type :: proc(t: Type){
 	for mod in t.modifiers {
 		switch mod {
@@ -29,7 +44,7 @@ print_env :: proc(scope: ^Scope, n := 0){
 		}
 
 		if sym.kind == .Function {
-			printf(n, "%v: (", name)
+			printf(n, "%v: func(", name)
 			for arg in sym.args {
 				print_type(arg)
 				printf(0, " ")

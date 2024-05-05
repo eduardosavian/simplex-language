@@ -9,6 +9,8 @@ func pog() -> int {
 }
 
 func main() {
-	x: int = square(pog());
+	for i: int = 0; i < 100 ; i = i + 1 {
+	}
 }
+
 

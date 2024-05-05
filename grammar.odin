@@ -271,7 +271,6 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: FunctionDef, err: E
 		return_type = ParserType{}
 	}
 
-	log.debug(parser.tokens[parser.current])
 	body := parse_scope(parser) or_return
 
 	func = FunctionDef {

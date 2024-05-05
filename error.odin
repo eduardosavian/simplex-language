@@ -22,13 +22,14 @@ ParserError :: enum byte {
 CheckerError :: enum byte {
 	DisallowedOnToplevel,
 	DisallowedOnInnerScope,
+	DisallowedOnForLoop,
 	Redefinition,
 	NotDefined,
 	NonCallable,
 	NonIndexable,
+	NonAssignable,
 	ArgMismatch,
 	MismatchedTypes,
-	NonAssignable,
 }
 
 Error :: union {

@@ -141,46 +141,58 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 
 		case For:
 			if stmt.post_stmt != nil || stmt.pre_stmt != nil {
-				log.warnf("Deal with triple for loop definition creation & checking")
+				pre := stmt.pre_stmt.(InlineStatement)
+				switch &s in pre {
+				case Break, Continue, Return:
+					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
+				case Assignment:
+					check_assignment(scope, s)
+				case VarDeclaration:
+					check_var_declaration(scope, s)
+				case ExpressionStatement:
+					eval_expression_type(scope, transmute(^Expression)(&s.value)) or_return
+				}
+
+				eval_expression_type(scope, stmt.condition) or_return
+				primitive := is_pure_primitive(stmt.condition.type)
+				ok := primitive && stmt.condition.type.primitive == .Bool
+				if !ok	{
+					return emit_error(.MismatchedTypes, "Cannot use a non-boolean as condition")
+				}
+
+				post := stmt.post_stmt.(InlineStatement)
+				switch &s in post {
+				case Break, Continue, Return:
+					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
+				case Assignment:
+					check_assignment(scope, s)
+				case VarDeclaration:
+					check_var_declaration(scope, s)
+				case ExpressionStatement:
+					eval_expression_type(scope, transmute(^Expression)(&s.value)) or_return
+				}
 			}
-			else {
-				init_scopes(&stmt.scope, scope) or_return
+			else { /* Simple for */
+				eval_expression_type(scope, stmt.condition) or_return
+
+				primitive := is_pure_primitive(stmt.condition.type)
+				ok := primitive && stmt.condition.type.primitive == .Bool
+				if !ok	{
+					return emit_error(.MismatchedTypes, "Cannot use a non-boolean as condition")
+				}
 			}
+			init_scopes(&stmt.scope, scope) or_return
 
 		case InlineStatement:
 			switch &in_stmt in stmt {
 			case Assignment:
-				// Only allows assigning to indexing or identifier
-				for &left, i in in_stmt.left_side {
-					right := in_stmt.right_side[i]
-					eval_expression_type(scope, right) or_return
-					check_lvalue(left) or_return
-					eval_expression_type(scope, left) or_return
-				}
-				log.warn("assign compat")
-
+				check_assignment(scope, in_stmt)
 			case VarDeclaration:
-				for id, i in in_stmt.identifiers {
-					t := eval_parser_type(scope, in_stmt.type) or_return
-					define_symbol(scope, id, SymbolInfo{
-						kind = .Variable,
-						type = t,
-					})
-				}
-				if len(in_stmt.expressions) > 0 {
-					for &exp, i in in_stmt.expressions {
-						eval_expression_type(scope, exp) or_return
-						sym, _ := search_symbol(scope, in_stmt.identifiers[i])
-						if !same_type(sym.type, exp.type){
-							return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", sym.type, exp.type)
-						}
-					}
-				}
-
+				check_var_declaration(scope, in_stmt)
 			case Return:
 				log.warn("return check")
-
-			case ExpressionStatement: log.warn("exprstmt")
+			case ExpressionStatement:
+				eval_expression_type(scope, transmute(^Expression)(&in_stmt.value)) or_return
 			case Break, Continue: continue
 			}
 		}
@@ -189,47 +201,19 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 	return
 }
 
-UNARY_COMPAT := map[TokenKind][]PrimitiveType {
-	.Minus    = {.Int, .Real},
-	.Plus     = {.Int, .Real},
-	.BitXor   = {.Int},
-	.LogicNot = {.Bool},
+@(private="file")
+is_comparison :: proc(op: TokenKind) -> bool {
+	COMPARE_OPS :: []TokenKind{
+		.EqualEqual,
+		.GreaterEqual,
+		.LesserEqual,
+		.Lesser,
+		.Greater,
+		.NotEqual,
+	}
+
+	return contains(COMPARE_OPS, op)
 }
-
-BINARY_COMPAT := map[TokenKind][]PrimitiveType {
-	.EqualEqual   = {.Bool, .Int, .Real, .Rune, .String},
-	.NotEqual     = {.Bool, .Int, .Real, .Rune, .String},
-	.GreaterEqual = {.Bool, .Int, .Real, .Rune, .String},
-	.LesserEqual  = {.Bool, .Int, .Real, .Rune, .String},
-	.Greater      = {.Bool, .Int, .Real, .Rune, .String},
-	.Lesser       = {.Bool, .Int, .Real, .Rune, .String},
-
-	.BitXor     = {.Int},
-	.BitAnd     = {.Int},
-	.BitOr      = {.Int},
-	.ShiftLeft  = {.Int},
-	.ShiftRight = {.Int},
-
-	.Plus   = {.Int, .Real},
-	.Minus  = {.Int, .Real},
-	.Star   = {.Int, .Real},
-	.Slash  = {.Int, .Real},
-	.Modulo = {.Int},
-
-	.LogicAnd = {.Bool},
-	.LogicNot = {.Bool},
-	.LogicOr  = {.Bool},
-	.LogicXor = {.Bool},
-}
-
-BUILTIN_TYPES := map[Identifier]BuiltinType{
-	"int"    = .Int,
-	"real"   = .Real,
-	"bool"   = .Bool,
-	"rune"   = .Rune,
-	"string" = .String,
-}
-
 
 @(require_results)
 eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
@@ -262,7 +246,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		lhs := expression.left_side
 		rhs := expression.right_side
 		if !is_pure_primitive(lhs.type) || !is_pure_primitive(rhs.type){
-			return emit_error(.MismatchedTypes, "Cannot apply binary operation to non primitive types: %v and %v", lhs.type, rhs.type)
+			return emit_error(.MismatchedTypes, "Cannot apply binary operation to non primitive types: %v and %v", format_type(lhs.type), format_type(rhs.type))
 		}
 
 		operator_supported := contains(compat_types, lhs.type.primitive) && contains(compat_types, rhs.type.primitive)
@@ -270,13 +254,20 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		if operator_supported {
 			// Ensure same type
 			if !same_type(lhs.type, rhs.type){
-				return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", lhs.type, rhs.type)
+				return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
 			}
-			expr.type = lhs.type
+
+			if is_comparison(expression.operator){
+				expr.type.primitive = .Bool
+			}
+			else {
+				expr.type = lhs.type
+			}
+
 			// log.debug("Binary expression has type: ", expr.type.primitive)
 		}
 		else {
-			return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", lhs.type, rhs.type)
+			return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
 		}
 
 	case Indexing:
@@ -289,7 +280,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 
 		mod, ok := pop_mod(expression.object.type)
 		if !ok || mod != .Slice {
-			return emit_error(.NonIndexable, "Cannot index type")
+			return emit_error(.NonIndexable, "Cannot index type: %v", format_type(expression.object.type))
 		}
 
 		expr.type = expression.object.type
@@ -324,7 +315,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 			for &arg, i in expression.args {
 				eval_expression_type(scope, arg) or_return
 				if !same_type(arg.type, fn.args[i]){
-					return emit_error(.MismatchedTypes, "Cannot pass argument of type %v to parameter of type %v", arg.type, fn.args[i])
+					return emit_error(.MismatchedTypes, "Cannot pass argument of type %v to parameter of type %v", format_type(arg.type), format_type(fn.args[i]))
 				}
 			}
 		}
@@ -432,3 +423,81 @@ pop_mod :: proc(t: Type) -> (Modifier, bool) {
 	}
 	return t.modifiers[0], true
 }
+
+check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
+	// Only allows assigning to indexing or identifier
+	for &left, i in stmt.left_side {
+		right := stmt.right_side[i]
+		eval_expression_type(scope, right) or_return
+		check_lvalue(left) or_return
+		eval_expression_type(scope, left) or_return
+
+		if !same_type(left.type, right.type){
+			return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to value of type %v", format_type(left.type), format_type(right.type))
+		}
+	}
+	return
+}
+
+check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Error){
+	for id, i in stmt.identifiers {
+		t := eval_parser_type(scope, stmt.type) or_return
+		define_symbol(scope, id, SymbolInfo{
+			kind = .Variable,
+			type = t,
+		})
+	}
+	if len(stmt.expressions) > 0 {
+		for &exp, i in stmt.expressions {
+			eval_expression_type(scope, exp) or_return
+			sym, _ := search_symbol(scope, stmt.identifiers[i])
+			if !same_type(sym.type, exp.type){
+				return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
+			}
+		}
+	}
+	return
+}
+
+UNARY_COMPAT := map[TokenKind][]PrimitiveType {
+	.Minus    = {.Int, .Real},
+	.Plus     = {.Int, .Real},
+	.BitXor   = {.Int},
+	.LogicNot = {.Bool},
+}
+
+BINARY_COMPAT := map[TokenKind][]PrimitiveType {
+	.EqualEqual   = {.Bool, .Int, .Real, .Rune, .String},
+	.NotEqual     = {.Bool, .Int, .Real, .Rune, .String},
+	.GreaterEqual = {.Bool, .Int, .Real, .Rune, .String},
+	.LesserEqual  = {.Bool, .Int, .Real, .Rune, .String},
+	.Greater      = {.Bool, .Int, .Real, .Rune, .String},
+	.Lesser       = {.Bool, .Int, .Real, .Rune, .String},
+
+	.BitXor     = {.Int},
+	.BitAnd     = {.Int},
+	.BitOr      = {.Int},
+	.ShiftLeft  = {.Int},
+	.ShiftRight = {.Int},
+
+	.Plus   = {.Int, .Real},
+	.Minus  = {.Int, .Real},
+	.Star   = {.Int, .Real},
+	.Slash  = {.Int, .Real},
+	.Modulo = {.Int},
+
+	.LogicAnd = {.Bool},
+	.LogicNot = {.Bool},
+	.LogicOr  = {.Bool},
+	.LogicXor = {.Bool},
+}
+
+BUILTIN_TYPES := map[Identifier]BuiltinType{
+	"int"    = .Int,
+	"real"   = .Real,
+	"bool"   = .Bool,
+	"rune"   = .Rune,
+	"string" = .String,
+}
+
+
