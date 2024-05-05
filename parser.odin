@@ -22,7 +22,6 @@ parse :: proc(tokens : []Token) -> Scope {
 	filter_tokens: {
 		for tk in tokens {
 			if !should_ignore(tk){
-
 				append(&parser_tokens, tk)
 			}
 		}

@@ -1,16 +1,17 @@
 
-func square(x: int) -> int {
-	res: int = x * x;
-	return res;
-}
-
-func pog() -> int {
-	return 69;
-}
+// func square(x: int) -> int {
+// 	res: int = x * x;
+// 	return res;
+// }
+// 
+// func pog() -> int {
+// 	return 69;
+// }
 
 func main() {
-	for i: int = 0; i < 100 ; i = i + 1 {
-	}
+	a: real = 1.5;
+	b: int = 2;
+	b = a;
 }
 
 

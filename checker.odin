@@ -25,7 +25,9 @@ SymbolInfo :: struct {
 	args: []Type,
 	body: Scope,
 
-	uses: int, // TODO: Remove
+	/* TODO: Remove these pointless metadata */
+	uses: int,
+	init: bool,
 }
 
 SymbolKind :: enum {
@@ -254,7 +256,13 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 		if operator_supported {
 			// Ensure same type
 			if !same_type(lhs.type, rhs.type){
-				return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
+				/* TODO: REMOVE */
+				if !permissively_compare_numeric_types_to_yield_bad_buggy_code(lhs.type, rhs.type){
+					return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
+				}
+				else {
+					emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
+				}
 			}
 
 			if is_comparison(expression.operator){
@@ -263,8 +271,6 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression) -> (err: Error) {
 			else {
 				expr.type = lhs.type
 			}
-
-			// log.debug("Binary expression has type: ", expr.type.primitive)
 		}
 		else {
 			return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
@@ -432,9 +438,17 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 		check_lvalue(left) or_return
 		eval_expression_type(scope, left) or_return
 
+		/* TODO: REMOVE */
 		if !same_type(left.type, right.type){
-			return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to value of type %v", format_type(left.type), format_type(right.type))
+			if !permissively_compare_numeric_types_to_yield_bad_buggy_code(left.type, right.type){
+				return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v",
+					format_type(left.type), format_type(right.type))
+			}
+			else {
+				emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(left.type), format_type(right.type))
+			}
 		}
+
 	}
 	return
 }
@@ -500,4 +514,12 @@ BUILTIN_TYPES := map[Identifier]BuiltinType{
 	"string" = .String,
 }
 
+
+/* TODO: VERY STUPID, REMOVE LATER! */
+permissively_compare_numeric_types_to_yield_bad_buggy_code :: proc(a: Type, b: Type) -> bool {
+	is_numeric_type :: proc(t: Type) -> bool {
+		return is_pure_primitive(t) && (t.primitive == .Int || t.primitive == .Real)
+	}
+	return is_numeric_type(a) && is_numeric_type(b)
+}
 
