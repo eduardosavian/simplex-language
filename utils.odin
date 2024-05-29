@@ -15,9 +15,10 @@ contains :: proc(s: $T/[]$E, e: E) -> bool {
 format_type :: proc(t: Type) -> string {
 	sb := str.builder_make(allocator = context.temp_allocator)
 	for mod in t.modifiers {
-		switch mod {
-		case .Pointer: fmt.sbprint(&sb, "^")
-		case .Slice: fmt.sbprint(&sb, "[]")
+		switch mod in mod {
+		case Pointer: fmt.sbprint(&sb, "^")
+		case Slice: fmt.sbprint(&sb, "[]")
+		case Array: fmt.sbprintf(&sb, "[%v]", mod.size)
 		}
 	}
 	fmt.sbprintf(&sb, "%v", t.primitive)
@@ -27,9 +28,10 @@ format_type :: proc(t: Type) -> string {
 
 print_type :: proc(t: Type){
 	for mod in t.modifiers {
-		switch mod {
-		case .Pointer: fmt.print("^")
-		case .Slice: fmt.print("[]")
+		switch mod in mod {
+		case Pointer: fmt.print("^")
+		case Slice: fmt.print("[]")
+		case Array: fmt.printf("[%v]", mod.size)
 		}
 	}
 	fmt.printf("%v", t.primitive)
@@ -112,11 +114,13 @@ print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
 
 print_parser_type :: proc(type: ParserType){
 	for q in type.modifiers {
-		switch q {
-		case .Pointer:
+		switch q in q {
+		case Pointer:
 			fmt.print("pointer to ")
-		case .Slice:
+		case Slice:
 			fmt.print("slice of ")
+		case Array:
+			fmt.print("array of %v ", q.size)
 		}
 	}
 	fmt.print(type.name)

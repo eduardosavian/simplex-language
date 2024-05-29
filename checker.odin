@@ -2,6 +2,7 @@ package lang
 
 import "core:slice"
 import "core:log"
+import "core:reflect"
 
 BuiltinType :: enum {
 	Bool, Int, Real, Rune, String,
@@ -24,6 +25,7 @@ SymbolInfo :: struct {
 	body: Scope,
 
 	stack_offset: int,
+
 	uses: int,
 }
 
@@ -277,8 +279,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		}
 		eval_expression_type(scope, expression.object) or_return
 
-		mod, ok := pop_mod(expression.object.type)
-		if !ok || mod != .Slice {
+		if type_is_indexable(expression.object.type) {
 			return emit_error(.NonIndexable, "Cannot index type: %v", format_type(expression.object.type))
 		}
 
@@ -473,6 +474,16 @@ check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Erro
 		}
 	}
 	return
+}
+
+@private
+type_is_indexable :: proc(t: Type) -> bool {
+	m := pop_mod(t) or_return
+	switch _ in m {
+	case Slice, Array: return true
+	case Pointer:
+	}
+	return false
 }
 
 UNARY_COMPAT := map[TokenKind][]PrimitiveType {

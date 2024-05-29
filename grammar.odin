@@ -88,10 +88,18 @@ ParserType :: struct {
 	modifiers: []Modifier,
 }
 
-Modifier :: enum i8 {
+Modifier :: union #no_nil {
 	Array,
 	Slice,
 	Pointer,
+}
+
+Slice :: struct {}
+
+Pointer :: struct {}
+
+Array :: struct {
+	size: int,
 }
 
 Assignment :: struct {
@@ -546,11 +554,11 @@ parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 		if tk.kind == .SquareOpen {
 			// PEEK NUMBER
 			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
-				append_elem(&modifiers, Modifier.Slice)
+				append_elem(&modifiers, Slice{})
 			}
 		}
 		else if tk.kind == .Caret {
-			append_elem(&modifiers, Modifier.Pointer)
+			append_elem(&modifiers, Pointer{})
 		}
 		else if tk.kind == .Identifier {
 			name = Identifier(tk.lexeme)
