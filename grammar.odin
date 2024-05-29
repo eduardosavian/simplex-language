@@ -89,6 +89,7 @@ ParserType :: struct {
 }
 
 Modifier :: enum i8 {
+	Array,
 	Slice,
 	Pointer,
 }
@@ -536,30 +537,14 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	return
 }
 
-// parse_type_definition :: proc(parser: ^Parser) -> (typedef: TypeDef, err: Error){
-// 	name, ok := parser_expect_consume(parser, .Identifier)
-// 	if !ok {
-// 		err = .NoExpectedToken
-// 		return
-// 	}
-//
-// 	type := parse_type(parser) or_return
-//
-// 	typedef = TypeDef {
-// 		name = Identifier(name.lexeme),
-// 		what = type,
-// 	}
-//
-// 	return
-// }
-
 parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
-	// ("[]" | "^")* id
+	// ("[integer]", "[]" | "^")* id
 	modifiers := make([dynamic]Modifier)
 	name: Identifier
 	for !parser_end(parser^){
 		tk := parser_advance(parser)
 		if tk.kind == .SquareOpen {
+			// PEEK NUMBER
 			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
 				append_elem(&modifiers, Modifier.Slice)
 			}

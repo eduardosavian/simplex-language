@@ -23,6 +23,7 @@ SymbolInfo :: struct {
 	args: []Type,
 	body: Scope,
 
+	stack_offset: int,
 	uses: int,
 }
 
