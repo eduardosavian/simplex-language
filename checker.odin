@@ -23,9 +23,7 @@ SymbolInfo :: struct {
 	args: []Type,
 	body: Scope,
 
-	/* TODO: Remove these pointless metadata */
 	uses: int,
-	init: bool,
 }
 
 SymbolKind :: enum {
@@ -256,13 +254,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		if operator_supported {
 			// Ensure same type
 			if !same_type(lhs.type, rhs.type){
-				/* TODO: REMOVE */
-				if !permissively_compare_numeric_types_to_yield_bad_buggy_code(lhs.type, rhs.type){
-					return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
-				}
-				else {
-					emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
-				}
+				return emit_error(.MismatchedTypes, "Cannot apply binary operation to operands of types: %v and %v", format_type(lhs.type), format_type(rhs.type))
 			}
 
 			if is_comparison(expression.operator){
@@ -359,9 +351,6 @@ check_symbol_usage :: proc(scope: ^Scope){
 		if info.uses == 0 && info.kind == .Variable {
 			emit_warning("Unused variable: %v", name)
 		}
-		if !info.init && info.kind == .Variable {
-			emit_warning("Uninitialized variable: %v", name)
-		}
 	}
 	for entry in scope.body {
 		switch &stmt in entry {
@@ -455,15 +444,8 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 		check_lvalue(left) or_return
 		eval_expression_type(scope, left, increase_usage = false) or_return
 
-		/* TODO: REMOVE */
 		if !same_type(left.type, right.type){
-			if !permissively_compare_numeric_types_to_yield_bad_buggy_code(left.type, right.type){
-				return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v",
-					format_type(left.type), format_type(right.type))
-			}
-			else {
-				emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(left.type), format_type(right.type))
-			}
+			return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v", format_type(left.type), format_type(right.type))
 		}
 
 	}
@@ -484,24 +466,9 @@ check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Erro
 		for &exp, i in stmt.expressions {
 			eval_expression_type(scope, exp) or_return
 			sym, _ := search_symbol(scope, stmt.identifiers[i], false)
-			// if !same_type(sym.type, exp.type){
-			// 	return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
-			// }
-			/* TODO: REMOVE THIS */
 			if !same_type(sym.type, exp.type){
-				if !permissively_compare_numeric_types_to_yield_bad_buggy_code(sym.type, exp.type){
-					return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v",
-						format_type(sym.type), format_type(exp.type))
-				}
-				else {
-					emit_warning("Potentially narrowing conversion of types: %v and %v", format_type(sym.type), format_type(exp.type))
-				}
+				return emit_error(.MismatchedTypes, "Cannot assign symbol of type %v to value of type %v", format_type(sym.type), format_type(exp.type))
 			}
-
-			/* TODO: REMOVE */
-			info := scope.env[stmt.identifiers[i]]
-			info.init = true
-			scope.env[stmt.identifiers[i]] = info
 		}
 	}
 	return
@@ -548,12 +515,4 @@ BUILTIN_TYPES := map[Identifier]BuiltinType{
 	"string" = .String,
 }
 
-
-/* TODO: VERY STUPID, REMOVE LATER! */
-permissively_compare_numeric_types_to_yield_bad_buggy_code :: proc(a: Type, b: Type) -> bool {
-	is_numeric_type :: proc(t: Type) -> bool {
-		return is_pure_primitive(t) && (t.primitive == .Int || t.primitive == .Real)
-	}
-	return is_numeric_type(a) && is_numeric_type(b)
-}
 

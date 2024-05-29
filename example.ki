@@ -17,9 +17,9 @@ func fizzbuzz(max: int){
 }
 
 func main() {
-	a: real = 1.5;
-	b: int = 1.9;
-	fizzbuzz(b + a);
+	a: int = 200;
+	b: int = 2;
+	c: int = a / b;
 }
 
 

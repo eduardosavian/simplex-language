@@ -87,11 +87,15 @@ compiler_main :: proc(source: string) -> (err: Error){
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
 
+	// Timers
+	lex_time, parse_time, check_time: time.Duration
+	defer log.info("Compiler took: ", check_time + parse_time + lex_time)
+
 	// Tokenize
 	lex_begin := time.now()
 	tokens, lex_ok := tokenize(source)
 	if !lex_ok { return .OtherLexError }
-	lex_time := time.since(lex_begin)
+	lex_time = time.since(lex_begin)
 	if verbose {
 		print_tokens(tokens)
 	}
@@ -101,7 +105,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 	// Parse
 	parse_begin := time.now()
 	scope := parse(tokens) or_return
-	parse_time := time.since(parse_begin)
+	parse_time = time.since(parse_begin)
 	if verbose {
 		print_scope(scope)
 	}
@@ -111,12 +115,13 @@ compiler_main :: proc(source: string) -> (err: Error){
 	// Typecheck
 	check_begin := time.now()
 	check_ast(&scope) or_return
-	check_time := time.since(check_begin)
+	check_time = time.since(check_begin)
 	if verbose {
 		print_env(&scope)
 	}
 	log.info("Type Checker took:", check_time)
 	if only_check { return }
+
 
 	return
 }
