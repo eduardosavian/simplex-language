@@ -21,7 +21,9 @@ Opcode :: enum {
 	Push, Pop,
 
 	Add, Sub, Mul, Div, Mod,
+
 	And, Or, Xor, Not,
+	ShiftLeft, ShiftRight,
 
 	Store, Load,
 	Store_Imm, Load_Imm,
@@ -120,12 +122,19 @@ OPCODE_BIN_MAP := map[TokenKind]Opcode {
 	.Star = .Mul,
 	.Slash = .Div,
 	.Modulo = .Mod,
+
+	.BitAnd = .And,
+	.BitOr = .Or,
+	.BitXor = .Xor,
+	.ShiftLeft = .ShiftLeft,
+	.ShiftRight = .ShiftRight,
 }
 
 @(private="file")
 OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.Plus = .NoOp,
 	.Minus = .Sub,
+	.BitXor = .Xor,
 }
 
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
@@ -135,7 +144,7 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 		generate_expression_ir(progbuf, val.right_side)
 		op, ok := OPCODE_BIN_MAP[val.operator]
 		if !ok {
-			err = emit_error(.UnknownOperator, "Unknown operator: ", val.operator)
+			err = emit_error(.UnknownOperator, "Unknown operator: %v", val.operator)
 			return
 		}
 		append(progbuf, Instruction{ opcode = op })
@@ -143,18 +152,23 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 	case Unary:
 		op, ok := OPCODE_UNARY_MAP[val.operator]
 		if !ok {
-			err = emit_error(.UnknownOperator, "Unknown operator: ", val.operator)
+			err = emit_error(.UnknownOperator, "Unknown operator: %v", val.operator)
 			return
 		}
 
 		if op == .Sub {
-			// Unary minus is the same as (0 - x)
 			append(progbuf, Instruction{ opcode = .Push, immediate = Word(0)})
 		}
 
 		generate_expression_ir(progbuf, val.operand)
 
-		append(progbuf, Instruction{ opcode = op })
+		// NOTE: Unary xor == unary not
+		if op == .Xor {
+			append(progbuf, Instruction{ opcode = .Not })
+		}
+		else {
+			append(progbuf, Instruction{ opcode = op })
+		}
 
 	case Indexing: unimplemented()
 	case FunctionCall: unimplemented()

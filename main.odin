@@ -28,10 +28,11 @@ help :: proc(){
 @(private="file") only_check := false
 @(private="file") only_ir    := false
 
-SRC :: "(4 % 3) + 5 / 2 * -1;"
+SRC :: "1 >> 0b11_00 & 0xff_00_1e;"
 
 main :: proc() {
 	tokens, _ := tokenize(SRC)
+	// print_tokens(tokens)
 	ast, _ := parse(tokens)
 	_ = check_ast(&ast)
 	print_scope(ast)
