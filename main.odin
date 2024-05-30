@@ -28,7 +28,12 @@ help :: proc(){
 @(private="file") only_check := false
 @(private="file") only_ir    := false
 
-SRC :: "1 >> 0b11_00 & 0xff_00_1e;"
+SRC :: `
+	a, b: int;
+	v: [8]int;
+	// v[23] = 100;
+	a, b = 23 - 34, ~2 >> 1 + (-8 / 7);
+`
 
 main :: proc() {
 	tokens, _ := tokenize(SRC)
@@ -36,9 +41,13 @@ main :: proc() {
 	ast, _ := parse(tokens)
 	_ = check_ast(&ast)
 	print_scope(ast)
+
 	buf := make([dynamic]Instruction)
-	e := ast.body[0].(InlineStatement).(ExpressionStatement).inner
-	generate_expression_ir(&buf, e)
+	e := ast.body[2].(InlineStatement).(Assignment)
+
+	mangle_names(&ast)
+	generate_assignment_ir(&buf, &ast, e)
+
 	print_ir(buf[:])
 
 	// if len(os.args) < 3 {

@@ -1,11 +1,10 @@
-package lang
 // TODO:
-// - Numeric types
 // - Strings
 // - Arrays
 // - Pointers
 // - Branching
 // - Functions
+package lang
 
 Word :: distinct Int
 
@@ -27,7 +26,14 @@ Opcode :: enum {
 
 	Store, Load,
 	Store_Imm, Load_Imm,
+
+	/* Store pops the top of the stack as the address/label and pops again
+	   the value to be stored.
+	   Load pops the top of the stack as the address/label and pushes the Word
+	   at the address
+	   The *_Imm versions simply take the address/label as an immediate. */
 }
+
 
 Instruction :: struct {
 	opcode: Opcode,
@@ -137,6 +143,29 @@ OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.BitXor = .Xor,
 }
 
+generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, assign: Assignment) -> (err: Error) {
+	for lhs, i in assign.left_side {
+		rhs := assign.right_side[i]
+
+		#partial switch lhs in lhs.value {
+		case Primary:
+			id := lhs.(Identifier)
+			info, ok := search_symbol(scope, id)
+			assert(ok, "Undefined symbol")
+			generate_expression_ir(progbuf, rhs) or_return
+			append(progbuf, Instruction{
+				opcode = .Store_Imm,
+				label = info.static_section_name,
+			})
+
+		case Indexing:
+			unimplemented()
+		case: unreachable()
+		}
+	}
+	return
+}
+
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
 	switch val in expr.value {
 	case Binary:
@@ -191,8 +220,6 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 
 	return
 }
-
-
 
 type_size :: proc(t: Type) -> int {
 	size := 0
