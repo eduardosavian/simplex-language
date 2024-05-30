@@ -29,24 +29,27 @@ help :: proc(){
 @(private="file") only_ir    := false
 
 SRC :: `
-	a, b: int;
-	v: [8]int;
-	// v[23] = 100;
-	a, b = 23 - 34, ~2 >> 1 + (-8 / 7);
+a, b: int = 30 -1 , +2 / (-3 << 1);
 `
 
 main :: proc() {
+	// Setup Logger
+	logger_options :: log.Options{.Short_File_Path, .Line, .Terminal_Color, .Level}
+	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Info
+	logger := log.create_console_logger(lowest_level, logger_options)
+	defer log.destroy_console_logger(logger)
+	context.logger = logger
+
 	tokens, _ := tokenize(SRC)
-	// print_tokens(tokens)
 	ast, _ := parse(tokens)
 	_ = check_ast(&ast)
 	print_scope(ast)
 
 	buf := make([dynamic]Instruction)
-	e := ast.body[2].(InlineStatement).(Assignment)
 
 	mangle_names(&ast)
-	generate_assignment_ir(&buf, &ast, e)
+	err := generate_scope_ir(&buf, &ast)
+	assert(err == nil)
 
 	print_ir(buf[:])
 
@@ -103,13 +106,6 @@ compiler_main :: proc(source: string) -> (err: Error){
 	mem.arena_init(&compiler_arena, COMPILER_MEM_POOL[:])
 	context.allocator = mem.arena_allocator(&compiler_arena)
 	defer free_all(context.allocator)
-
-	// Setup Logger
-	logger_options :: log.Options{.Short_File_Path, .Line, .Terminal_Color, .Level}
-	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Info
-	logger := log.create_console_logger(lowest_level, logger_options)
-	defer log.destroy_console_logger(logger)
-	context.logger = logger
 
 	// Timers
 	lex_time, parse_time, check_time: time.Duration

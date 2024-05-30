@@ -8,6 +8,7 @@ package lang
 
 Word :: distinct Int
 
+import "core:log"
 import "core:fmt"
 import "core:hash"
 import "core:strings"
@@ -143,6 +144,48 @@ OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.BitXor = .Xor,
 }
 
+generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err: Error) {
+	for &statement in scope.body {
+		switch &statement in statement {
+		case InlineStatement:
+			switch inline_stmt in statement {
+			case ExpressionStatement:
+				generate_expression_ir(progbuf, scope, inline_stmt.inner) or_return
+			case VarDeclaration:
+				generate_var_declaration_ir(progbuf, scope, inline_stmt)
+			case Assignment:
+				generate_assignment_ir(progbuf, scope, inline_stmt)
+			case Return:unimplemented()
+			case Break:unimplemented()
+			case Continue: unimplemented()
+			}
+
+		case Scope: unimplemented()
+		case If: unimplemented()
+		case For: unimplemented()
+		case FunctionDef: unimplemented()
+		}
+	}
+	return
+}
+
+generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, decl: VarDeclaration) -> (err: Error) {
+	if len(decl.expressions) <= 0 { return }
+
+	for rhs, i in decl.expressions {
+		id := decl.identifiers[i]
+		info, ok := search_symbol(scope, id)
+		assert(ok, "Undefined symbol")
+		generate_expression_ir(progbuf, scope, rhs) or_return
+		append(progbuf, Instruction{
+			opcode = .Store_Imm,
+			label = info.static_section_name,
+		})
+	}
+
+	return
+}
+
 generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, assign: Assignment) -> (err: Error) {
 	for lhs, i in assign.left_side {
 		rhs := assign.right_side[i]
@@ -152,7 +195,7 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			id := lhs.(Identifier)
 			info, ok := search_symbol(scope, id)
 			assert(ok, "Undefined symbol")
-			generate_expression_ir(progbuf, rhs) or_return
+			generate_expression_ir(progbuf, scope, rhs) or_return
 			append(progbuf, Instruction{
 				opcode = .Store_Imm,
 				label = info.static_section_name,
@@ -166,11 +209,13 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 	return
 }
 
-generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
+
+@(require_results)
+generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression) -> (err: Error){
 	switch val in expr.value {
 	case Binary:
-		generate_expression_ir(progbuf, val.left_side)
-		generate_expression_ir(progbuf, val.right_side)
+		generate_expression_ir(progbuf, scope, val.left_side) or_return
+		generate_expression_ir(progbuf, scope, val.right_side) or_return
 		op, ok := OPCODE_BIN_MAP[val.operator]
 		if !ok {
 			err = emit_error(.UnknownOperator, "Unknown operator: %v", val.operator)
@@ -189,13 +234,13 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 			append(progbuf, Instruction{ opcode = .Push, immediate = Word(0)})
 		}
 
-		generate_expression_ir(progbuf, val.operand)
+		generate_expression_ir(progbuf, scope, val.operand) or_return
 
 		// NOTE: Unary xor == unary not
 		if op == .Xor {
 			append(progbuf, Instruction{ opcode = .Not })
 		}
-		else {
+		else if op != .NoOp {
 			append(progbuf, Instruction{ opcode = op })
 		}
 
@@ -208,14 +253,20 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 				opcode = .Push,
 				immediate = Word(val),
 			})
-		case Identifier: unimplemented()
+		case Identifier:
+			info, ok := search_symbol(scope, val)
+			assert(ok, "Undefined symbol")
+			append(progbuf, Instruction {
+				opcode = .Load_Imm,
+				label = info.static_section_name,
+			})
 		case String: unimplemented()
 		case Real: unimplemented()
 		case Bool: unimplemented()
 		case Rune: unimplemented()
 		}
 	case Group:
-		generate_expression_ir(progbuf, val.inner)
+		generate_expression_ir(progbuf, scope, val.inner) or_return
 	}
 
 	return
