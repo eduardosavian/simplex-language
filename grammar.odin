@@ -553,7 +553,15 @@ parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 		tk := parser_advance(parser)
 		if tk.kind == .SquareOpen {
 			// PEEK NUMBER
-			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
+			if tk, ok := parser_match_consume(parser, .Int); ok {
+				val, _ := tk.payload.(i64)
+				append_elem(&modifiers, Array{ size = int(val) })
+				_, ok := parser_expect_consume(parser, .SquareClose)
+				if !ok {
+					err = emit_error(.UnexpectedToken, "Expected ']' in type expression")
+				}
+			}
+			else if _, ok := parser_expect_consume(parser, .SquareClose); ok {
 				append_elem(&modifiers, Slice{})
 			}
 		}

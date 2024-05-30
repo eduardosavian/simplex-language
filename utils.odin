@@ -120,7 +120,7 @@ print_parser_type :: proc(type: ParserType){
 		case Slice:
 			fmt.print("slice of ")
 		case Array:
-			fmt.print("array of %v ", q.size)
+			fmt.printf("array of %v ", q.size)
 		}
 	}
 	fmt.print(type.name)

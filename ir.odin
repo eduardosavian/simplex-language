@@ -35,7 +35,7 @@ Machine :: struct {
 
 // Push space for all variables in env
 // Map each variable of env to a particular offset
-map_scope_variables :: proc(scope: ^Scope) {
+map_scope_variables :: proc(scope: ^Scope){
 	previous_offset := 0
 	for id in scope.env {
 		info := scope.env[id]
@@ -44,6 +44,11 @@ map_scope_variables :: proc(scope: ^Scope) {
 		scope.env[id] = info
 	}
 }
+
+// gen_assignment :: proc(prog: ^[dynamic]Instruction, assign: Assignment){
+// }
+
+
 
 type_size :: proc(t: Type) -> int {
 	size := 0

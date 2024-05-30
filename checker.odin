@@ -279,7 +279,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		}
 		eval_expression_type(scope, expression.object) or_return
 
-		if type_is_indexable(expression.object.type) {
+		if !type_is_indexable(expression.object.type) {
 			return emit_error(.NonIndexable, "Cannot index type: %v", format_type(expression.object.type))
 		}
 
@@ -287,7 +287,6 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		mod_count := len(expr.type.modifiers)
 		expr.type.modifiers = []Modifier{} if mod_count < 2 else expr.type.modifiers[1:]
 
-	// TODO: Function expression
 	case FunctionCall:
 		p, ok := expression.func.value.(Primary)
 		if !ok {
@@ -479,11 +478,12 @@ check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Erro
 @private
 type_is_indexable :: proc(t: Type) -> bool {
 	m := pop_mod(t) or_return
+	ok := false
 	switch _ in m {
-	case Slice, Array: return true
+	case Slice, Array: ok = true
 	case Pointer:
 	}
-	return false
+	return ok
 }
 
 UNARY_COMPAT := map[TokenKind][]PrimitiveType {

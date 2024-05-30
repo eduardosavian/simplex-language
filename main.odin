@@ -122,7 +122,6 @@ compiler_main :: proc(source: string) -> (err: Error){
 	log.info("Type Checker took:", check_time)
 	if only_check { return }
 
-
 	return
 }
 
