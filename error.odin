@@ -33,6 +33,10 @@ CheckerError :: enum byte {
 	MismatchedTypes,
 }
 
+IRError :: enum byte {
+	UnknownOperator,
+}
+
 Error :: union {
 	LexerError, ParserError, CheckerError,
 }

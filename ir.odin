@@ -16,6 +16,8 @@ import "core:strings"
 WORD_SIZE :: size_of(Word)
 
 Opcode :: enum {
+	NoOp = 0,
+
 	Push, Pop,
 
 	Add, Sub, Mul, Div, Mod,
@@ -28,6 +30,7 @@ Opcode :: enum {
 Instruction :: struct {
 	opcode: Opcode,
 	immediate: Word,
+	label: string, // For load/store instructions that operate on the static segment
 }
 
 Machine :: struct {
@@ -41,7 +44,6 @@ Machine :: struct {
 generate_ir :: proc(root: ^Scope){
 	mangle_names(root)
 }
-
 
 // Does all required name-mangling recursively
 mangle_names :: proc(scope: ^Scope, seed := u32(0x811c9dc5)) -> u32 {
@@ -110,6 +112,47 @@ mangle_type_name :: proc(t: Type) -> string {
 	resize(&buf, len(buf))
 	return string(buf[:])
 }
+
+OPCODE_BIN_MAP := map[TokenKind]Opcode {
+	.Plus = .Add,
+	.Minus = .Sub,
+	.Star = .Mul,
+	.Slash = .Div,
+	.Mod = .Mod,
+}
+
+generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
+	switch val in expr.value {
+	case Binary:
+		generate_expression_ir(progbuf, val.left_side)
+		generate_expression_ir(progbuf, val.right_side)
+		op, ok := OPCODE_BIN_MAP[val.operator]
+		if !ok {
+			err = emit_error(.UnknownOperator, "Unknown operator: ", val.operator)
+		}
+
+	case Unary: unimplemented()
+	case Indexing: unimplemented()
+	case FunctionCall: unimplemented()
+	case Primary:
+		switch val in val {
+		case Int:
+			append(progbuf, Instruction{
+				opcode = .Push,
+				immediate = Word(val),
+			})
+		case Identifier: unimplemented()
+		case String: unimplemented()
+		case Real: unimplemented()
+		case Bool: unimplemented()
+		case Rune: unimplemented()
+		}
+	case Group: unimplemented()
+	}
+
+	return
+}
+
 
 
 type_size :: proc(t: Type) -> int {
