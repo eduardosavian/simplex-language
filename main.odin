@@ -28,54 +28,63 @@ help :: proc(){
 @(private="file") only_check := false
 @(private="file") only_ir    := false
 
+SRC :: "(4 % 3) + 5 / 2 * -1;"
+
 main :: proc() {
-	/*
-	if len(os.args) < 3 {
-		help()
-		return
-	}
+	tokens, _ := tokenize(SRC)
+	ast, _ := parse(tokens)
+	_ = check_ast(&ast)
+	print_scope(ast)
+	buf := make([dynamic]Instruction)
+	e := ast.body[0].(InlineStatement).(ExpressionStatement).inner
+	generate_expression_ir(&buf, e)
+	print_ir(buf[:])
 
-	file := os.args[1]
-	mode := os.args[2]
-
-	options := make([dynamic]cli.Flag)
-	if len(os.args) > 3 {
-		for arg in os.args[3:] {
-			f, _ := cli.parse_flag(arg)
-			append(&options, f)
-		}
-	}
-	for opt in options {
-		switch opt.key {
-		case "help":
-			help()
-			return
-		case "verbose":
-			verbose = true
-		case:
-			fmt.printfln("Unknown option: %q", opt.key)
-			return
-		}
-	}
-
-	switch mode {
-	case "lex": only_lex = true
-	case "parse": only_parse = true
-	case "check": only_check = true
-	case "ir": only_ir = true
-	case:
-		fmt.println("Unknown mode: ", mode)
-		return
-	}
-
-	source, ok := os.read_entire_file(file)
-	if !ok {
-		fmt.println("Failed to read file:", file)
-		return
-	}
-
-	compiler_main(string(source))
-	*/
+	// if len(os.args) < 3 {
+	// 	help()
+	// 	return
+	// }
+	//
+	// file := os.args[1]
+	// mode := os.args[2]
+	//
+	// options := make([dynamic]cli.Flag)
+	// if len(os.args) > 3 {
+	// 	for arg in os.args[3:] {
+	// 		f, _ := cli.parse_flag(arg)
+	// 		append(&options, f)
+	// 	}
+	// }
+	// for opt in options {
+	// 	switch opt.key {
+	// 	case "help":
+	// 		help()
+	// 		return
+	// 	case "verbose":
+	// 		verbose = true
+	// 	case:
+	// 		fmt.printfln("Unknown option: %q", opt.key)
+	// 		return
+	// 	}
+	// }
+	//
+	// switch mode {
+	// case "lex": only_lex = true
+	// case "parse": only_parse = true
+	// case "check": only_check = true
+	// case "ir": only_ir = true
+	// case:
+	// 	fmt.println("Unknown mode: ", mode)
+	// 	return
+	// }
+	//
+	// source, ok := os.read_entire_file(file)
+	// if !ok {
+	// 	fmt.println("Failed to read file:", file)
+	// 	return
+	// }
+	//
+	// compiler_main(string(source))
 }
 
 compiler_main :: proc(source: string) -> (err: Error){

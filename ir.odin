@@ -113,12 +113,19 @@ mangle_type_name :: proc(t: Type) -> string {
 	return string(buf[:])
 }
 
+@(private="file")
 OPCODE_BIN_MAP := map[TokenKind]Opcode {
 	.Plus = .Add,
 	.Minus = .Sub,
 	.Star = .Mul,
 	.Slash = .Div,
 	.Modulo = .Mod,
+}
+
+@(private="file")
+OPCODE_UNARY_MAP := map[TokenKind]Opcode {
+	.Plus = .NoOp,
+	.Minus = .Sub,
 }
 
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
@@ -129,9 +136,26 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 		op, ok := OPCODE_BIN_MAP[val.operator]
 		if !ok {
 			err = emit_error(.UnknownOperator, "Unknown operator: ", val.operator)
+			return
+		}
+		append(progbuf, Instruction{ opcode = op })
+
+	case Unary:
+		op, ok := OPCODE_UNARY_MAP[val.operator]
+		if !ok {
+			err = emit_error(.UnknownOperator, "Unknown operator: ", val.operator)
+			return
 		}
 
-	case Unary: unimplemented()
+		if op == .Sub {
+			// Unary minus is the same as (0 - x)
+			append(progbuf, Instruction{ opcode = .Push, immediate = Word(0)})
+		}
+
+		generate_expression_ir(progbuf, val.operand)
+
+		append(progbuf, Instruction{ opcode = op })
+
 	case Indexing: unimplemented()
 	case FunctionCall: unimplemented()
 	case Primary:
@@ -147,7 +171,8 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression
 		case Bool: unimplemented()
 		case Rune: unimplemented()
 		}
-	case Group: unimplemented()
+	case Group:
+		generate_expression_ir(progbuf, val.inner)
 	}
 
 	return

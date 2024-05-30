@@ -181,6 +181,23 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 	}
 }
 
+@(private="file")
+IMMEDIATE_OPS := map[Opcode]bool {
+	.Push = true,
+	.Load_Imm = true,
+}
+
+print_ir :: proc(prog: []Instruction){
+	for instruction, i in prog {
+		if instruction.opcode in IMMEDIATE_OPS {
+			fmt.printfln("%04d   %v %v", i, instruction.opcode, instruction.immediate)
+		}
+		else {
+			fmt.printfln("%04d   %v", i, instruction.opcode)
+		}
+	}
+}
+
 print_scope :: proc(scope: Scope, n := 0){
 	if n > 0 {
 		printf(n - 1, "{{\n")
