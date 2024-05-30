@@ -1,21 +1,8 @@
 func toString(_: int) -> string {}
 func print(_: string){}
 
-// func fizzbuzz(max: int){
-// 	for i: int = 0; i < max; i = i + 1 {
-// 		if i % 3 == 0 {
-// 			print("Fizz");
-// 		}
-// 		else if i % 5 == 0 {
-// 			print("Buzz");
-// 		}
-// 		else {
-// 			print(toString(i));
-// 		}
-// 
-// 	}
-// }
 
+g: [100]int;
 func main() {
 	a: [100]int;
 	b: int = a[89];

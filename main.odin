@@ -16,6 +16,7 @@ help :: proc(){
 	fmt.printfln("    lex      Only run the lexer")
 	fmt.printfln("    parse    Only run the parser")
 	fmt.printfln("    check    Only run the typechecker")
+	fmt.printfln("    ir       Generate intermediate representation")
 	fmt.printfln("  Options:")
 	fmt.printfln("    -verbose    Be verbose")
 	fmt.printfln("    -help       Display this help message")
@@ -25,6 +26,7 @@ help :: proc(){
 @(private="file") only_lex   := false
 @(private="file") only_parse := false
 @(private="file") only_check := false
+@(private="file") only_ir    := false
 
 main :: proc() {
 	if len(os.args) < 3 {
@@ -59,6 +61,7 @@ main :: proc() {
 	case "lex": only_lex = true
 	case "parse": only_parse = true
 	case "check": only_check = true
+	case "ir": only_ir = true
 	case:
 		fmt.println("Unknown mode: ", mode)
 		return
@@ -121,6 +124,14 @@ compiler_main :: proc(source: string) -> (err: Error){
 	}
 	log.info("Type Checker took:", check_time)
 	if only_check { return }
+
+	// IR Gen
+	generate_ir(&scope)
+	if verbose {
+		print_env(&scope, true)
+	}
+
+	if only_ir { return }
 
 	return
 }

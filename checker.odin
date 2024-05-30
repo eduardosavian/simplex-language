@@ -24,7 +24,7 @@ SymbolInfo :: struct {
 	args: []Type,
 	body: Scope,
 
-	stack_offset: int,
+	static_section_name: string,
 
 	uses: int,
 }
@@ -526,5 +526,4 @@ BUILTIN_TYPES := map[Identifier]BuiltinType{
 	"rune"   = .Rune,
 	"string" = .String,
 }
-
 

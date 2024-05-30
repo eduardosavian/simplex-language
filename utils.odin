@@ -37,11 +37,11 @@ print_type :: proc(t: Type){
 	fmt.printf("%v", t.primitive)
 }
 
-print_env :: proc(scope: ^Scope){
-	print_env_rec(scope, 0, "<Global>")
+print_env :: proc(scope: ^Scope, mangled_names := false){
+	print_env_rec(scope, 0, "<Global>", mangled_names)
 }
 
-print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
+print_env_rec :: proc(scope: ^Scope, n: int, header := "", mangled_names := false){
 	if len(header) == 0 {
 		printf(n, "---| <Scope> |---\n", header)
 	}
@@ -75,7 +75,12 @@ print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
 			continue
 		}
 
-		printf(n, "%v: ", name)
+		if mangled_names {
+			printf(n, "%v (%v): ", name, sym.static_section_name)
+		}
+		else {
+			printf(n, "%v: ", name)
+		}
 		print_type(sym.type)
 		fmt.println()
 	}
@@ -84,19 +89,19 @@ print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
 	for stmt in scope.body {
 		#partial switch &v in stmt {
 		case For:
-			print_env_rec(&v.scope, n + 1, "<For>")
+			print_env_rec(&v.scope, n + 1, "<For>", mangled_names = mangled_names)
 		case If:
-			print_env_rec(&v.scope, n + 1, "<If>")
+			print_env_rec(&v.scope, n + 1, "<If>",mangled_names =  mangled_names)
 			current := v.else_branch
 			for current != nil {
 				if_stmt, is_if := current.(If)
 				else_stmt, is_else := current.(Scope)
 				if is_if {
-					print_env_rec(&if_stmt.scope, n + 1, "<Elif>")
+					print_env_rec(&if_stmt.scope, n + 1, "<Elif>",mangled_names =  mangled_names)
 					current = if_stmt.else_branch
 				}
 				else if is_else {
-					print_env_rec(&else_stmt, n + 1, "<Else>")
+					print_env_rec(&else_stmt, n + 1, "<Else>",mangled_names =  mangled_names)
 					current = nil
 				}
 				else {
@@ -105,9 +110,9 @@ print_env_rec :: proc(scope: ^Scope, n: int, header := ""){
 			}
 
 		case FunctionDef:
-			print_env_rec(&v.scope, n + 1, string(stmt.(FunctionDef).name))
+			print_env_rec(&v.scope, n + 1, string(stmt.(FunctionDef).name),mangled_names =  mangled_names)
 		case Scope:
-			print_env_rec(&v, n + 1)
+			print_env_rec(&v, n + 1,mangled_names =  mangled_names)
 		}
 	}
 }
