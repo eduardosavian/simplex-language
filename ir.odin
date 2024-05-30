@@ -94,7 +94,6 @@ mangle_type_name :: proc(t: Type) -> string {
 				append(&buf, byte(c))
 			}
 			append(&buf, 'V')
-		case Slice: append(&buf, 'S')
 		case Pointer: append(&buf, 'P')
 		}
 	}
@@ -125,9 +124,8 @@ type_size :: proc(t: Type) -> int {
 
 	for mod in t.modifiers {
 		switch mod in mod {
-		case Slice: size += 2 * size_of(Word)
-		case Array: size *= mod.size
-		case Pointer: size += size_of(Word)
+		case Array: size = size * mod.size
+		case Pointer: size = size + size_of(Word)
 		}
 	}
 

@@ -272,7 +272,7 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		}
 
 	case Indexing:
-		// Index must be an integer, Indexed object must be a slice.
+		// Index must be an integer, Indexed object must be a array
 		eval_expression_type(scope, expression.index) or_return
 		if !is_valid_index(expression.index.type){
 			return emit_error(.MismatchedTypes, "Index must be an integer.")
@@ -480,7 +480,7 @@ type_is_indexable :: proc(t: Type) -> bool {
 	m := pop_mod(t) or_return
 	ok := false
 	switch _ in m {
-	case Slice, Array: ok = true
+	case Array: ok = true
 	case Pointer:
 	}
 	return ok

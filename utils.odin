@@ -17,7 +17,6 @@ format_type :: proc(t: Type) -> string {
 	for mod in t.modifiers {
 		switch mod in mod {
 		case Pointer: fmt.sbprint(&sb, "^")
-		case Slice: fmt.sbprint(&sb, "[]")
 		case Array: fmt.sbprintf(&sb, "[%v]", mod.size)
 		}
 	}
@@ -30,7 +29,6 @@ print_type :: proc(t: Type){
 	for mod in t.modifiers {
 		switch mod in mod {
 		case Pointer: fmt.print("^")
-		case Slice: fmt.print("[]")
 		case Array: fmt.printf("[%v]", mod.size)
 		}
 	}
@@ -122,8 +120,6 @@ print_parser_type :: proc(type: ParserType){
 		switch q in q {
 		case Pointer:
 			fmt.print("pointer to ")
-		case Slice:
-			fmt.print("slice of ")
 		case Array:
 			fmt.printf("array of %v ", q.size)
 		}
