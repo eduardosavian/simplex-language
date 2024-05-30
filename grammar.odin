@@ -365,9 +365,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 
 		// New Sub-Scope
 		if parser_peek(parser, 0).kind == .CurlyOpen {
-			log.debug("Parsing an anonynmous scope")
 			stmt = parse_scope(parser) or_return
-			log.debug("Anon:", stmt)
 			append_elem(&statements, stmt)
 			continue
 		}

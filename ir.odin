@@ -144,6 +144,7 @@ OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.BitXor = .Xor,
 }
 
+@(require_results)
 generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err: Error) {
 	for &statement in scope.body {
 		switch &statement in statement {
@@ -155,12 +156,12 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 				generate_var_declaration_ir(progbuf, scope, inline_stmt)
 			case Assignment:
 				generate_assignment_ir(progbuf, scope, inline_stmt)
-			case Return:unimplemented()
-			case Break:unimplemented()
+			case Return: unimplemented()
+			case Break: unimplemented()
 			case Continue: unimplemented()
 			}
-
-		case Scope: unimplemented()
+		case Scope:
+			generate_scope_ir(progbuf, &statement) or_return
 		case If: unimplemented()
 		case For: unimplemented()
 		case FunctionDef: unimplemented()

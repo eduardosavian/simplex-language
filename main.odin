@@ -30,6 +30,12 @@ help :: proc(){
 
 SRC :: `
 a, b: int = 30 -1 , +2 / (-3 << 1);
+{
+	c: int = 100;
+}
+{
+	c: int = 69;
+}
 `
 
 main :: proc() {
