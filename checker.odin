@@ -448,10 +448,13 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 		if !same_type(left.type, right.type){
 			return emit_error(.MismatchedTypes, "Cannot assign expression of type %v to expression of type %v", format_type(left.type), format_type(right.type))
 		}
-
+		if len(left.type.modifiers) > 0 {
+			return emit_error(.MismatchedTypes, "Vectorized assignment is not allowed")
+		}
 	}
 	return
 }
+
 
 check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Error){
 	t := eval_parser_type(scope, stmt.type) or_return

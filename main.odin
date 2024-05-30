@@ -16,7 +16,7 @@ help :: proc(){
 	fmt.printfln("    lex      Only run the lexer")
 	fmt.printfln("    parse    Only run the parser")
 	fmt.printfln("    check    Only run the typechecker")
-	fmt.printfln("    ir       Generate intermediate representation")
+	fmt.printfln("    ir       Only generate intermediate representation")
 	fmt.printfln("  Options:")
 	fmt.printfln("    -verbose    Be verbose")
 	fmt.printfln("    -help       Display this help message")
@@ -29,13 +29,10 @@ help :: proc(){
 @(private="file") only_ir    := false
 
 SRC :: `
-a, b: int = 30 -1 , +2 / (-3 << 1);
-{
-	c: int = 100;
-}
-{
-	c: int = 69;
-}
+a: [12][3]int;
+b: [7][9]int;
+
+a[0][1] = 100;
 `
 
 main :: proc() {
@@ -57,6 +54,7 @@ main :: proc() {
 	err := generate_scope_ir(&buf, &ast)
 	assert(err == nil)
 
+	print_env(&ast, true)
 	print_ir(buf[:])
 
 	// if len(os.args) < 3 {

@@ -28,13 +28,9 @@ Opcode :: enum {
 	Store, Load,
 	Store_Imm, Load_Imm,
 
-	/* Store pops the top of the stack as the address/label and pops again
-	   the value to be stored.
-	   Load pops the top of the stack as the address/label and pushes the Word
-	   at the address
-	   The *_Imm versions simply take the address/label as an immediate. */
+	// Store addr <- value
+	// Load addr
 }
-
 
 Instruction :: struct {
 	opcode: Opcode,
@@ -105,16 +101,17 @@ mangle_type_name :: proc(t: Type) -> string {
 				append(&buf, byte(c))
 			}
 			append(&buf, 'V')
-		case Pointer: append(&buf, 'P')
+		case Pointer:
+			append(&buf, 'P')
 		}
 	}
 
 	p := t.primitive.(BuiltinType)
 	switch p {
-	case .Bool: append(&buf, 'b')
-	case .Int: append(&buf, 'i')
-	case .Real: append(&buf, 'f')
-	case .Rune: append(&buf, 'c')
+	case .Bool:   append(&buf, 'b')
+	case .Int:    append(&buf, 'i')
+	case .Real:   append(&buf, 'f')
+	case .Rune:   append(&buf, 'c')
 	case .String: append(&buf, 's')
 	}
 
@@ -203,13 +200,89 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			})
 
 		case Indexing:
-			unimplemented()
-		case: unreachable()
+			generate_expression_ir(progbuf, scope, lhs.object) or_return
+			generate_expression_ir(progbuf, scope, lhs.index) or_return
+
+			// This means a base address is being indexed, note that the only
+			// primary expression that can be indexed are identifiers.
+
+			// Indexing in the rhs of assignment -> add a load instruction
+			// Indexing in the lhs of assignment -> add a store instruction
+			panic("START FROM HERE")
+			#partial switch object in lhs.object.value {
+			case Primary:
+				id := object.(Identifier)
+				info, ok := search_symbol(scope, id)
+				assert(ok, "Undefined symbol")
+
+				fmt.println("INDEXING BASE OF ", id)
+
+				type := Type{
+					modifiers = mods[max(len(mods), 1):],
+					primitive = lhs.object.type.primitive,
+				}
+				size := type_size(type)
+
+				append(progbuf, Instruction {
+					opcode = .Push,
+					label = info.static_section_name,
+				})
+
+				append(progbuf, Instruction {
+					opcode = .Push,
+					immediate = Word(size),
+				})
+
+				generate_expression_ir(progbuf, scope, lhs.index) or_return
+
+				append(progbuf, Instruction { opcode = .Mul, })
+				append(progbuf, Instruction { opcode = .Add, })
+
+			case Indexing:
+				type := Type{
+					modifiers = mods[max(len(mods), 1):],
+					primitive = lhs.object.type.primitive,
+				}
+
+				size := type_size(type)
+
+				append(progbuf, Instruction {
+					opcode = .Push,
+					immediate = Word(size),
+				})
+
+				generate_expression_ir(progbuf, scope, lhs.index) or_return
+
+				append(progbuf, Instruction { opcode = .Mul, })
+				append(progbuf, Instruction { opcode = .Add, })
+			}
+
+			// unimplemented("--- vec :/ ----")
+
+		case:
+			unreachable()
 		}
 	}
 	return
 }
 
+@(private="file")
+only_has_array :: proc(s: []Modifier) -> bool {
+	for mod in s {
+		mod, ok := mod.(Array)
+		if !ok { return false }
+	}
+	return true
+}
+
+// Assuming the base address of the array is already at the top of the stack.
+// For each index, calculate that index, multiply by the stride factor and add
+// that to the base address (stack top). Repeat until there's no more right
+// side's, the end value will be the correct address.
+@(private="file")
+generate_indexed_access :: proc(progbuf: ^[dynamic]Instruction, indexing: Indexing) -> (err: Error){
+	return
+}
 
 @(require_results)
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression) -> (err: Error){
@@ -277,7 +350,7 @@ type_size :: proc(t: Type) -> int {
 	size := 0
 	switch t.primitive.(BuiltinType) {
 	case .Int: size = size_of(Word)
-	case .Bool: size = size_of(Word) /* Should have been just a byte, but I dont want to bother with alignment right now */
+	case .Bool: size = size_of(Word) // Should have been just a byte, but I dont want to bother with alignment right now
 	case .Real: size = size_of(Real)
 	case .Rune: size = 4
 	case .String: size = size_of(Word) * 2
@@ -292,3 +365,14 @@ type_size :: proc(t: Type) -> int {
 
 	return size
 }
+
+array_stride_factor :: proc(mods: []Modifier) -> int {
+	assert(only_has_array(mods), "This function should only be used on array types")
+	acc := 1
+
+	for m in mods {
+		#no_type_assert acc *= m.(Array).size
+	}
+	return acc
+}
+
