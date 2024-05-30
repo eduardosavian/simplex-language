@@ -38,7 +38,7 @@ IRError :: enum byte {
 }
 
 Error :: union {
-	LexerError, ParserError, CheckerError,
+	LexerError, ParserError, CheckerError, IRError,
 }
 
 @(private="file")
@@ -48,6 +48,7 @@ error_name :: proc(e: Error) -> string {
 	case LexerError:   msg = "Lexing "
 	case ParserError:  msg = "Syntax "
 	case CheckerError: msg = "Semantic "
+	case IRError: msg = "IR "
 	case: msg = " "
 	}
 	return msg

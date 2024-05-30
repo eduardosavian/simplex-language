@@ -29,6 +29,7 @@ help :: proc(){
 @(private="file") only_ir    := false
 
 main :: proc() {
+	/*
 	if len(os.args) < 3 {
 		help()
 		return
@@ -74,6 +75,7 @@ main :: proc() {
 	}
 
 	compiler_main(string(source))
+	*/
 }
 
 compiler_main :: proc(source: string) -> (err: Error){

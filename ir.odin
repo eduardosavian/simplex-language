@@ -118,7 +118,7 @@ OPCODE_BIN_MAP := map[TokenKind]Opcode {
 	.Minus = .Sub,
 	.Star = .Mul,
 	.Slash = .Div,
-	.Mod = .Mod,
+	.Modulo = .Mod,
 }
 
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, expr: ^Expression) -> (err: Error){
