@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/lang",
-            "args": ["example.ki", "check", "-verbose"],
+            // "args": ["example.ki", "check", "-verbose"],
             "cwd": "${workspaceFolder}"
         }
     ]

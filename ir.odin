@@ -28,6 +28,8 @@ Opcode :: enum {
 	Store, Load,
 	Store_Imm, Load_Imm,
 
+	Index,
+
 	// Store addr <- value
 	// Load addr
 }
@@ -200,64 +202,16 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			})
 
 		case Indexing:
-			generate_expression_ir(progbuf, scope, lhs.object) or_return
-			generate_expression_ir(progbuf, scope, lhs.index) or_return
+			// generate_expression_ir(progbuf, scope, lhs.object) or_return
+			// generate_expression_ir(progbuf, scope, lhs.index) or_return
+			// append(progbuf, Instruction{
+			// 	opcode = .Index,
+			// })
 
 			// This means a base address is being indexed, note that the only
 			// primary expression that can be indexed are identifiers.
-
 			// Indexing in the rhs of assignment -> add a load instruction
 			// Indexing in the lhs of assignment -> add a store instruction
-			panic("START FROM HERE")
-			#partial switch object in lhs.object.value {
-			case Primary:
-				id := object.(Identifier)
-				info, ok := search_symbol(scope, id)
-				assert(ok, "Undefined symbol")
-
-				fmt.println("INDEXING BASE OF ", id)
-
-				type := Type{
-					modifiers = mods[max(len(mods), 1):],
-					primitive = lhs.object.type.primitive,
-				}
-				size := type_size(type)
-
-				append(progbuf, Instruction {
-					opcode = .Push,
-					label = info.static_section_name,
-				})
-
-				append(progbuf, Instruction {
-					opcode = .Push,
-					immediate = Word(size),
-				})
-
-				generate_expression_ir(progbuf, scope, lhs.index) or_return
-
-				append(progbuf, Instruction { opcode = .Mul, })
-				append(progbuf, Instruction { opcode = .Add, })
-
-			case Indexing:
-				type := Type{
-					modifiers = mods[max(len(mods), 1):],
-					primitive = lhs.object.type.primitive,
-				}
-
-				size := type_size(type)
-
-				append(progbuf, Instruction {
-					opcode = .Push,
-					immediate = Word(size),
-				})
-
-				generate_expression_ir(progbuf, scope, lhs.index) or_return
-
-				append(progbuf, Instruction { opcode = .Mul, })
-				append(progbuf, Instruction { opcode = .Add, })
-			}
-
-			// unimplemented("--- vec :/ ----")
 
 		case:
 			unreachable()
@@ -275,13 +229,16 @@ only_has_array :: proc(s: []Modifier) -> bool {
 	return true
 }
 
-// Assuming the base address of the array is already at the top of the stack.
-// For each index, calculate that index, multiply by the stride factor and add
-// that to the base address (stack top). Repeat until there's no more right
-// side's, the end value will be the correct address.
+tail :: proc(s: []$T, n: int) -> []T {
+	if n <= 0 {
+		return nil
+	}
+	return s[len(s) - n:]
+}
+
 @(private="file")
-generate_indexed_access :: proc(progbuf: ^[dynamic]Instruction, indexing: Indexing) -> (err: Error){
-	return
+generate_indexed_access :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, indexing: Indexing) -> (err: Error){
+	unimplemented()
 }
 
 @(require_results)
@@ -318,7 +275,38 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			append(progbuf, Instruction{ opcode = op })
 		}
 
-	case Indexing: unimplemented()
+	case Indexing:
+		log.debug("INDEXED T:", val.object.type)
+
+		generate_expression_ir(progbuf, scope, val.object) or_return
+		generate_expression_ir(progbuf, scope, val.index) or_return
+
+		mods := val.object.type.modifiers
+		mods = tail(mods, len(mods) - 1)
+		stride := type_size(Type{
+			primitive = val.object.type.primitive,
+			modifiers = mods,
+		})
+
+		append(progbuf, Instruction{
+			opcode = .Push,
+			immediate = Word(stride),
+		})
+		append(progbuf, Instruction{
+			opcode = .Mul,
+		})
+		append(progbuf, Instruction{
+			opcode = .Add,
+		})
+
+
+		if len(expr.type.modifiers) == 0 {
+			append(progbuf, Instruction{
+				opcode = .Load,
+			})
+		}
+
+
 	case FunctionCall: unimplemented()
 	case Primary:
 		switch val in val {

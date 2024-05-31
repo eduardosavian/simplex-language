@@ -29,10 +29,9 @@ help :: proc(){
 @(private="file") only_ir    := false
 
 SRC :: `
-a: [12][3]int;
-b: [7][9]int;
-
-a[0][1] = 100;
+// 4 * 3 * 8
+a: [4][3]int;
+b: int = a[0][2] / (a[1][2] + 69);
 `
 
 main :: proc() {
