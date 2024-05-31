@@ -299,7 +299,6 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			opcode = .Add,
 		})
 
-
 		if len(expr.type.modifiers) == 0 {
 			append(progbuf, Instruction{
 				opcode = .Load,
