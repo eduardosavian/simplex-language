@@ -203,8 +203,11 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			assert(ok, "Undefined symbol")
 			generate_expression_ir(progbuf, scope, rhs) or_return
 			append(progbuf, Instruction{
-				opcode = .Store_Imm,
+				opcode = .Push,
 				label = info.static_section_name,
+			})
+			append(progbuf, Instruction{
+				opcode = .Store,
 			})
 
 		case Indexing:
@@ -263,7 +266,7 @@ generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Sc
 }
 
 @(require_results)
-generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression) -> (err: Error){
+generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression, auto_load_id := true) -> (err: Error){
 	switch val in expr.value {
 	case Binary:
 		generate_expression_ir(progbuf, scope, val.left_side) or_return
@@ -308,8 +311,9 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			})
 		}
 
+	case FunctionCall:
+		unimplemented()
 
-	case FunctionCall: unimplemented()
 	case Primary:
 		switch val in val {
 		case Int:
@@ -321,8 +325,11 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			info, ok := search_symbol(scope, val)
 			assert(ok, "Undefined symbol")
 			append(progbuf, Instruction {
-				opcode = .Load_Imm,
+				opcode = .Push,
 				label = info.static_section_name,
+			})
+			append(progbuf, Instruction {
+				opcode = .Load,
 			})
 		case String: unimplemented()
 		case Real: unimplemented()
