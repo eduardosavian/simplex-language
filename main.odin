@@ -17,6 +17,7 @@ help :: proc(){
 	fmt.printfln("    parse    Only run the parser")
 	fmt.printfln("    check    Only run the typechecker")
 	fmt.printfln("    ir       Only generate intermediate representation")
+	fmt.printfln("    compile  Compile to RISC-V 32bit assembly")
 	fmt.printfln("  Options:")
 	fmt.printfln("    -verbose    Be verbose")
 	fmt.printfln("    -help       Display this help message")
@@ -75,6 +76,7 @@ main :: proc() {
 	case "parse": only_parse = true
 	case "check": only_check = true
 	case "ir": only_ir = true
+	case "compile":
 	case:
 		fmt.println("Unknown mode: ", mode)
 		return
@@ -97,7 +99,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 	defer free_all(context.allocator)
 
 	// Timers
-	lex_time, parse_time, check_time, ir_time: time.Duration
+	lex_time, parse_time, check_time, ir_time, asm_time: time.Duration
 	defer log.info("Compiler took: ", check_time + parse_time + lex_time)
 
 	// Tokenize
@@ -133,15 +135,20 @@ compiler_main :: proc(source: string) -> (err: Error){
 
 	// IR Gen
 	ir_begin := time.now()
-	prog, ir_error := generate_ir(&scope)
-	if verbose {
-		print_env(&scope, true)
-	}
+	prog, static_data, ir_error := generate_ir(&scope)
 	ir_time = time.since(ir_begin)
 	log.info("IR generation took:", ir_time)
-
-	print_ir(prog)
+	if verbose {
+		print_ir(prog)
+	}
 	if only_ir { return }
+
+	// Assembly generation
+	asm_begin := time.now()
+	asm_time = time.since(asm_begin)
+	log.info("Assembly generation took:", asm_time)
+
+	fmt.println(rv32_generate_data_section(static_data))
 
 	return
 }

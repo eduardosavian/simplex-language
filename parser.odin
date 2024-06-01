@@ -98,8 +98,8 @@ new_literal :: proc(tk: Token) -> ^Expression {
 	case .True:   p = true
 	case .False:  p = false
 	case .Nil:    p = nil
-	case .Int:    p = tk.payload.(i64)
-	case .Real:   p = tk.payload.(f64)
+	case .Int:    p = tk.payload.(Int)
+	case .Real:   p = tk.payload.(Real)
 	case .Rune:   p = tk.payload.(rune)
 	case .String: p = tk.payload.(string)
 	case: panic("Not a literal")

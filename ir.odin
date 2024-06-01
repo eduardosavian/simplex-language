@@ -15,6 +15,8 @@ import "core:strings"
 
 WORD_SIZE :: size_of(Word)
 
+StaticDataTable :: map[string]int
+
 Opcode :: enum {
 	NoOp = 0,
 
@@ -48,12 +50,13 @@ Machine :: struct {
 	ip: int,
 }
 
-generate_ir :: proc(root: ^Scope) -> (program: []Instruction, err: Error) {
+generate_ir :: proc(root: ^Scope) -> (program: []Instruction, data: StaticDataTable, err: Error) {
 	mangle_names(root)
 	buf := make([dynamic]Instruction)
 	generate_scope_ir(&buf, root) or_return
 	resize(&buf, len(buf))
 	program = buf[:]
+	data = make_static_data_table(root)
 	return
 }
 
@@ -146,6 +149,33 @@ OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.Plus = .NoOp,
 	.Minus = .Sub,
 	.BitXor = .Xor,
+}
+
+@(private)
+init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
+	for id, info in scope.env {
+		if len(info.static_section_name) > 0 {
+			using info
+			cur_table[static_section_name] = type_size(type)
+		}
+	}
+
+	for &statement in scope.body {
+		switch &statement in statement {
+		case If: unimplemented()
+		case For: unimplemented()
+		case FunctionDef: unimplemented()
+		case Scope:
+			init_static_data_table_rec(cur_table, &statement)
+		case InlineStatement: continue
+		}
+	}
+}
+
+make_static_data_table :: proc(root: ^Scope) -> StaticDataTable {
+	table := make(StaticDataTable)
+	init_static_data_table_rec(&table, root)
+	return table
 }
 
 @(require_results)
@@ -349,7 +379,7 @@ type_size :: proc(t: Type) -> int {
 	case .Int: size = size_of(Word)
 	case .Bool: size = size_of(Word) // Should have been just a byte, but I dont want to bother with alignment right now
 	case .Real: size = size_of(Real)
-	case .Rune: size = 4
+	case .Rune: size = size_of(u32)
 	case .String: size = size_of(Word) * 2
 	}
 

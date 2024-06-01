@@ -359,9 +359,9 @@ print_tokens :: proc(tokens: []Token){
 		case .Rune:
 			fmt.printf("Rune(%q)", tk.payload.(rune))
 		case .Int:
-			fmt.printf("Int(%v)", tk.payload.(i64))
+			fmt.printf("Int(%v)", tk.payload.(Int))
 		case .Real:
-			fmt.printf("Real(%v)", tk.payload.(f64))
+			fmt.printf("Real(%v)", tk.payload.(Real))
 		case .Comment:
 			fmt.printf("Comment(%v)", tk.lexeme)
 		case .LineBreak:

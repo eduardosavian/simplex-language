@@ -21,7 +21,7 @@ Location :: struct {
 }
 
 TokenPayload :: union {
-	i64, f64, string, rune,
+	Int, Real, String, Rune,
 }
 
 Token :: struct {
@@ -327,7 +327,7 @@ tokenize_number :: proc(using lex: ^Lexer) -> Token {
 	lexeme := string(source[mark:current])
 
 	if found_decimal {
-		num, ok := strconv.parse_f64(string(digits[:]))
+		num, ok := strconv.parse_f32(string(digits[:]))
 		if !ok {
 			emit_error(.ConversionError, "Could not convert %q to real literal", string(digits[:]),)
 			return BAD_TOKEN
@@ -382,7 +382,7 @@ tokenize_prefixed_int :: proc(using lex: ^Lexer, base: int) -> Token {
 	}
 	tk := Token {
 		kind = .Int,
-		payload = i64(num),
+		payload = Int(num),
 		lexeme = lexeme,
 	}
 	return tk

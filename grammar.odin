@@ -22,8 +22,8 @@ InlineStatement :: union {
 }
 
 Identifier :: distinct string
-Int :: i64
-Real :: f64
+Int :: i32
+Real :: f32
 String :: string
 Rune :: rune
 Bool :: bool
@@ -549,7 +549,7 @@ parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 		if tk.kind == .SquareOpen {
 			// PEEK NUMBER
 			if tk, ok := parser_expect_consume(parser, .Int); ok {
-				val, _ := tk.payload.(i64)
+				val, _ := tk.payload.(Int)
 				append_elem(&modifiers, Array{ size = int(val) })
 				_, ok := parser_expect_consume(parser, .SquareClose)
 				if !ok {
