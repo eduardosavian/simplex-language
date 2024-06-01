@@ -49,7 +49,7 @@ LOAD :: `
 # Load
 lw s0, (sp)
 lw s1, (s0)
-sw s1, (sp) # No need to pop the top, just override it
+sw s1, (sp)
 `
 
 OPCODE_MAP := map[Opcode]string {

@@ -100,7 +100,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 
 	// Timers
 	lex_time, parse_time, check_time, ir_time, asm_time: time.Duration
-	defer log.info("Compiler took: ", check_time + parse_time + lex_time)
+	// defer log.info("Compiler took: ", check_time + parse_time + lex_time)
 
 	// Tokenize
 	lex_begin := time.now()
