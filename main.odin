@@ -38,7 +38,7 @@ a[2][0], a[1][1] = 69, 420;
 main :: proc() {
 	// Setup Logger
 	logger_options :: log.Options{.Short_File_Path, .Line, .Terminal_Color, .Level}
-	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Info
+	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Fatal
 	logger := log.create_console_logger(lowest_level, logger_options)
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
@@ -137,6 +137,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 	ir_begin := time.now()
 	prog, static_data, ir_error := generate_ir(&scope)
 	ir_time = time.since(ir_begin)
+	assert(ir_error == nil)
 	log.info("IR generation took:", ir_time)
 	if verbose {
 		print_ir(prog)
@@ -148,7 +149,10 @@ compiler_main :: proc(source: string) -> (err: Error){
 	asm_time = time.since(asm_begin)
 	log.info("Assembly generation took:", asm_time)
 
+	fmt.println(".data")
 	fmt.println(rv32_generate_data_section(static_data))
+	fmt.println(".text")
+	fmt.println(rv32_generate_text_section(prog))
 
 	return
 }

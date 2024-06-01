@@ -28,10 +28,6 @@ Opcode :: enum {
 	ShiftLeft, ShiftRight,
 
 	Store, Load,
-	Store_Imm, Load_Imm,
-
-	Index,
-
 	// Store addr <- value
 	// Load addr
 }
@@ -211,11 +207,17 @@ generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scop
 		id := decl.identifiers[i]
 		info, ok := search_symbol(scope, id)
 		assert(ok, "Undefined symbol")
-		generate_expression_ir(progbuf, scope, rhs) or_return
 		append(progbuf, Instruction{
-			opcode = .Store_Imm,
+			opcode = .Push,
 			label = info.static_section_name,
 		})
+
+		generate_expression_ir(progbuf, scope, rhs) or_return
+
+		append(progbuf, Instruction{
+			opcode = .Store,
+		})
+
 	}
 
 	return
@@ -231,11 +233,13 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			id := lhs.(Identifier)
 			info, ok := search_symbol(scope, id)
 			assert(ok, "Undefined symbol")
-			generate_expression_ir(progbuf, scope, rhs) or_return
 			append(progbuf, Instruction{
 				opcode = .Push,
 				label = info.static_section_name,
 			})
+
+			generate_expression_ir(progbuf, scope, rhs) or_return
+
 			append(progbuf, Instruction{
 				opcode = .Store,
 			})
@@ -296,7 +300,7 @@ generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Sc
 }
 
 @(require_results)
-generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression, auto_load_id := true) -> (err: Error){
+generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression, emit_load_for_label := true) -> (err: Error){
 	switch val in expr.value {
 	case Binary:
 		generate_expression_ir(progbuf, scope, val.left_side) or_return
@@ -330,15 +334,18 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 		}
 
 	case Indexing:
-		generate_expression_ir(progbuf, scope, val.object) or_return
+		next_to_primary := len(expr.type.modifiers) == 0
+
+		generate_expression_ir(progbuf, scope, val.object, false) or_return
 		generate_expression_ir(progbuf, scope, val.index) or_return
 
 		generate_indexing_offset_calc(progbuf, scope, val)
 
-		if len(expr.type.modifiers) == 0 {
+		if next_to_primary {
 			append(progbuf, Instruction{
 				opcode = .Load,
 			})
+			// append(progbuf, Instruction{ opcode = .NoOp })
 		}
 
 	case FunctionCall:
@@ -358,9 +365,11 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 				opcode = .Push,
 				label = info.static_section_name,
 			})
-			append(progbuf, Instruction {
-				opcode = .Load,
-			})
+			if emit_load_for_label {
+				append(progbuf, Instruction {
+					opcode = .Load,
+				})
+			}
 		case String: unimplemented()
 		case Real: unimplemented()
 		case Bool: unimplemented()
@@ -403,3 +412,23 @@ array_stride_factor :: proc(mods: []Modifier) -> int {
 	return acc
 }
 
+// Pretty format instruction for printing/debugging, uses temp_allocator
+format_instruction :: proc(i: Instruction) -> string {
+	op := fmt.tprint(i.opcode)
+	imm : string
+	if i.opcode in IMMEDIATE_OPS {
+		if len(i.label) > 0 {
+			imm = fmt.tprint(i.label)
+		}
+		else {
+			imm = fmt.tprint(i.immediate)
+		}
+	}
+
+	return fmt.tprintf("%v %v", op, imm)
+}
+
+@(private)
+IMMEDIATE_OPS := map[Opcode]bool {
+	.Push = true,
+}

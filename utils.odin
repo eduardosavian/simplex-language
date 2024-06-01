@@ -181,12 +181,6 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 	}
 }
 
-@(private="file")
-IMMEDIATE_OPS := map[Opcode]bool {
-	.Push = true,
-	.Load_Imm = true,
-	.Store_Imm = true,
-}
 
 print_ir :: proc(prog: []Instruction){
 	for instruction, i in prog {
