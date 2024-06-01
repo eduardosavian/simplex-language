@@ -189,6 +189,7 @@ generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scop
 generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, assign: Assignment) -> (err: Error) {
 	for lhs, i in assign.left_side {
 		rhs := assign.right_side[i]
+		left_expr := lhs
 
 		#partial switch lhs in lhs.value {
 		case Primary:
@@ -202,16 +203,15 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 			})
 
 		case Indexing:
-			// generate_expression_ir(progbuf, scope, lhs.object) or_return
-			// generate_expression_ir(progbuf, scope, lhs.index) or_return
-			// append(progbuf, Instruction{
-			// 	opcode = .Index,
-			// })
+			// To assign to an index, simply generate a load and replace it with a store
+			generate_expression_ir(progbuf, scope, left_expr) or_return
+			pop(progbuf) /* REMOVE TRAILING LOAD */
 
-			// This means a base address is being indexed, note that the only
-			// primary expression that can be indexed are identifiers.
-			// Indexing in the rhs of assignment -> add a load instruction
-			// Indexing in the lhs of assignment -> add a store instruction
+			generate_expression_ir(progbuf, scope, rhs) or_return
+
+			append(progbuf, Instruction{
+				opcode = .Store,
+			})
 
 		case:
 			unreachable()
@@ -237,8 +237,24 @@ tail :: proc(s: []$T, n: int) -> []T {
 }
 
 @(private="file")
-generate_indexed_access :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, indexing: Indexing) -> (err: Error){
-	unimplemented()
+generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, val: Indexing){
+	mods := val.object.type.modifiers
+	mods = tail(mods, len(mods) - 1)
+	stride := type_size(Type{
+		primitive = val.object.type.primitive,
+		modifiers = mods,
+	})
+
+	append(progbuf, Instruction{
+		opcode = .Push,
+		immediate = Word(stride),
+	})
+	append(progbuf, Instruction{
+		opcode = .Mul,
+	})
+	append(progbuf, Instruction{
+		opcode = .Add,
+	})
 }
 
 @(require_results)
@@ -276,28 +292,10 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 		}
 
 	case Indexing:
-		log.debug("INDEXED T:", val.object.type)
-
 		generate_expression_ir(progbuf, scope, val.object) or_return
 		generate_expression_ir(progbuf, scope, val.index) or_return
 
-		mods := val.object.type.modifiers
-		mods = tail(mods, len(mods) - 1)
-		stride := type_size(Type{
-			primitive = val.object.type.primitive,
-			modifiers = mods,
-		})
-
-		append(progbuf, Instruction{
-			opcode = .Push,
-			immediate = Word(stride),
-		})
-		append(progbuf, Instruction{
-			opcode = .Mul,
-		})
-		append(progbuf, Instruction{
-			opcode = .Add,
-		})
+		generate_indexing_offset_calc(progbuf, scope, val)
 
 		if len(expr.type.modifiers) == 0 {
 			append(progbuf, Instruction{

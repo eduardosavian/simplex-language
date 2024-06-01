@@ -31,7 +31,7 @@ help :: proc(){
 SRC :: `
 // 4 * 3 * 8
 a: [4][3]int;
-b: int = a[0][2] / (a[1][2] + 69);
+a[2][0], a[1][1] = 69, 420;
 `
 
 main :: proc() {
@@ -42,16 +42,20 @@ main :: proc() {
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
 
-	tokens, _ := tokenize(SRC)
-	ast, _ := parse(tokens)
-	_ = check_ast(&ast)
+	tokens, lex_ok := tokenize(SRC)
+	assert(lex_ok)
+	ast, parse_err := parse(tokens)
+	assert(parse_err == nil)
+	check_err := check_ast(&ast)
+	assert(check_err == nil)
+
 	print_scope(ast)
 
 	buf := make([dynamic]Instruction)
 
 	mangle_names(&ast)
-	err := generate_scope_ir(&buf, &ast)
-	assert(err == nil)
+	ir_err := generate_scope_ir(&buf, &ast)
+	assert(ir_err == nil)
 
 	print_env(&ast, true)
 	print_ir(buf[:])

@@ -149,9 +149,9 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				case Break, Continue, Return:
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
 				case VarDeclaration:
-					check_var_declaration(&stmt.scope, s)
+					check_var_declaration(&stmt.scope, s) or_return
 				case Assignment:
-					check_assignment(&stmt.scope, s)
+					check_assignment(&stmt.scope, s) or_return
 				case ExpressionStatement:
 					eval_expression_type(&stmt.scope, s.inner) or_return
 				}
@@ -168,7 +168,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				case Break, Continue, Return:
 					return emit_error(.DisallowedOnForLoop, "This type of statement is not allowed within a for-loop.")
 				case Assignment:
-					check_assignment(&stmt.scope, s)
+					check_assignment(&stmt.scope, s) or_return
 				case ExpressionStatement:
 					eval_expression_type(&stmt.scope, s.inner) or_return
 				case VarDeclaration:
@@ -189,9 +189,9 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 		case InlineStatement:
 			switch &in_stmt in stmt {
 			case Assignment:
-				check_assignment(scope, in_stmt)
+				check_assignment(scope, in_stmt) or_return
 			case VarDeclaration:
-				check_var_declaration(scope, in_stmt)
+				check_var_declaration(scope, in_stmt) or_return
 			case ExpressionStatement:
 				eval_expression_type(scope, in_stmt.inner) or_return
 			case Break, Continue: continue
@@ -364,6 +364,7 @@ check_symbol_usage :: proc(scope: ^Scope){
 	}
 }
 
+@(require_results)
 check_ast :: proc(scope: ^Scope) -> (err: Error){
 	init_global_env(scope)
 	init_scopes(scope, nil) or_return
@@ -437,6 +438,7 @@ pop_mod :: proc(t: Type) -> (Modifier, bool) {
 	return t.modifiers[0], true
 }
 
+@(require_results)
 check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 	// Only allows assigning to indexing or identifier
 	for &left, i in stmt.left_side {
@@ -456,6 +458,7 @@ check_assignment :: proc(scope: ^Scope, stmt: Assignment) -> (err: Error){
 }
 
 
+@(require_results)
 check_var_declaration :: proc(scope: ^Scope, stmt: VarDeclaration) -> (err: Error){
 	t := eval_parser_type(scope, stmt.type) or_return
 	for id, i in stmt.identifiers {
