@@ -1,7 +1,6 @@
 package cli_parse
 
 import str "core:strings"
-import conv "core:strings"
 import mem "core:mem"
 
 Flag :: struct {
@@ -31,7 +30,7 @@ parse_flag :: proc(arg: string, allocator := context.allocator) -> (flag: Flag, 
 	key, val : string
 	if comma_pos > -1 {
 		key = str.clone(flag_data[:comma_pos])
-		val = str.clone(flag_data[max(len(flag_data) - 1, comma_pos+1):])
+		val = str.clone(flag_data[min(len(flag_data) - 1, comma_pos + 1):])
 	}
 	else {
 		key = flag_data[:]

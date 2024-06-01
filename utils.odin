@@ -3,6 +3,14 @@ package lang
 import "core:fmt"
 import str "core:strings"
 
+sum :: proc(s: $S/[]$E) -> E {
+	acc := E{}
+	for e in s {
+		acc += e
+	}
+	return acc
+}
+
 contains :: proc(s: $T/[]$E, e: E) -> bool {
 	for x in  s {
 		if x == e {

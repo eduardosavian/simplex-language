@@ -57,6 +57,11 @@ OPCODE_MAP := map[Opcode]string {
 	.Sub = "sub",
 	.Mul = "mul",
 	.Div = "div",
+	.ShiftLeft = "sll",
+	.ShiftRight = "srl",
+	.And = "and",
+	.Or = "or",
+	.Xor = "xor",
 }
 
 rv32_generate_text_section :: proc(prog: []Instruction) -> string {

@@ -4,3 +4,5 @@
 *.bin
 unnamed-language
 lang
+*.asm
+*.S

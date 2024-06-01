@@ -181,7 +181,8 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 		case InlineStatement:
 			switch inline_stmt in statement {
 			case ExpressionStatement:
-				generate_expression_ir(progbuf, scope, inline_stmt.inner) or_return
+				log.warn("Expression statements are not yet supported")
+				continue
 			case VarDeclaration:
 				generate_var_declaration_ir(progbuf, scope, inline_stmt)
 			case Assignment:

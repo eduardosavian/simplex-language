@@ -5,6 +5,7 @@ import "core:log"
 import "core:time"
 import "core:mem"
 import "core:os"
+import str "core:strings"
 
 import cli "cli_parse"
 
@@ -19,8 +20,9 @@ help :: proc(){
 	fmt.printfln("    ir       Only generate intermediate representation")
 	fmt.printfln("    compile  Compile to RISC-V 32bit assembly")
 	fmt.printfln("  Options:")
-	fmt.printfln("    -verbose    Be verbose")
-	fmt.printfln("    -help       Display this help message")
+	fmt.printfln("    -out:<FILE>    Write assembly to file")
+	fmt.printfln("    -verbose       Be verbose")
+	fmt.printfln("    -help          Display this help message")
 }
 
 @(private="file") verbose    := false
@@ -28,17 +30,13 @@ help :: proc(){
 @(private="file") only_parse := false
 @(private="file") only_check := false
 @(private="file") only_ir    := false
-
-SRC :: `
-// 4 * 3 * 8
-a: [4][3]int;
-a[2][0], a[1][1] = 69, 420;
-`
+@(private="file") out_file   := ""
+@(private="file") src_data   := ""
 
 main :: proc() {
 	// Setup Logger
 	logger_options :: log.Options{.Short_File_Path, .Line, .Terminal_Color, .Level}
-	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Fatal
+	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Warning
 	logger := log.create_console_logger(lowest_level, logger_options)
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
@@ -58,6 +56,7 @@ main :: proc() {
 			append(&options, f)
 		}
 	}
+
 	for opt in options {
 		switch opt.key {
 		case "help":
@@ -65,6 +64,12 @@ main :: proc() {
 			return
 		case "verbose":
 			verbose = true
+		case "out":
+			if len(opt.value) == 0 {
+				help()
+				return
+			}
+			out_file = opt.value
 		case:
 			fmt.printfln("Unknown option: %q", opt.key)
 			return
@@ -84,19 +89,21 @@ main :: proc() {
 
 	source, ok := os.read_entire_file(file)
 	if !ok {
-		fmt.println("Failed to read file:", file)
-		return
+		fmt.panicf("Failed to read file:", file)
 	}
+	src_data = string(source)
 
-	compiler_main(string(source))
+	compiler_main()
 }
 
-compiler_main :: proc(source: string) -> (err: Error){
+compiler_main :: proc() -> (err: Error){
 	// Setup arena
 	compiler_arena: mem.Arena
 	mem.arena_init(&compiler_arena, COMPILER_MEM_POOL[:])
 	context.allocator = mem.arena_allocator(&compiler_arena)
 	defer free_all(context.allocator)
+
+	source := src_data
 
 	// Timers
 	lex_time, parse_time, check_time, ir_time, asm_time: time.Duration
@@ -138,6 +145,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 	prog, static_data, ir_error := generate_ir(&scope)
 	ir_time = time.since(ir_begin)
 	assert(ir_error == nil)
+
 	log.info("IR generation took:", ir_time)
 	if verbose {
 		print_ir(prog)
@@ -149,10 +157,30 @@ compiler_main :: proc(source: string) -> (err: Error){
 	asm_time = time.since(asm_begin)
 	log.info("Assembly generation took:", asm_time)
 
-	fmt.println(".data")
-	fmt.println(rv32_generate_data_section(static_data))
-	fmt.println(".text")
-	fmt.println(rv32_generate_text_section(prog))
+
+	asm_builder := str.builder_make()
+	fmt.sbprintln(&asm_builder, ".data")
+	fmt.sbprintln(&asm_builder, rv32_generate_data_section(static_data))
+	fmt.sbprintln(&asm_builder, ".text")
+	fmt.sbprintln(&asm_builder, rv32_generate_text_section(prog))
+	resize(&asm_builder.buf, len(asm_builder.buf))
+
+	assembly_source := string(asm_builder.buf[:])
+
+	if len(out_file) > 0 {
+		fd, errno := os.open(out_file, os.O_RDWR | os.O_CREATE, 0o644)
+		if errno < 0 {
+			fmt.panicf("Failed to read file:", out_file)
+		}
+		defer os.close(fd)
+
+		n, _ := os.write(fd, transmute([]byte)assembly_source)
+
+		fmt.printf("Wrote %vB to %v\n", n, out_file)
+	}
+	else {
+		fmt.println(assembly_source)
+	}
 
 	return
 }
