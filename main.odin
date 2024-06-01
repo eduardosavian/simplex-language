@@ -42,69 +42,51 @@ main :: proc() {
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
 
-	tokens, lex_ok := tokenize(SRC)
-	assert(lex_ok)
-	ast, parse_err := parse(tokens)
-	assert(parse_err == nil)
-	check_err := check_ast(&ast)
-	assert(check_err == nil)
+	if len(os.args) < 3 {
+		help()
+		return
+	}
 
-	print_scope(ast)
+	file := os.args[1]
+	mode := os.args[2]
 
-	buf := make([dynamic]Instruction)
+	options := make([dynamic]cli.Flag)
+	if len(os.args) > 3 {
+		for arg in os.args[3:] {
+			f, _ := cli.parse_flag(arg)
+			append(&options, f)
+		}
+	}
+	for opt in options {
+		switch opt.key {
+		case "help":
+			help()
+			return
+		case "verbose":
+			verbose = true
+		case:
+			fmt.printfln("Unknown option: %q", opt.key)
+			return
+		}
+	}
 
-	mangle_names(&ast)
-	ir_err := generate_scope_ir(&buf, &ast)
-	assert(ir_err == nil)
+	switch mode {
+	case "lex": only_lex = true
+	case "parse": only_parse = true
+	case "check": only_check = true
+	case "ir": only_ir = true
+	case:
+		fmt.println("Unknown mode: ", mode)
+		return
+	}
 
-	print_env(&ast, true)
-	print_ir(buf[:])
+	source, ok := os.read_entire_file(file)
+	if !ok {
+		fmt.println("Failed to read file:", file)
+		return
+	}
 
-	// if len(os.args) < 3 {
-	// 	help()
-	// 	return
-	// }
-	//
-	// file := os.args[1]
-	// mode := os.args[2]
-	//
-	// options := make([dynamic]cli.Flag)
-	// if len(os.args) > 3 {
-	// 	for arg in os.args[3:] {
-	// 		f, _ := cli.parse_flag(arg)
-	// 		append(&options, f)
-	// 	}
-	// }
-	// for opt in options {
-	// 	switch opt.key {
-	// 	case "help":
-	// 		help()
-	// 		return
-	// 	case "verbose":
-	// 		verbose = true
-	// 	case:
-	// 		fmt.printfln("Unknown option: %q", opt.key)
-	// 		return
-	// 	}
-	// }
-	//
-	// switch mode {
-	// case "lex": only_lex = true
-	// case "parse": only_parse = true
-	// case "check": only_check = true
-	// case "ir": only_ir = true
-	// case:
-	// 	fmt.println("Unknown mode: ", mode)
-	// 	return
-	// }
-	//
-	// source, ok := os.read_entire_file(file)
-	// if !ok {
-	// 	fmt.println("Failed to read file:", file)
-	// 	return
-	// }
-	//
-	// compiler_main(string(source))
+	compiler_main(string(source))
 }
 
 compiler_main :: proc(source: string) -> (err: Error){
@@ -115,7 +97,7 @@ compiler_main :: proc(source: string) -> (err: Error){
 	defer free_all(context.allocator)
 
 	// Timers
-	lex_time, parse_time, check_time: time.Duration
+	lex_time, parse_time, check_time, ir_time: time.Duration
 	defer log.info("Compiler took: ", check_time + parse_time + lex_time)
 
 	// Tokenize
@@ -150,11 +132,15 @@ compiler_main :: proc(source: string) -> (err: Error){
 	if only_check { return }
 
 	// IR Gen
-	generate_ir(&scope)
+	ir_begin := time.now()
+	prog, ir_error := generate_ir(&scope)
 	if verbose {
 		print_env(&scope, true)
 	}
+	ir_time = time.since(ir_begin)
+	log.info("IR generation took:", ir_time)
 
+	print_ir(prog)
 	if only_ir { return }
 
 	return

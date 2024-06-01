@@ -48,8 +48,13 @@ Machine :: struct {
 	ip: int,
 }
 
-generate_ir :: proc(root: ^Scope){
+generate_ir :: proc(root: ^Scope) -> (program: []Instruction, err: Error) {
 	mangle_names(root)
+	buf := make([dynamic]Instruction)
+	generate_scope_ir(&buf, root) or_return
+	resize(&buf, len(buf))
+	program = buf[:]
+	return
 }
 
 // Does all required name-mangling recursively
