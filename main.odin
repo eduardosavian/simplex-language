@@ -159,9 +159,10 @@ compiler_main :: proc() -> (err: Error){
 
 
 	asm_builder := str.builder_make()
-	fmt.sbprintln(&asm_builder, ".data")
+	fmt.sbprintfln(&asm_builder, RV32_CRT_DATA)
 	fmt.sbprintln(&asm_builder, rv32_generate_data_section(static_data))
-	fmt.sbprintln(&asm_builder, ".text")
+
+	fmt.sbprintfln(&asm_builder, RV32_CRT_TEXT)
 	fmt.sbprintln(&asm_builder, rv32_generate_text_section(prog))
 	resize(&asm_builder.buf, len(asm_builder.buf))
 

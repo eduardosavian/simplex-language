@@ -15,6 +15,7 @@ import "core:strings"
 
 WORD_SIZE :: size_of(Word)
 
+// TODO: Make this better
 StaticDataTable :: map[string]int
 
 Opcode :: enum {
@@ -23,9 +24,16 @@ Opcode :: enum {
 	Push, Pop,
 
 	Add, Sub, Mul, Div, Mod,
+	Neg,
 
 	And, Or, Xor, Not,
 	ShiftLeft, ShiftRight,
+
+	Call,
+	Call_Builtin,
+
+	Jump,
+	Branch,
 
 	Store, Load,
 	// Store addr <- value
@@ -142,9 +150,13 @@ OPCODE_BIN_MAP := map[TokenKind]Opcode {
 
 @(private="file")
 OPCODE_UNARY_MAP := map[TokenKind]Opcode {
-	.Plus = .NoOp,
-	.Minus = .Sub,
-	.BitXor = .Xor,
+	.Plus   = .NoOp,
+	.Minus  = .Neg,
+	.BitXor = .Not,
+}
+
+builtin_function_name :: proc(s: Identifier) -> bool {
+	return len(s) > 2 && s[:2] == "__"
 }
 
 @(private)
@@ -160,7 +172,8 @@ init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
 		switch &statement in statement {
 		case If: unimplemented()
 		case For: unimplemented()
-		case FunctionDef: unimplemented()
+		case FunctionDef:
+
 		case Scope:
 			init_static_data_table_rec(cur_table, &statement)
 		case InlineStatement: continue
@@ -181,8 +194,14 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 		case InlineStatement:
 			switch inline_stmt in statement {
 			case ExpressionStatement:
-				log.warn("Expression statements are not yet supported")
-				continue
+				expr, is_func := inline_stmt.inner.value.(FunctionCall)
+				if !is_func {
+					log.warn("Expression statements are not yet supported")
+					continue
+				}
+				else {
+					generate_expression_ir(progbuf, scope, inline_stmt.inner) or_return
+				}
 			case VarDeclaration:
 				generate_var_declaration_ir(progbuf, scope, inline_stmt)
 			case Assignment:
@@ -193,9 +212,18 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 			}
 		case Scope:
 			generate_scope_ir(progbuf, &statement) or_return
+
 		case If: unimplemented()
+
 		case For: unimplemented()
-		case FunctionDef: unimplemented()
+
+		case FunctionDef:
+			if builtin_function_name(statement.name){
+				log.warn("BUILTIN")
+			}
+			else {
+				unimplemented("Function definitions are not yet implemented")
+			}
 		}
 	}
 	return
@@ -300,6 +328,8 @@ generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Sc
 	})
 }
 
+
+
 @(require_results)
 generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression, emit_load_for_label := true) -> (err: Error){
 	switch val in expr.value {
@@ -320,19 +350,12 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			return
 		}
 
-		if op == .Sub {
-			append(progbuf, Instruction{ opcode = .Push, immediate = Word(0)})
-		}
-
 		generate_expression_ir(progbuf, scope, val.operand) or_return
-
-		// NOTE: Unary xor == unary not
-		if op == .Xor {
-			append(progbuf, Instruction{ opcode = .Not })
-		}
-		else if op != .NoOp {
+		if op != .NoOp {
 			append(progbuf, Instruction{ opcode = op })
 		}
+
+
 
 	case Indexing:
 		next_to_primary := len(expr.type.modifiers) == 0
@@ -350,7 +373,22 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 		}
 
 	case FunctionCall:
-		unimplemented()
+		func_name := val.func.value.(Primary).(Identifier)
+		sym, ok := search_symbol(scope, func_name)
+		assert(ok, "Undefined Function")
+		if builtin_function_name(func_name){
+			for arg in val.args {
+				generate_expression_ir(progbuf, scope, arg) or_return
+			}
+			append(progbuf, Instruction{
+				opcode = .Call_Builtin,
+				label = auto_cast func_name,
+			})
+		}
+		else {
+			unimplemented("Regular functions not supported")
+		}
+
 
 	case Primary:
 		switch val in val {
@@ -417,7 +455,7 @@ array_stride_factor :: proc(mods: []Modifier) -> int {
 format_instruction :: proc(i: Instruction) -> string {
 	op := fmt.tprint(i.opcode)
 	imm : string
-	if i.opcode in IMMEDIATE_OPS {
+	if IMMEDIATE_OPS[i.opcode] {
 		if len(i.label) > 0 {
 			imm = fmt.tprint(i.label)
 		}
@@ -432,4 +470,5 @@ format_instruction :: proc(i: Instruction) -> string {
 @(private)
 IMMEDIATE_OPS := map[Opcode]bool {
 	.Push = true,
+	.Call_Builtin = true,
 }
