@@ -2,8 +2,18 @@
 func __write_int(_: int){}
 func __read_int() -> int {}
 
+a: [4][3]int;
 
-n: int = __read_int();
+a[0][0] = 69;
+a[1][2] = __read_int() * 2;
 
-__write_int(n % 2);
+a = "aabbbcbcbbbabba";
+
+__write_int(a[0][0]);
+__write_int(a[0][1]);
+__write_int(a[0][2]);
+
+__write_int(a[1][0]);
+__write_int(a[1][1]);
+__write_int(a[1][2]);
 

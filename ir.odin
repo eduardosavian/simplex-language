@@ -219,7 +219,7 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 
 		case FunctionDef:
 			if builtin_function_name(statement.name){
-				log.warn("BUILTIN")
+				continue
 			}
 			else {
 				unimplemented("Function definitions are not yet implemented")
