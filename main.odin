@@ -157,7 +157,6 @@ compiler_main :: proc() -> (err: Error){
 	asm_time = time.since(asm_begin)
 	log.info("Assembly generation took:", asm_time)
 
-
 	asm_builder := str.builder_make()
 	fmt.sbprintln(&asm_builder, RV32_CRT_DATA)
 	fmt.sbprintln(&asm_builder, rv32_generate_data_section(static_data))
@@ -169,13 +168,16 @@ compiler_main :: proc() -> (err: Error){
 	assembly_source := string(asm_builder.buf[:])
 
 	if len(out_file) > 0 {
-		fd, errno := os.open(out_file, os.O_RDWR | os.O_CREATE, 0o644)
+		fd, errno := os.open(out_file, os.O_WRONLY | os.O_CREATE, 0o644)
 		if errno < 0 {
-			fmt.panicf("Failed to read file:", out_file)
+			fmt.panicf("Failed to open file:", out_file)
 		}
 		defer os.close(fd)
 
-		n, _ := os.write(fd, transmute([]byte)assembly_source)
+		n, err := os.write(fd, transmute([]byte)assembly_source)
+		if errno < 0 {
+			fmt.panicf("Failed to write to file:", out_file)
+		}
 
 		fmt.printf("Wrote %vB to %v\n", n, out_file)
 	}
