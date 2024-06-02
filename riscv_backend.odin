@@ -65,6 +65,7 @@ OPCODE_MAP := map[Opcode]string {
 	.Sub = "sub",
 	.Mul = "mul",
 	.Div = "div",
+	.Mod = "rem",
 	.ShiftLeft = "sll",
 	.ShiftRight = "srl",
 	.And = "and",
@@ -126,6 +127,14 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 			continue
 		}
 	}
+
+	inject_at(&sb.buf, 0, '\t')
+	#reverse for b, i in sb.buf {
+		if b == '\n' {
+			inject_at(&sb.buf, i + 1, '\t')
+		}
+	}
+
 	resize(&sb.buf, len(sb.buf))
 	return string(sb.buf[:])
 }

@@ -2,11 +2,8 @@
 func __write_int(_: int){}
 func __read_int() -> int {}
 
-a: int = 1;
 
-b: int = ~ 0;
+n: int = __read_int();
 
-c: int = 10 - 80;
-
-__write_int(c);
+__write_int(n % 2);
 
