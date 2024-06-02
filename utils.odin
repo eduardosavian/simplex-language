@@ -29,7 +29,7 @@ format_type :: proc(t: Type) -> string {
 		}
 	}
 	fmt.sbprintf(&sb, "%v", t.primitive)
-	resize(&sb.buf, len(sb.buf))
+	shrink(&sb.buf)
 	return string(sb.buf[:])
 }
 

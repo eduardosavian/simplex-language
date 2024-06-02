@@ -25,7 +25,7 @@ parse :: proc(tokens : []Token) -> (scope: Scope, err: Error) {
 				append(&parser_tokens, tk)
 			}
 		}
-		resize(&parser_tokens, len(parser_tokens))
+		shrink(&parser_tokens)
 	}
 	append(&parser_tokens, Token{kind = .CurlyClose})
 

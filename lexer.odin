@@ -262,7 +262,7 @@ tokenize :: proc(source: string, filename: string = "") -> ([]Token, bool) {
 	// Just to make the parser's life a bit easier in some edge cases
 	append_elem(&tokens, Token{kind = .LineBreak})
 
-	resize(&tokens, len(tokens))
+	shrink(&tokens)
 	return tokens[:], lex.error_count == 0
 }
 
@@ -506,7 +506,7 @@ tokenize_string :: proc(using lex: ^Lexer) -> Token {
 		return BAD_TOKEN
 	}
 
-	resize(&buf, len(buf))
+	shrink(&buf)
 
 	text := string(buf[:])
 	tk := Token {

@@ -114,7 +114,7 @@ init_scopes :: proc(scope: ^Scope, previous: ^Scope) -> (err: Error){
 				}) or_return
 			}
 
-			resize(&arg_types, len(arg_types))
+			shrink(&arg_types)
 			fn_info.args = arg_types[:]
 
 			define_symbol(scope, stmt.name, fn_info) or_return

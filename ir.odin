@@ -58,7 +58,7 @@ generate_ir :: proc(root: ^Scope) -> (program: []Instruction, data: StaticDataTa
 	mangle_names(root)
 	buf := make([dynamic]Instruction)
 	generate_scope_ir(&buf, root) or_return
-	resize(&buf, len(buf))
+	shrink(&buf)
 	program = buf[:]
 	data = make_static_data_table(root)
 	return
@@ -97,7 +97,7 @@ mangle_variables :: proc(scope: ^Scope, seed: u32) -> u32 {
 			// NOTE: Not strictly necessary, but prevents collisions even further and makes debugging easier
 			mtype := mangle_type_name(info.type)
 			mangled := fmt.sbprintf(&sb, "%s_%v_%08x", id, mtype, h)
-			resize(&sb.buf, len(sb.buf))
+			shrink(&sb.buf)
 			info.static_section_name = mangled
 			last_hash = h
 		}
@@ -129,7 +129,7 @@ mangle_type_name :: proc(t: Type) -> string {
 	case .String: append(&buf, 's')
 	}
 
-	resize(&buf, len(buf))
+	shrink(&buf)
 	return string(buf[:])
 }
 

@@ -135,7 +135,7 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 		}
 	}
 
-	resize(&sb.buf, len(sb.buf))
+	shrink(&sb.buf)
 	return string(sb.buf[:])
 }
 
@@ -145,7 +145,7 @@ rv32_generate_data_section :: proc(table: StaticDataTable) -> string {
 	for label, space in table {
 		fmt.sbprintfln(&sb, "%v: .space %v", label, space)
 	}
-	resize(&sb.buf, len(sb.buf))
+	shrink(&sb.buf)
 	return string(sb.buf[:])
 }
 

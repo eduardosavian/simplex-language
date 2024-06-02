@@ -409,7 +409,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 		return
 	}
 
-	resize(&statements, len(statements))
+	shrink(&statements)
 	//log.debug("S: ", statements)
 
 	scope = Scope {
@@ -535,7 +535,7 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 		}
 	}
 
-	resize(&fields, len(fields))
+	shrink(&fields)
 	list = fields[:]
 	return
 }
@@ -572,7 +572,7 @@ parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
 			return
 		}
 	}
-	resize(&modifiers, len(modifiers))
+	shrink(&modifiers)
 
 	type = ParserType {
 		name = name,
@@ -608,7 +608,7 @@ parse_identifier_list :: proc(parser: ^Parser) -> (list: []Identifier, err: Erro
 		}
 	}
 
-	resize(&ids, len(ids))
+	shrink(&ids)
 	list = ids[:]
 	return
 }
@@ -636,7 +636,7 @@ parse_expression_list :: proc(parser: ^Parser, allow_trailing_on : Maybe(TokenKi
 		}
 	}
 
-	resize(&exprs, len(exprs))
+	shrink(&exprs)
 
 	list = exprs[:]
 	return

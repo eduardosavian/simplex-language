@@ -163,7 +163,7 @@ compiler_main :: proc() -> (err: Error){
 
 	fmt.sbprintln(&asm_builder, RV32_CRT_TEXT)
 	fmt.sbprintln(&asm_builder, rv32_generate_text_section(prog))
-	resize(&asm_builder.buf, len(asm_builder.buf))
+	shrink(&asm_builder.buf)
 
 	assembly_source := string(asm_builder.buf[:])
 
