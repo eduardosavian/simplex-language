@@ -1,0 +1,26 @@
+// 1a 1b 1c
+// 2a 2b 2c
+// 3a 3b 3c
+
+// board: [3][3]int;
+// 
+// board[0][0] = 0x1a;
+// board[0][1] = 0x1b;
+// board[0][2] = 0x1c;
+// 
+// board[1][0] = 0x2a;
+// board[1][1] = 0x2b;
+// board[1][2] = 0x2c;
+// 
+// board[2][0] = 0x3a;
+// board[2][1] = 0x3b;
+// board[2][2] = 0x3c;
+
+// Builtin rars syscall wrappers, leave the implementation empty
+// func _writeInt(n: int){}
+
+a, b: int = 2, 4;
+t: int = a;
+a = b;
+b = t;
+

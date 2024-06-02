@@ -1,6 +1,0 @@
-my_global: []int = 100;
-
-func main() {
-	x: int = 30 + my_global;
-}
-

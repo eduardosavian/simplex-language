@@ -14,7 +14,7 @@ should_ignore :: proc(tk: Token) -> bool {
 	}
 }
 
-parse :: proc(tokens : []Token) -> Scope {
+parse :: proc(tokens : []Token) -> (scope: Scope, err: Error) {
 	parser_tokens := make([dynamic]Token)
 	defer delete(parser_tokens)
 
@@ -22,7 +22,6 @@ parse :: proc(tokens : []Token) -> Scope {
 	filter_tokens: {
 		for tk in tokens {
 			if !should_ignore(tk){
-
 				append(&parser_tokens, tk)
 			}
 		}
@@ -34,12 +33,8 @@ parse :: proc(tokens : []Token) -> Scope {
 		tokens = parser_tokens[:],
 	}
 
-	s, err := parse_scope(&parser)
-	if err != nil {
-		log.errorf("Parser exited with error: %v", err)
-		return Scope{}
-	}
-	return s
+	scope = parse_scope(&parser) or_return
+	return
 }
 
 parser_end :: proc(using parser: Parser) -> bool {
@@ -83,13 +78,13 @@ parser_match_consume :: proc(using parser: ^Parser, accept: ..TokenKind) -> (Tok
 	return tk, false
 }
 
-parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind, loc := #caller_location) -> (Token, bool){
+parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind) -> (Token, bool){
 	tk := parser_peek(parser, 0)
 	if tk.kind == expect {
 		parser_advance(parser)
 		return tk, true
 	}
-	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind, loc = loc)
+	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind)
 	return tk, false
 }
 
@@ -103,8 +98,8 @@ new_literal :: proc(tk: Token) -> ^Expression {
 	case .True:   p = true
 	case .False:  p = false
 	case .Nil:    p = nil
-	case .Int:    p = tk.payload.(i64)
-	case .Real:   p = tk.payload.(f64)
+	case .Int:    p = tk.payload.(Int)
+	case .Real:   p = tk.payload.(Real)
 	case .Rune:   p = tk.payload.(rune)
 	case .String: p = tk.payload.(string)
 	case: panic("Not a literal")

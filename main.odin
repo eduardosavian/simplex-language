@@ -4,60 +4,184 @@ import "core:fmt"
 import "core:log"
 import "core:time"
 import "core:mem"
+import "core:os"
+import str "core:strings"
 
-SRC : string : #load("example.ki")
+import cli "cli_parse"
 
-PARSER_MEM_POOL := [16 * mem.Megabyte]byte{}
+COMPILER_MEM_POOL := [32 * mem.Megabyte]byte{}
+
+help :: proc(){
+	fmt.printfln("Usage: %s <FILE> <ACTION> [OPTION]", os.args[0])
+	fmt.printfln("  Actions:")
+	fmt.printfln("    lex            Only run the lexer")
+	fmt.printfln("    parse          Only run the parser")
+	fmt.printfln("    check          Only run the typechecker")
+	fmt.printfln("    ir             Only generate intermediate representation")
+	fmt.printfln("    compile        Compile to RISC-V 32bit assembly")
+	fmt.printfln("  Options:")
+	fmt.printfln("    -out:<FILE>    Write assembly to file")
+	fmt.printfln("    -verbose       Be verbose")
+	fmt.printfln("    -help          Display this help message")
+}
+
+@(private="file") verbose    := false
+@(private="file") only_lex   := false
+@(private="file") only_parse := false
+@(private="file") only_check := false
+@(private="file") only_ir    := false
+@(private="file") out_file   := ""
+@(private="file") src_data   := ""
 
 main :: proc() {
-	parser_arena: mem.Arena
-	mem.arena_init(&parser_arena, PARSER_MEM_POOL[:])
-
 	// Setup Logger
 	logger_options :: log.Options{.Short_File_Path, .Line, .Terminal_Color, .Level}
-	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Info
+	lowest_level :: log.Level.Debug when ODIN_DEBUG else log.Level.Warning
 	logger := log.create_console_logger(lowest_level, logger_options)
 	defer log.destroy_console_logger(logger)
 	context.logger = logger
 
-	lex_begin := time.now()
-	tokens, lex_ok := tokenize(SRC)
-	defer delete(tokens)
-	if !lex_ok {
+	if len(os.args) < 3 {
+		help()
 		return
 	}
-	lex_time := time.since(lex_begin)
 
-	// print_tokens(tokens)
-	log.info("Lexer took:", lex_time)
+	file := os.args[1]
+	mode := os.args[2]
 
-	scope: Scope
-	{
-		context.allocator = mem.arena_allocator(&parser_arena)
-		parse_begin := time.now()
-		scope       = parse(tokens)
-		parse_time  := time.since(parse_begin)
-		log.info("Parser took:", parse_time)
+	options := make([dynamic]cli.Flag)
+	if len(os.args) > 3 {
+		for arg in os.args[3:] {
+			f, _ := cli.parse_flag(arg)
+			append(&options, f)
+		}
 	}
-	print_scope(scope)
 
-	check_begin := time.now()
-	err := check_ast(&scope)
-	check_time  := time.since(check_begin)
-	log.info("Type Checker took:", check_time)
+	for opt in options {
+		switch opt.key {
+		case "help":
+			help()
+			return
+		case "verbose":
+			verbose = true
+		case "out":
+			if len(opt.value) == 0 {
+				help()
+				return
+			}
+			out_file = opt.value
+		case:
+			fmt.printfln("Unknown option: %q", opt.key)
+			return
+		}
+	}
 
-	print_env(&scope)
+	switch mode {
+	case "lex": only_lex = true
+	case "parse": only_parse = true
+	case "check": only_check = true
+	case "ir": only_ir = true
+	case "compile":
+	case:
+		fmt.println("Unknown mode: ", mode)
+		return
+	}
 
-	// for s in scope.body {
-	// 	if ss, ok := s.(FunctionDef); ok {
-	// 		fmt.println("(fun) >>", ss.scope.parent, ss.scope.env)
-	// 		continue
-	// 	}
-	// 	if ss, ok := s.(Scope); ok {
-	// 		fmt.println("(scope) >>", ss.parent, ss.env)
-	// 		continue
-	// 	}
-	// }
+	source, ok := os.read_entire_file(file)
+	if !ok {
+		fmt.panicf("Failed to read file:", file)
+	}
+	src_data = string(source)
+
+	compiler_main()
 }
 
+compiler_main :: proc() -> (err: Error){
+	// Setup arena
+	compiler_arena: mem.Arena
+	mem.arena_init(&compiler_arena, COMPILER_MEM_POOL[:])
+	context.allocator = mem.arena_allocator(&compiler_arena)
+	defer free_all(context.allocator)
+
+	source := src_data
+
+	// Timers
+	lex_time, parse_time, check_time, ir_time, asm_time: time.Duration
+	// defer log.info("Compiler took: ", check_time + parse_time + lex_time)
+
+	// Tokenize
+	lex_begin := time.now()
+	tokens, lex_ok := tokenize(source)
+	if !lex_ok { return .OtherLexError }
+	lex_time = time.since(lex_begin)
+	if verbose {
+		print_tokens(tokens)
+	}
+	log.info("Lexer took:", lex_time)
+	if only_lex { return }
+
+	// Parse
+	parse_begin := time.now()
+	scope := parse(tokens) or_return
+	parse_time = time.since(parse_begin)
+	if verbose {
+		print_scope(scope)
+	}
+	log.info("Parser took:", parse_time)
+	if only_parse { return }
+
+	// Typecheck
+	check_begin := time.now()
+	check_ast(&scope) or_return
+	check_time = time.since(check_begin)
+	if verbose {
+		print_env(&scope)
+	}
+	log.info("Type Checker took:", check_time)
+	if only_check { return }
+
+	// IR Gen
+	ir_begin := time.now()
+	prog, static_data, ir_error := generate_ir(&scope)
+	ir_time = time.since(ir_begin)
+	assert(ir_error == nil)
+
+	log.info("IR generation took:", ir_time)
+	if verbose {
+		print_ir(prog)
+	}
+	if only_ir { return }
+
+	// Assembly generation
+	asm_begin := time.now()
+	asm_time = time.since(asm_begin)
+	log.info("Assembly generation took:", asm_time)
+
+
+	asm_builder := str.builder_make()
+	fmt.sbprintln(&asm_builder, ".data")
+	fmt.sbprintln(&asm_builder, rv32_generate_data_section(static_data))
+	fmt.sbprintln(&asm_builder, ".text")
+	fmt.sbprintln(&asm_builder, rv32_generate_text_section(prog))
+	resize(&asm_builder.buf, len(asm_builder.buf))
+
+	assembly_source := string(asm_builder.buf[:])
+
+	if len(out_file) > 0 {
+		fd, errno := os.open(out_file, os.O_RDWR | os.O_CREATE, 0o644)
+		if errno < 0 {
+			fmt.panicf("Failed to read file:", out_file)
+		}
+		defer os.close(fd)
+
+		n, _ := os.write(fd, transmute([]byte)assembly_source)
+
+		fmt.printf("Wrote %vB to %v\n", n, out_file)
+	}
+	else {
+		fmt.println(assembly_source)
+	}
+
+	return
+}
 

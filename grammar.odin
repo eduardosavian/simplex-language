@@ -22,8 +22,8 @@ InlineStatement :: union {
 }
 
 Identifier :: distinct string
-Int :: i64
-Real :: f64
+Int :: i32
+Real :: f32
 String :: string
 Rune :: rune
 Bool :: bool
@@ -50,7 +50,9 @@ For :: struct {
 	scope: Scope,
 }
 
-ExpressionStatement :: distinct ^Expression
+ExpressionStatement :: struct {
+	inner: ^Expression,
+}
 
 Break :: struct {}
 
@@ -86,9 +88,15 @@ ParserType :: struct {
 	modifiers: []Modifier,
 }
 
-Modifier :: enum i8 {
-	Slice,
+Modifier :: union #no_nil {
+	Array,
 	Pointer,
+}
+
+Pointer :: struct {}
+
+Array :: struct {
+	size: int,
 }
 
 Assignment :: struct {
@@ -271,7 +279,6 @@ parse_function_definition :: proc(parser: ^Parser) -> (func: FunctionDef, err: E
 		return_type = ParserType{}
 	}
 
-	log.debug(parser.tokens[parser.current])
 	body := parse_scope(parser) or_return
 
 	func = FunctionDef {
@@ -302,8 +309,8 @@ parse_inline_statement :: proc(parser: ^Parser, force_semicolon := true) -> (sta
 		statement = InlineStatement(assign)
 	}
 	else {
-		expr := ExpressionStatement(parse_expression(parser) or_return)
-		statement = InlineStatement(expr)
+		expr := parse_expression(parser) or_return
+		statement = InlineStatement(ExpressionStatement {inner = expr})
 	}
 
 	if force_semicolon {
@@ -358,9 +365,7 @@ parse_scope :: proc(parser: ^Parser) -> (scope: Scope, err: Error) {
 
 		// New Sub-Scope
 		if parser_peek(parser, 0).kind == .CurlyOpen {
-			log.debug("Parsing an anonynmous scope")
 			stmt = parse_scope(parser) or_return
-			log.debug("Anon:", stmt)
 			append_elem(&statements, stmt)
 			continue
 		}
@@ -535,36 +540,28 @@ parse_field_list :: proc(parser: ^Parser, allow_trailing_on := TokenKind.EndOfFi
 	return
 }
 
-// parse_type_definition :: proc(parser: ^Parser) -> (typedef: TypeDef, err: Error){
-// 	name, ok := parser_expect_consume(parser, .Identifier)
-// 	if !ok {
-// 		err = .NoExpectedToken
-// 		return
-// 	}
-//
-// 	type := parse_type(parser) or_return
-//
-// 	typedef = TypeDef {
-// 		name = Identifier(name.lexeme),
-// 		what = type,
-// 	}
-//
-// 	return
-// }
-
 parse_type :: proc(parser: ^Parser) -> (type: ParserType, err: Error) {
-	// ("[]" | "^")* id
+	// ("[integer]", "[]" | "^")* id
 	modifiers := make([dynamic]Modifier)
 	name: Identifier
 	for !parser_end(parser^){
 		tk := parser_advance(parser)
 		if tk.kind == .SquareOpen {
-			if _, ok := parser_expect_consume(parser, .SquareClose); ok {
-				append_elem(&modifiers, Modifier.Slice)
+			// PEEK NUMBER
+			if tk, ok := parser_expect_consume(parser, .Int); ok {
+				val, _ := tk.payload.(Int)
+				append_elem(&modifiers, Array{ size = int(val) })
+				_, ok := parser_expect_consume(parser, .SquareClose)
+				if !ok {
+					err = emit_error(.NoExpectedToken, "Expected ']' in type expression")
+				}
+			}
+			else {
+				err = emit_error(.NoExpectedToken, "Expected number in array type expression")
 			}
 		}
 		else if tk.kind == .Caret {
-			append_elem(&modifiers, Modifier.Pointer)
+			append_elem(&modifiers, Pointer{})
 		}
 		else if tk.kind == .Identifier {
 			name = Identifier(tk.lexeme)

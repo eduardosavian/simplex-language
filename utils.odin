@@ -1,6 +1,15 @@
 package lang
 
 import "core:fmt"
+import str "core:strings"
+
+sum :: proc(s: $S/[]$E) -> E {
+	acc := E{}
+	for e in s {
+		acc += e
+	}
+	return acc
+}
 
 contains :: proc(s: $T/[]$E, e: E) -> bool {
 	for x in  s {
@@ -11,43 +20,94 @@ contains :: proc(s: $T/[]$E, e: E) -> bool {
 	return false
 }
 
-print_env :: proc(scope: ^Scope, n := 0){
-	printf(n, "--- >> ---\n")
+format_type :: proc(t: Type) -> string {
+	sb := str.builder_make(allocator = context.temp_allocator)
+	for mod in t.modifiers {
+		switch mod in mod {
+		case Pointer: fmt.sbprint(&sb, "^")
+		case Array: fmt.sbprintf(&sb, "[%v]", mod.size)
+		}
+	}
+	fmt.sbprintf(&sb, "%v", t.primitive)
+	resize(&sb.buf, len(sb.buf))
+	return string(sb.buf[:])
+}
+
+print_type :: proc(t: Type){
+	for mod in t.modifiers {
+		switch mod in mod {
+		case Pointer: fmt.print("^")
+		case Array: fmt.printf("[%v]", mod.size)
+		}
+	}
+	fmt.printf("%v", t.primitive)
+}
+
+print_env :: proc(scope: ^Scope, mangled_names := false){
+	print_env_rec(scope, 0, "<Global>", mangled_names)
+}
+
+print_env_rec :: proc(scope: ^Scope, n: int, header := "", mangled_names := false){
+	if len(header) == 0 {
+		printf(n, "---| <Scope> |---\n", header)
+	}
+	else {
+		printf(n, "---| %v |---\n", header)
+	}
+
 	for name, sym in scope.env {
 		if sym.kind == .Type {
 			printf(n, "%v: type\n", name)
 			continue
 		}
-		printf(n, "%v: ", name)
-		for mod in sym.type.modifiers {
-			switch mod {
-			case .Pointer: fmt.print("^")
-			case .Slice: fmt.print("[]")
+
+		if sym.kind == .Function {
+			printf(n, "%v: func(", name)
+			for arg in sym.args {
+				print_type(arg)
+				printf(0, " ")
 			}
+
+			printf(0, ") -> ")
+			print_type(sym.type)
+			fmt.println()
+			continue
 		}
-		fmt.printf("%v\n", sym.type.primitive)
+
+		if sym.kind == .Parameter {
+			printf(n, "(arg) %v: ", name)
+			print_type(sym.type)
+			fmt.println()
+			continue
+		}
+
+		if mangled_names {
+			printf(n, "%v (%v): ", name, sym.static_section_name)
+		}
+		else {
+			printf(n, "%v: ", name)
+		}
+		print_type(sym.type)
+		fmt.println()
 	}
-	printf(n, "--- << ---\n")
+	printf(n, "----------\n")
 
 	for stmt in scope.body {
 		#partial switch &v in stmt {
 		case For:
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, "<For>", mangled_names = mangled_names)
 		case If:
-			printf(n+1, "IF\n")
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, "<If>",mangled_names =  mangled_names)
 			current := v.else_branch
 			for current != nil {
 				if_stmt, is_if := current.(If)
 				else_stmt, is_else := current.(Scope)
 				if is_if {
-					printf(n+1, "ELSE IF\n")
-					print_env(&if_stmt.scope, n + 1)
+					print_env_rec(&if_stmt.scope, n + 1, "<Elif>",mangled_names =  mangled_names)
 					current = if_stmt.else_branch
 				}
 				else if is_else {
-					printf(n+1, "ELSE\n")
-					print_env(&else_stmt, n + 1)
+					print_env_rec(&else_stmt, n + 1, "<Else>",mangled_names =  mangled_names)
 					current = nil
 				}
 				else {
@@ -56,20 +116,20 @@ print_env :: proc(scope: ^Scope, n := 0){
 			}
 
 		case FunctionDef:
-			print_env(&v.scope, n + 1)
+			print_env_rec(&v.scope, n + 1, string(stmt.(FunctionDef).name),mangled_names =  mangled_names)
 		case Scope:
-			print_env(&v, n + 1)
+			print_env_rec(&v, n + 1,mangled_names =  mangled_names)
 		}
 	}
 }
 
 print_parser_type :: proc(type: ParserType){
 	for q in type.modifiers {
-		switch q {
-		case .Pointer:
+		switch q in q {
+		case Pointer:
 			fmt.print("pointer to ")
-		case .Slice:
-			fmt.print("slice of ")
+		case Array:
+			fmt.printf("array of %v ", q.size)
 		}
 	}
 	fmt.print(type.name)
@@ -86,7 +146,7 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 	switch v in s {
 	case ExpressionStatement:
 		printf(n, "")
-		print_expression(cast(^Expression)v)
+		print_expression(v.inner)
 		fmt.print(";\n")
 	case Return:
 		printf(n, "return ")
@@ -126,6 +186,23 @@ print_inline_stmt :: proc(s: InlineStatement, n: int){
 			}
 		}
 		printf(n, ";\n")
+	}
+}
+
+
+print_ir :: proc(prog: []Instruction){
+	for instruction, i in prog {
+		if instruction.opcode in IMMEDIATE_OPS {
+			if len(instruction.label) == 0 {
+				fmt.printfln("%06x    %v %v", i, instruction.opcode, instruction.immediate)
+			}
+			else {
+				fmt.printfln("%06x    %v %v", i, instruction.opcode, instruction.label)
+			}
+		}
+		else {
+			fmt.printfln("%06x    %v", i, instruction.opcode)
+		}
 	}
 }
 
@@ -284,9 +361,9 @@ print_tokens :: proc(tokens: []Token){
 		case .Rune:
 			fmt.printf("Rune(%q)", tk.payload.(rune))
 		case .Int:
-			fmt.printf("Int(%v)", tk.payload.(i64))
+			fmt.printf("Int(%v)", tk.payload.(Int))
 		case .Real:
-			fmt.printf("Real(%v)", tk.payload.(f64))
+			fmt.printf("Real(%v)", tk.payload.(Real))
 		case .Comment:
 			fmt.printf("Comment(%v)", tk.lexeme)
 		case .LineBreak:
