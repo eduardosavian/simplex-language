@@ -16,13 +16,12 @@ __runtime.write_newline:
 
 # Write a null terminated string to console
 __runtime.write_string:
-	sw t0, (sp) # Pop argument into t0
+	lw a0, (sp) # Pop argument into a0
 	addi sp, sp, 4
 	addi sp, sp, -4 # Push ra to stack
 	sw ra, (sp)
 
 	li a7, 4
-	add a0, t0, zero
 	ecall
 
 	lw ra, (sp) # Restore return address
