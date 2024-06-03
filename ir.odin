@@ -16,7 +16,25 @@ import "core:strings"
 WORD_SIZE :: size_of(Word)
 
 // TODO: Make this better
-StaticDataTable :: map[string]int
+StaticData :: struct {
+	size: int,
+	align: Alignment,
+	kind: StaticDataKind,
+
+	str_data: string,
+}
+
+Alignment :: enum {
+	Word = align_of(Word),
+	Byte = 1,
+}
+
+StaticDataKind :: enum {
+	Variable,
+	String_Literal,
+}
+
+StaticDataTable :: map[string]StaticData
 
 Opcode :: enum {
 	NoOp = 0,
@@ -57,10 +75,12 @@ Machine :: struct {
 generate_ir :: proc(root: ^Scope) -> (program: []Instruction, data: StaticDataTable, err: Error) {
 	mangle_names(root)
 	buf := make([dynamic]Instruction)
-	generate_scope_ir(&buf, root) or_return
+
+	data = make_static_data_table(root)
+	generate_scope_ir(&buf, &data, root) or_return
+
 	shrink(&buf)
 	program = buf[:]
-	data = make_static_data_table(root)
 	return
 }
 
@@ -164,7 +184,11 @@ init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
 	for id, info in scope.env {
 		if len(info.static_section_name) > 0 {
 			using info
-			cur_table[static_section_name] = type_size(type)
+			cur_table[static_section_name] = StaticData {
+				size = type_size(type),
+				align = .Word,
+				kind = .Variable,
+			}
 		}
 	}
 
@@ -188,7 +212,7 @@ make_static_data_table :: proc(root: ^Scope) -> StaticDataTable {
 }
 
 @(require_results)
-generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err: Error) {
+generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope) -> (err: Error) {
 	for &statement in scope.body {
 		switch &statement in statement {
 		case InlineStatement:
@@ -200,18 +224,18 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 					continue
 				}
 				else {
-					generate_expression_ir(progbuf, scope, inline_stmt.inner) or_return
+					generate_expression_ir(progbuf, static_data, scope, inline_stmt.inner) or_return
 				}
 			case VarDeclaration:
-				generate_var_declaration_ir(progbuf, scope, inline_stmt)
+				generate_var_declaration_ir(progbuf, static_data, scope, inline_stmt)
 			case Assignment:
-				generate_assignment_ir(progbuf, scope, inline_stmt)
+				generate_assignment_ir(progbuf, static_data, scope, inline_stmt)
 			case Return: unimplemented()
 			case Break: unimplemented()
 			case Continue: unimplemented()
 			}
 		case Scope:
-			generate_scope_ir(progbuf, &statement) or_return
+			generate_scope_ir(progbuf, static_data, &statement) or_return
 
 		case If: unimplemented()
 
@@ -229,7 +253,7 @@ generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope) -> (err
 	return
 }
 
-generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, decl: VarDeclaration) -> (err: Error) {
+generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope, decl: VarDeclaration) -> (err: Error) {
 	if len(decl.expressions) <= 0 { return }
 
 	for rhs, i in decl.expressions {
@@ -241,7 +265,7 @@ generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scop
 			label = info.static_section_name,
 		})
 
-		generate_expression_ir(progbuf, scope, rhs) or_return
+		generate_expression_ir(progbuf, static_data, scope, rhs) or_return
 
 		append(progbuf, Instruction{
 			opcode = .Store,
@@ -252,7 +276,7 @@ generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scop
 	return
 }
 
-generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, assign: Assignment) -> (err: Error) {
+generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope, assign: Assignment) -> (err: Error) {
 	for lhs, i in assign.left_side {
 		rhs := assign.right_side[i]
 		left_expr := lhs
@@ -267,7 +291,7 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 				label = info.static_section_name,
 			})
 
-			generate_expression_ir(progbuf, scope, rhs) or_return
+			generate_expression_ir(progbuf, static_data, scope, rhs) or_return
 
 			append(progbuf, Instruction{
 				opcode = .Store,
@@ -275,10 +299,10 @@ generate_assignment_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, as
 
 		case Indexing:
 			// To assign to an index, simply generate a load and replace it with a store
-			generate_expression_ir(progbuf, scope, left_expr) or_return
+			generate_expression_ir(progbuf, static_data, scope, left_expr) or_return
 			pop(progbuf) /* REMOVE TRAILING LOAD */
 
-			generate_expression_ir(progbuf, scope, rhs) or_return
+			generate_expression_ir(progbuf, static_data, scope, rhs) or_return
 
 			append(progbuf, Instruction{
 				opcode = .Store,
@@ -331,11 +355,17 @@ generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Sc
 
 
 @(require_results)
-generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, expr: ^Expression, emit_load_for_label := true) -> (err: Error){
+generate_expression_ir :: proc(
+	progbuf: ^[dynamic]Instruction,
+	static_data: ^StaticDataTable,
+	scope: ^Scope,
+	expr: ^Expression,
+	emit_load_for_label := true,
+) -> (err: Error){
 	switch val in expr.value {
 	case Binary:
-		generate_expression_ir(progbuf, scope, val.left_side) or_return
-		generate_expression_ir(progbuf, scope, val.right_side) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.left_side) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.right_side) or_return
 		op, ok := OPCODE_BIN_MAP[val.operator]
 		if !ok {
 			err = emit_error(.UnknownOperator, "Unknown operator: %v", val.operator)
@@ -350,7 +380,7 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 			return
 		}
 
-		generate_expression_ir(progbuf, scope, val.operand) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.operand) or_return
 		if op != .NoOp {
 			append(progbuf, Instruction{ opcode = op })
 		}
@@ -360,8 +390,8 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 	case Indexing:
 		next_to_primary := len(expr.type.modifiers) == 0
 
-		generate_expression_ir(progbuf, scope, val.object, false) or_return
-		generate_expression_ir(progbuf, scope, val.index) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.object, false) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.index) or_return
 
 		generate_indexing_offset_calc(progbuf, scope, val)
 
@@ -378,7 +408,7 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 		assert(ok, "Undefined Function")
 		if builtin_function_name(func_name){
 			for arg in val.args {
-				generate_expression_ir(progbuf, scope, arg) or_return
+				generate_expression_ir(progbuf, static_data, scope, arg) or_return
 			}
 			append(progbuf, Instruction{
 				opcode = .Call_Builtin,
@@ -409,13 +439,28 @@ generate_expression_ir :: proc(progbuf: ^[dynamic]Instruction, scope: ^Scope, ex
 					opcode = .Load,
 				})
 			}
-		case String: unimplemented()
+		case String:
+			n := len(static_data) + 1
+			sb := strings.builder_make()
+			mangled_name := fmt.sbprintf(&sb, "_S_lit_%08x", n)
+			shrink(&sb.buf)
+			static_data[mangled_name] = StaticData {
+				size = len(val),
+				align = .Byte,
+				kind = .String_Literal,
+				str_data = val,
+			}
+			append(progbuf, Instruction {
+				opcode = .Push,
+				label = mangled_name,
+			})
+
 		case Real: unimplemented()
 		case Bool: unimplemented()
 		case Rune: unimplemented()
 		}
 	case Group:
-		generate_expression_ir(progbuf, scope, val.inner) or_return
+		generate_expression_ir(progbuf, static_data, scope, val.inner) or_return
 	}
 
 	return
@@ -428,7 +473,9 @@ type_size :: proc(t: Type) -> int {
 	case .Bool: size = size_of(Word) // Should have been just a byte, but I dont want to bother with alignment right now
 	case .Real: size = size_of(Real)
 	case .Rune: size = size_of(u32)
-	case .String: size = size_of(Word) * 2
+
+	// WARN: This should have been ptr + len, but it will be temporarilly downgraded to a null terminated one.
+	case .String: size = size_of(Word)
 	}
 
 	for mod in t.modifiers {

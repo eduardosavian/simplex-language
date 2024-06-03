@@ -1,0 +1,7 @@
+// Builtin rars syscall wrappers, leave the implementation empty //
+func __write_int(_: int){}
+func __read_int() -> int {}
+///////////////////////////////////////////////////////////////////
+
+
+

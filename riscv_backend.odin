@@ -141,10 +141,25 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 
 rv32_generate_data_section :: proc(table: StaticDataTable) -> string {
 	sb := str.builder_make()
-	fmt.sbprintln(&sb, ".align 2 # Word alignment")
-	for label, space in table {
-		fmt.sbprintfln(&sb, "%v: .space %v", label, space)
+
+
+	for label, data in table {
+		switch data.align {
+		case .Word: 
+			fmt.sbprintln(&sb, ".align 2")
+		case .Byte:
+			fmt.sbprintln(&sb, ".align 0")
+		}
+
+		switch data.kind {
+		case .Variable:
+			fmt.sbprintfln(&sb, "%v: .space %v", label, data.size)
+		case .String_Literal:
+			fmt.sbprintfln(&sb, "%v: .string %q", label, data.str_data)
+		}
+
 	}
+
 	shrink(&sb.buf)
 	return string(sb.buf[:])
 }
