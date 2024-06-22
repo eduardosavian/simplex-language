@@ -63,8 +63,11 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 			// fmt.sbprintf(&sb, COMPARISON2, comment, op)
 			unimplemented()
 
-		case .Equal, .NotEqual:
-			unimplemented()
+		case .Equal:
+			fmt.sbprintf(&sb, COMPARISON_EQ, comment)
+
+		case .NotEqual:
+			fmt.sbprintf(&sb, COMPARISON_NEQ, comment)
 
 		case .Load:
 			fmt.sbprintf(&sb, LOAD)

@@ -6,8 +6,12 @@ func __write_newline(){}
 ///////////////////////////////////////////////////////////////////
 
 
-n: int = 41;
+n: int = 2;
 
-if n % 2 > 0 {
+// Is even?
+if n % 2 == 1 >> 2 {
 	__write_int(n);
+	if n > 10 {
+		__write_string("WAOW!!!!");
+	}
 }
