@@ -44,6 +44,9 @@ Opcode :: enum {
 	Add, Sub, Mul, Div, Mod,
 	Neg,
 
+	Lesser, Greater, LesserEqual, GreaterEqual,
+	NotEqual, Equal,
+
 	And, Or, Xor, Not,
 	ShiftLeft, ShiftRight,
 
@@ -51,7 +54,9 @@ Opcode :: enum {
 	Call_Builtin,
 
 	Jump,
-	Branch,
+	BranchNotZero, BranchZero,
+
+	Label, // Just set a label for jumping
 
 	Store, Load,
 	// Store addr <- value
@@ -166,6 +171,13 @@ OPCODE_BIN_MAP := map[TokenKind]Opcode {
 	.BitXor = .Xor,
 	.ShiftLeft = .ShiftLeft,
 	.ShiftRight = .ShiftRight,
+
+	.EqualEqual = .Equal,
+	.NotEqual = .NotEqual,
+	.Greater = .Greater,
+	.Lesser = .Lesser,
+	.GreaterEqual = .GreaterEqual,
+	.LesserEqual = .LesserEqual,
 }
 
 @(private="file")
@@ -194,10 +206,12 @@ init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
 
 	for &statement in scope.body {
 		switch &statement in statement {
-		case If: unimplemented()
-		case For: unimplemented()
+		case If:
+			init_static_data_table_rec(cur_table, &statement.scope)
+		case For:
+			init_static_data_table_rec(cur_table, &statement.scope)
 		case FunctionDef:
-
+			log.warn("No function")
 		case Scope:
 			init_static_data_table_rec(cur_table, &statement)
 		case InlineStatement: continue
@@ -212,45 +226,74 @@ make_static_data_table :: proc(root: ^Scope) -> StaticDataTable {
 }
 
 @(require_results)
-generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope) -> (err: Error) {
-	for &statement in scope.body {
-		switch &statement in statement {
-		case InlineStatement:
-			switch inline_stmt in statement {
-			case ExpressionStatement:
-				expr, is_func := inline_stmt.inner.value.(FunctionCall)
-				if !is_func {
-					log.warn("Expression statements are not yet supported")
-					continue
-				}
-				else {
-					generate_expression_ir(progbuf, static_data, scope, inline_stmt.inner) or_return
-				}
-			case VarDeclaration:
-				generate_var_declaration_ir(progbuf, static_data, scope, inline_stmt)
-			case Assignment:
-				generate_assignment_ir(progbuf, static_data, scope, inline_stmt)
-			case Return: unimplemented()
-			case Break: unimplemented()
-			case Continue: unimplemented()
-			}
-		case Scope:
-			generate_scope_ir(progbuf, static_data, &statement) or_return
-
-		case If: unimplemented()
-
-		case For: unimplemented()
-
-		case FunctionDef:
-			if builtin_function_name(statement.name){
-				continue
+geneerate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, statement: ^Statement, scope: ^Scope) -> (err: Error) {
+	switch &statement in statement {
+	case InlineStatement:
+		switch inline_stmt in statement {
+		case ExpressionStatement:
+			expr, is_func := inline_stmt.inner.value.(FunctionCall)
+			if !is_func {
+				log.warn("Expression statements are not yet supported")
+				return
 			}
 			else {
-				unimplemented("Function definitions are not yet implemented")
+				generate_expression_ir(progbuf, static_data, scope, inline_stmt.inner) or_return
 			}
+		case VarDeclaration:
+			generate_var_declaration_ir(progbuf, static_data, scope, inline_stmt)
+		case Assignment:
+			generate_assignment_ir(progbuf, static_data, scope, inline_stmt)
+		case Return: unimplemented()
+		case Break: unimplemented()
+		case Continue: unimplemented()
+		}
+	case Scope:
+		generate_scope_ir(progbuf, static_data, &statement) or_return
+	case If:
+		buf := make([]byte, MAX_LABEL_LENGTH)
+		exit_label := fmt.bprintf(buf, "B_%08d", generate_branch_id())
+		generate_expression_ir(progbuf, static_data, scope, statement.condition) or_return
+		append(progbuf, Instruction {
+			opcode = .BranchZero,
+			label = exit_label,
+		})
+		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+		append(progbuf, Instruction {
+			opcode = .Label,
+			label = exit_label,
+		})
+
+		if statement.else_branch != nil {
+			unimplemented("Else")
+		}
+
+	case For:
+		unimplemented()
+
+	case FunctionDef:
+		if builtin_function_name(statement.name){
+			return
+		}
+		else {
+			unimplemented("Function definitions are not yet implemented")
 		}
 	}
 	return
+}
+
+@(require_results)
+generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope) -> (err: Error) {
+	for &statement in scope.body {
+		geneerate_statement_ir(progbuf, static_data, &statement, scope) or_return
+	}
+	return
+}
+
+// WARN: This is **NOT** thread safe
+generate_branch_id :: proc() -> int {
+	@static id := 0
+	id += 1
+	return id
 }
 
 generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope, decl: VarDeclaration) -> (err: Error) {
@@ -351,8 +394,6 @@ generate_indexing_offset_calc :: proc(progbuf: ^[dynamic]Instruction, scope: ^Sc
 		opcode = .Add,
 	})
 }
-
-
 
 @(require_results)
 generate_expression_ir :: proc(
@@ -511,6 +552,7 @@ format_instruction :: proc(i: Instruction) -> string {
 		}
 	}
 
+
 	return fmt.tprintf("%v %v", op, imm)
 }
 
@@ -519,3 +561,5 @@ IMMEDIATE_OPS := map[Opcode]bool {
 	.Push = true,
 	.Call_Builtin = true,
 }
+
+@(private) MAX_LABEL_LENGTH :: 128

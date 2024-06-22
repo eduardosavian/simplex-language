@@ -9,10 +9,10 @@ import str "core:strings"
 
 import cli "cli_parse"
 
-COMPILER_MEM_POOL := [32 * mem.Megabyte]byte{}
+COMPILER_MEM_POOL := [128 * mem.Megabyte]byte{}
 
 help :: proc(){
-	fmt.printfln("Usage: %s <FILE> <ACTION> [OPTION]", os.args[0])
+	fmt.printfln("Usage: %s <ACTION> <FILE> [OPTION]", os.args[0])
 	fmt.printfln("  Actions:")
 	fmt.printfln("    lex            Only run the lexer")
 	fmt.printfln("    parse          Only run the parser")
@@ -46,8 +46,8 @@ main :: proc() {
 		return
 	}
 
-	file := os.args[1]
-	mode := os.args[2]
+	mode := os.args[1]
+	file := os.args[2]
 
 	options := make([dynamic]cli.Flag)
 	if len(os.args) > 3 {
@@ -144,7 +144,9 @@ compiler_main :: proc() -> (err: Error){
 	ir_begin := time.now()
 	prog, static_data, ir_error := generate_ir(&scope)
 	ir_time = time.since(ir_begin)
+	fmt.println(ir_error)
 	assert(ir_error == nil)
+
 
 	log.info("IR generation took:", ir_time)
 	if verbose {

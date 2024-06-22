@@ -1,9 +1,13 @@
-// Builtin rars syscall wrappers, leave the implementation empty
+// Builtin rars syscall wrappers, leave the implementation empty //
 func __write_int(_: int){}
+func __write_string(_: string){}
 func __read_int() -> int {}
-func __write_string(s: string){}
+func __write_newline(){}
+///////////////////////////////////////////////////////////////////
 
 
-msg: string = "Hello, world";
+n: int = 41;
 
-__write_string(msg);
+if n % 2 > 0 {
+	__write_int(n);
+}

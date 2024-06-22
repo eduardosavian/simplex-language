@@ -3,63 +3,6 @@ package lang
 import "core:fmt"
 import str "core:strings"
 
-@(private="file")
-PUSH_LABEL :: `
-# %v
-la s0, %v
-addi sp, sp, -4
-sw s0, (sp)
-`
-
-@(private="file")
-POP_STACK :: `
-# Pop
-addi sp, sp, 4
-`
-
-@(private="file")
-PUSH_IMMEDIATE :: `
-# %v
-li s0, %v
-addi sp, sp, -4
-sw s0, (sp)
-`
-
-@(private="file")
-ARITH_BIN_OP :: `
-# %v
-lw s0, (sp)
-lw s1, 4(sp)
-%v s0, s1, s0
-addi sp, sp, 4
-sw s0, (sp)
-`
-
-@(private="file")
-ARITH_UN_OP :: `
-# %v
-lw s0, (sp)
-%v s0, s0
-sw s0, (sp)
-`
-
-@(private="file")
-STORE :: `
-# %v
-lw s0, (sp)
-lw s1, 4(sp)
-sw s0, (s1)
-addi sp, sp, 8
-`
-
-@(private="file")
-LOAD :: `
-# Load
-lw s0, (sp)
-lw s1, (s0)
-sw s1, (sp)
-`
-
 OPCODE_MAP := map[Opcode]string {
 	.Add = "add",
 	.Sub = "sub",
@@ -71,6 +14,8 @@ OPCODE_MAP := map[Opcode]string {
 	.And = "and",
 	.Or = "or",
 	.Xor = "xor",
+	.Lesser = "slt",
+	.Greater = "sgt",
 
 	.Not = "not",
 }
@@ -107,6 +52,20 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 			assert(ok, "Unsupported instruction")
 			fmt.sbprintf(&sb, ARITH_UN_OP, comment, op)
 
+		// Single instruction comparison
+		case .Greater, .Lesser:
+			op, ok := OPCODE_MAP[inst.opcode]
+			assert(ok, "Unsupported instruction")
+			fmt.sbprintf(&sb, COMPARISON1, comment, op)
+
+		// Double instruction comparison
+		case .GreaterEqual, .LesserEqual:
+			// fmt.sbprintf(&sb, COMPARISON2, comment, op)
+			unimplemented()
+
+		case .Equal, .NotEqual:
+			unimplemented()
+
 		case .Load:
 			fmt.sbprintf(&sb, LOAD)
 
@@ -115,12 +74,19 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 
 		case .Jump: unimplemented()
 
-		case .Branch: unimplemented()
-
 		case .Call_Builtin:
 			fmt.sbprintf(&sb, "\n# %v\ncall %v\n", comment, rv32_builtin_function_to_crt_label(inst.label))
 
+		case .Label:
+			fmt.sbprintf(&sb, "%v:\n", inst.label)
+
 		case .Call: unimplemented()
+
+		case .BranchZero:
+			fmt.sbprintf(&sb, BRANCH, comment, "beqz", "s0", inst.label)
+
+		case .BranchNotZero:
+			fmt.sbprintf(&sb, BRANCH, comment, "bnez", "s0", inst.label)
 
 		case .NoOp:
 			fmt.sbprintf(&sb, "# NoOp")
@@ -169,3 +135,105 @@ rv32_builtin_function_to_crt_label :: proc(name: string) -> (label: string) {
 	return
 }
 
+
+@(private="file")
+PUSH_LABEL :: `
+# %v
+la s0, %v
+addi sp, sp, -4
+sw s0, (sp)
+`
+
+@(private="file")
+POP_STACK :: `
+# Pop
+addi sp, sp, 4
+`
+
+@(private="file")
+PUSH_IMMEDIATE :: `
+# %v
+li s0, %v
+addi sp, sp, -4
+sw s0, (sp)
+`
+
+@(private="file")
+ARITH_BIN_OP :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+%v s0, s1, s0
+addi sp, sp, 4
+sw s0, (sp)
+`
+
+@(private="file")
+BRANCH :: `
+# %v
+lw s0, (sp)
+addi sp, sp, 4
+%v %v, %v
+`
+
+@(private="file")
+ARITH_UN_OP :: `
+# %v
+lw s0, (sp)
+%v s0, s0
+sw s0, (sp)
+`
+
+@(private="file")
+STORE :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+sw s0, (s1)
+addi sp, sp, 8
+`
+
+@(private="file")
+LOAD :: `
+# Load
+lw s0, (sp)
+lw s1, (s0)
+sw s1, (sp)
+`
+
+@(private="file")
+COMPARISON1 :: ARITH_BIN_OP
+
+@(private="file")
+COMPARISON2 :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+%v s2, s1, s0
+xori s0, s0, 1
+addi sp, sp, 4
+sw s0, (sp)
+`
+
+@(private="file")
+COMPARISON_EQ :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+sub s0, s1, s0
+seqz s0, s0
+addi sp, sp, 4
+sw s0, (sp)
+`
+
+@(private="file")
+COMPARISON_NEQ :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+sub s0, s1, s0
+seqz s0, s0
+xori s0, s0, 1
+addi sp, sp, 4
+sw s0, (sp)
+`

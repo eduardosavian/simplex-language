@@ -16,7 +16,6 @@ should_ignore :: proc(tk: Token) -> bool {
 
 parse :: proc(tokens : []Token) -> (scope: Scope, err: Error) {
 	parser_tokens := make([dynamic]Token)
-	defer delete(parser_tokens)
 
 	append(&parser_tokens, Token{kind = .CurlyOpen})
 	filter_tokens: {
