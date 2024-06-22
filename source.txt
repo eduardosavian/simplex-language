@@ -6,12 +6,16 @@ func __write_newline(){}
 ///////////////////////////////////////////////////////////////////
 
 
-n: int = 2;
+n: int = 7;
 
 // Is even?
-if n % 2 == 1 >> 2 {
-	__write_int(n);
-	if n > 10 {
-		__write_string("WAOW!!!!");
-	}
+if n % 2 == 0 {
+	__write_string("Divisible by 2\n");
+}
+
+if n % 3 == 0 {
+	__write_string("Divisible by 3\n");
+}
+else {
+	__write_string("Not Divisible by 2 nor 3");
 }
