@@ -4,10 +4,14 @@ __runtime.input_str: .string "(string) << "
 __runtime.output: .string ">> "
 __runtime.newline: .string "\n"
 
+.align 0
+_S_lit_00000003: .string "Divisible by 3\n"
+.align 0
+_S_lit_00000002: .string "Divisible by 2\n"
+.align 0
+_S_lit_00000004: .string "Not Divisible by 2 nor 3"
 .align 2
 n_i_eb0c3431: .space 4
-.align 0
-_S_lit_00000002: .string "WAOW!!!!"
 
 .text
 j __runtime.entry_point
@@ -80,8 +84,8 @@ __runtime.entry_point:
 	addi sp, sp, -4
 	sw s0, (sp)
 	
-	# Push 2
-	li s0, 2
+	# Push 7
+	li s0, 7
 	addi sp, sp, -4
 	sw s0, (sp)
 	
@@ -113,27 +117,15 @@ __runtime.entry_point:
 	addi sp, sp, 4
 	sw s0, (sp)
 	
-	# Push 1
-	li s0, 1
+	# Push 0
+	li s0, 0
 	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Push 2
-	li s0, 2
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# ShiftRight 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	srl s0, s1, s0
-	addi sp, sp, 4
 	sw s0, (sp)
 	
 	# Equal 
 	lw s0, (sp)
 	lw s1, 4(sp)
-	sub s0, s1, s0
+	xor s0, s1, s0
 	seqz s0, s0
 	addi sp, sp, 4
 	sw s0, (sp)
@@ -141,47 +133,8 @@ __runtime.entry_point:
 	# BranchZero 
 	lw s0, (sp)
 	addi sp, sp, 4
-	beqz s0, B_00000001
-	
-	# Push n_i_eb0c3431
-	la s0, n_i_eb0c3431
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Load
-	lw s0, (sp)
-	lw s1, (s0)
-	sw s1, (sp)
-	
-	# Call_Builtin __write_int
-	call __runtime.write_int
-	
-	# Push n_i_eb0c3431
-	la s0, n_i_eb0c3431
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Load
-	lw s0, (sp)
-	lw s1, (s0)
-	sw s1, (sp)
-	
-	# Push 10
-	li s0, 10
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Greater 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	sgt s0, s1, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# BranchZero 
-	lw s0, (sp)
-	addi sp, sp, 4
-	beqz s0, B_00000002
+	beqz s0, ENDIF_00000001
+	IF_00000001:
 	
 	# Push _S_lit_00000002
 	la s0, _S_lit_00000002
@@ -190,6 +143,67 @@ __runtime.entry_point:
 	
 	# Call_Builtin __write_string
 	call __runtime.write_string
-	B_00000002:
-	B_00000001:
+	j ENDIF_00000001
+	ENDIF_00000001:
+	
+	# Push n_i_eb0c3431
+	la s0, n_i_eb0c3431
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Load
+	lw s0, (sp)
+	lw s1, (s0)
+	sw s1, (sp)
+	
+	# Push 3
+	li s0, 3
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Mod 
+	lw s0, (sp)
+	lw s1, 4(sp)
+	rem s0, s1, s0
+	addi sp, sp, 4
+	sw s0, (sp)
+	
+	# Push 0
+	li s0, 0
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Equal 
+	lw s0, (sp)
+	lw s1, 4(sp)
+	xor s0, s1, s0
+	seqz s0, s0
+	addi sp, sp, 4
+	sw s0, (sp)
+	
+	# BranchZero 
+	lw s0, (sp)
+	addi sp, sp, 4
+	beqz s0, ELSE_00000002
+	IF_00000002:
+	
+	# Push _S_lit_00000003
+	la s0, _S_lit_00000003
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Call_Builtin __write_string
+	call __runtime.write_string
+	j ENDIF_00000002
+	ELSE_00000002:
+	
+	# Push _S_lit_00000004
+	la s0, _S_lit_00000004
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Call_Builtin __write_string
+	call __runtime.write_string
+	j ENDIF_00000002
+	ENDIF_00000002:
 	

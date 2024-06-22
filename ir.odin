@@ -1,6 +1,4 @@
 // TODO:
-// - Strings
-// - Arrays
 // - Pointers
 // - Branching
 // - Functions
@@ -159,28 +157,6 @@ mangle_type_name :: proc(t: Type) -> string {
 }
 
 @(private="file")
-OPCODE_BIN_MAP := map[TokenKind]Opcode {
-	.Plus = .Add,
-	.Minus = .Sub,
-	.Star = .Mul,
-	.Slash = .Div,
-	.Modulo = .Mod,
-
-	.BitAnd = .And,
-	.BitOr = .Or,
-	.BitXor = .Xor,
-	.ShiftLeft = .ShiftLeft,
-	.ShiftRight = .ShiftRight,
-
-	.EqualEqual = .Equal,
-	.NotEqual = .NotEqual,
-	.Greater = .Greater,
-	.Lesser = .Lesser,
-	.GreaterEqual = .GreaterEqual,
-	.LesserEqual = .LesserEqual,
-}
-
-@(private="file")
 OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.Plus   = .NoOp,
 	.Minus  = .Neg,
@@ -226,7 +202,9 @@ make_static_data_table :: proc(root: ^Scope) -> StaticDataTable {
 }
 
 @(require_results)
-geneerate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, statement: ^Statement, scope: ^Scope) -> (err: Error) {
+generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, statement: ^Statement, scope: ^Scope) -> (err: Error) {
+	if statement == nil { return }
+
 	switch &statement in statement {
 	case InlineStatement:
 		switch inline_stmt in statement {
@@ -250,22 +228,45 @@ geneerate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Sta
 	case Scope:
 		generate_scope_ir(progbuf, static_data, &statement) or_return
 	case If:
-		buf := make([]byte, MAX_LABEL_LENGTH)
-		exit_label := fmt.bprintf(buf, "B_%08d", generate_branch_id())
+		branch_id := generate_branch_id()
+		buf_entry := make([]byte, MAX_LABEL_LENGTH)
+		buf_else := make([]byte, MAX_LABEL_LENGTH)
+		buf_exit := make([]byte, MAX_LABEL_LENGTH)
+
+		entry_label := fmt.bprintf(buf_entry, "IF_%08d", branch_id)
+		else_label  := fmt.bprintf(buf_else, "ELSE_%08d", branch_id)
+		exit_label  := fmt.bprintf(buf_exit,  "ENDIF_%08d", branch_id)
+
+		// If not 'condition', jump to 'else' block (or exit if no else exists)
 		generate_expression_ir(progbuf, static_data, scope, statement.condition) or_return
 		append(progbuf, Instruction {
 			opcode = .BranchZero,
+			label = else_label if statement.else_branch != nil else exit_label,
+		})
+
+		// 'if' body
+		append(progbuf, Instruction { opcode = .Label, label = entry_label })
+		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+		append(progbuf, Instruction {
+			opcode = .Jump,
 			label = exit_label,
 		})
-		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+
+		// 'else' body
+		if statement.else_branch != nil {
+			append(progbuf, Instruction { opcode = .Label, label = else_label })
+			generate_statement_ir(progbuf, static_data, statement.else_branch, scope) or_return // WARN: I'm not sure if this scoping rule is correct
+			append(progbuf, Instruction {
+				opcode = .Jump,
+				label = exit_label,
+			})
+		}
+
+		// Exit label
 		append(progbuf, Instruction {
 			opcode = .Label,
 			label = exit_label,
 		})
-
-		if statement.else_branch != nil {
-			unimplemented("Else")
-		}
 
 	case For:
 		unimplemented()
@@ -284,7 +285,7 @@ geneerate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Sta
 @(require_results)
 generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope) -> (err: Error) {
 	for &statement in scope.body {
-		geneerate_statement_ir(progbuf, static_data, &statement, scope) or_return
+		generate_statement_ir(progbuf, static_data, &statement, scope) or_return
 	}
 	return
 }
@@ -556,10 +557,32 @@ format_instruction :: proc(i: Instruction) -> string {
 	return fmt.tprintf("%v %v", op, imm)
 }
 
+@(private) MAX_LABEL_LENGTH :: 32 // Enough to hold a keyword name + 16 digit hex number
+
 @(private)
 IMMEDIATE_OPS := map[Opcode]bool {
 	.Push = true,
 	.Call_Builtin = true,
 }
 
-@(private) MAX_LABEL_LENGTH :: 128
+@(private="file")
+OPCODE_BIN_MAP := map[TokenKind]Opcode {
+	.Plus = .Add,
+	.Minus = .Sub,
+	.Star = .Mul,
+	.Slash = .Div,
+	.Modulo = .Mod,
+
+	.BitAnd = .And,
+	.BitOr = .Or,
+	.BitXor = .Xor,
+	.ShiftLeft = .ShiftLeft,
+	.ShiftRight = .ShiftRight,
+
+	.EqualEqual = .Equal,
+	.NotEqual = .NotEqual,
+	.Greater = .Greater,
+	.Lesser = .Lesser,
+	.GreaterEqual = .GreaterEqual,
+	.LesserEqual = .LesserEqual,
+}

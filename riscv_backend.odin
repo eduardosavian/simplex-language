@@ -75,7 +75,8 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 		case .Store:
 			fmt.sbprintf(&sb, STORE, comment)
 
-		case .Jump: unimplemented()
+		case .Jump:
+			fmt.sbprintf(&sb, "j %v\n", inst.label)
 
 		case .Call_Builtin:
 			fmt.sbprintf(&sb, "\n# %v\ncall %v\n", comment, rv32_builtin_function_to_crt_label(inst.label))
@@ -223,7 +224,7 @@ COMPARISON_EQ :: `
 # %v
 lw s0, (sp)
 lw s1, 4(sp)
-sub s0, s1, s0
+xor s0, s1, s0
 seqz s0, s0
 addi sp, sp, 4
 sw s0, (sp)
