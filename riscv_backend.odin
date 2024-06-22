@@ -72,6 +72,9 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 		case .Load:
 			fmt.sbprintf(&sb, LOAD)
 
+		// Logic Operations
+		case .LogicNot: unimplemented()
+
 		case .Store:
 			fmt.sbprintf(&sb, STORE, comment)
 
@@ -84,7 +87,8 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 		case .Label:
 			fmt.sbprintf(&sb, "%v:\n", inst.label)
 
-		case .Call: unimplemented()
+		case .Call:
+			unimplemented()
 
 		case .BranchZero:
 			fmt.sbprintf(&sb, BRANCH, comment, "beqz", "s0", inst.label)

@@ -335,11 +335,18 @@ eval_expression_type :: proc(scope: ^Scope, expr: ^Expression, increase_usage :=
 		case Real:   expr.type.primitive = .Real
 		case Identifier:
 			id, _ := expression.(Identifier)
-			info, ok := search_symbol(scope, id, increase_usage)
-			if !ok {
-				return emit_error(.NotDefined, "Undefined identifier: %v", id)
+			// Check for reserved identifiers
+			switch id {
+			case "true", "false":
+				expr.type.primitive = .Bool
+			case:
+				info, ok := search_symbol(scope, id, increase_usage)
+				if !ok {
+					return emit_error(.NotDefined, "Undefined identifier: %v", id)
+				}
+				expr.type = info.type
 			}
-			expr.type = info.type
+
 		}
 	}
 

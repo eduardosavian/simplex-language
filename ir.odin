@@ -48,6 +48,8 @@ Opcode :: enum {
 	And, Or, Xor, Not,
 	ShiftLeft, ShiftRight,
 
+	LogicNot,
+
 	Call,
 	Call_Builtin,
 
@@ -161,6 +163,7 @@ OPCODE_UNARY_MAP := map[TokenKind]Opcode {
 	.Plus   = .NoOp,
 	.Minus  = .Neg,
 	.BitXor = .Not,
+	.LogicNot = .LogicNot, // NOTE: This only works because we assume a 0-1 representation for floats
 }
 
 builtin_function_name :: proc(s: Identifier) -> bool {
@@ -269,7 +272,29 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 		})
 
 	case For:
-		unimplemented()
+		assert(statement.pre_stmt == nil, "Composite loops are not yet supported")
+		loop_id := generate_branch_id()
+
+		buf_loop := make([]byte, MAX_LABEL_LENGTH)
+		buf_exit := make([]byte, MAX_LABEL_LENGTH)
+
+		exit_label := fmt.bprintf(buf_exit, "ENDFOR_%08d", loop_id)
+		loop_label := fmt.bprintf(buf_loop, "FOR_%08d", loop_id)
+
+		append(progbuf, Instruction { opcode = .Label, label = loop_label })
+		// Check loop condition, if false, break out of it
+		generate_expression_ir(progbuf, static_data, &statement.scope, statement.condition) or_return
+		append(progbuf, Instruction {
+			opcode = .BranchZero,
+			label = exit_label,
+		})
+
+		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+		append(progbuf, Instruction {
+			opcode = .Jump,
+			label = loop_label,
+		})
+		append(progbuf, Instruction { opcode = .Label, label = exit_label })
 
 	case FunctionDef:
 		if builtin_function_name(statement.name){
@@ -498,7 +523,13 @@ generate_expression_ir :: proc(
 			})
 
 		case Real: unimplemented()
-		case Bool: unimplemented()
+
+		case Bool:
+			append(progbuf, Instruction {
+				opcode = .Push,
+				immediate = Word(val),
+			})
+
 		case Rune: unimplemented()
 		}
 	case Group:

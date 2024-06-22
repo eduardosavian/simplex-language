@@ -21,7 +21,7 @@ Location :: struct {
 }
 
 TokenPayload :: union {
-	Int, Real, String, Rune,
+	Int, Real, String, Rune, Bool,
 }
 
 Token :: struct {
@@ -40,6 +40,8 @@ keywords := map[string]TokenKind {
 	"break"    = .Break,
 	"continue" = .Continue,
 	"return"   = .Return,
+	"true"     = .True,
+	"false"    = .False,
 }
 
 TokenKind :: enum i8 {
@@ -406,6 +408,13 @@ tokenize_identifier :: proc(using lex: ^Lexer) -> Token {
 	tk := Token {
 		kind = ok ? kind : .Identifier,
 		lexeme = id,
+	}
+
+	if tk.kind == .True {
+		tk.payload = true
+	}
+	else if tk.kind == .False {
+		tk.payload = false
 	}
 
 	return tk
