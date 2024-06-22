@@ -6,23 +6,24 @@ func __write_newline(){}
 ///////////////////////////////////////////////////////////////////
 
 
-n: int = 0;
+n: int = 1;
 
-for n < 10 {
-	ok: bool = false;
+for n < 30 {
+	ok: int = 0;
 	// Is even?
-
 	if n % 3 == 0 {
 		__write_string("Fizz");
-		ok = true;
+		ok = 1;
 	}
 	if n % 5 == 0 {
 		__write_string("Buzz");
-		ok = true;
+		ok = 1;
 	}
-	if !ok {
+
+	if ok == 0 {
 		__write_int(n);
 	}
+	__write_newline();
 
 	n = n + 1;
 }
