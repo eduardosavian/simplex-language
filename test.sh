@@ -1,5 +1,7 @@
+Clip='wl-copy'
+
 odin build . -o:none \
 	&& echo '' > source.asm \
 	&& ./lang compile source.txt -out:source.asm \
-	&& cat source.asm | xsel -b
+	&& cat source.asm | $Clip
 

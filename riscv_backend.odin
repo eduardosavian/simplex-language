@@ -73,7 +73,9 @@ rv32_generate_text_section :: proc(prog: []Instruction) -> string {
 			fmt.sbprintf(&sb, LOAD)
 
 		// Logic Operations
-		case .LogicNot: unimplemented()
+		case .LogicNot:
+			// x ~ 1 -> !x for a 0/1 based representation
+			fmt.sbprintf(&sb, LOGIC_UN_OP, comment, "xori", 1)
 
 		case .Store:
 			fmt.sbprintf(&sb, STORE, comment)
@@ -243,5 +245,23 @@ sub s0, s1, s0
 seqz s0, s0
 xori s0, s0, 1
 addi sp, sp, 4
+sw s0, (sp)
+`
+
+@(private="file")
+LOGIC_BIN_OP :: `
+# %v
+lw s0, (sp)
+lw s1, 4(sp)
+%v s0, s0, s1
+addi sp, sp, 4
+sw s0, (sp)
+`
+
+@(private="file")
+LOGIC_UN_OP :: `
+# %v
+lw s0, (sp)
+%v s0, s0, %v
 sw s0, (sp)
 `

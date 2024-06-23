@@ -6,6 +6,7 @@ package lang
 
 Word :: distinct Int
 
+import "base:intrinsics"
 import "core:log"
 import "core:fmt"
 import "core:hash"
@@ -82,7 +83,7 @@ generate_ir :: proc(root: ^Scope) -> (program: []Instruction, data: StaticDataTa
 	buf := make([dynamic]Instruction)
 
 	data = make_static_data_table(root)
-	generate_scope_ir(&buf, &data, root) or_return
+	generate_scope_ir(&buf, &data, root, LabelId(-1)) or_return
 
 	shrink(&buf)
 	program = buf[:]
@@ -204,8 +205,16 @@ make_static_data_table :: proc(root: ^Scope) -> StaticDataTable {
 	return table
 }
 
+LabelId :: distinct int
+
 @(require_results)
-generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, statement: ^Statement, scope: ^Scope) -> (err: Error) {
+generate_statement_ir :: proc(
+	progbuf: ^[dynamic]Instruction,
+	static_data: ^StaticDataTable,
+	statement: ^Statement,
+	scope: ^Scope,
+	innermost_loop: LabelId,
+) -> (err: Error){
 	if statement == nil { return }
 
 	switch &statement in statement {
@@ -224,23 +233,34 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 			generate_var_declaration_ir(progbuf, static_data, scope, inline_stmt)
 		case Assignment:
 			generate_assignment_ir(progbuf, static_data, scope, inline_stmt)
-		case Return: unimplemented()
-		case Break: unimplemented()
-		case Continue: unimplemented()
+		case Return:
+			unimplemented()
+
+		case Break:
+			assert(innermost_loop >= 0, "Break could not possibly appear here")
+			_, innermost_loop_exit := make_loop_labels(innermost_loop)
+			append(progbuf, Instruction {
+				opcode = .Jump,
+				label = innermost_loop_exit,
+			})
+
+		case Continue:
+			assert(innermost_loop >= 0, "Continue could not possibly appear here")
+			innermost_loop_entry, _ := make_loop_labels(innermost_loop)
+			append(progbuf, Instruction {
+				opcode = .Jump,
+				label = innermost_loop_entry,
+			})
 		}
 	case Scope:
-		generate_scope_ir(progbuf, static_data, &statement) or_return
+		generate_scope_ir(progbuf, static_data, &statement, innermost_loop) or_return
 	case If:
-		branch_id := generate_branch_id()
-		buf_entry := make([]byte, MAX_LABEL_LENGTH)
-		buf_else := make([]byte, MAX_LABEL_LENGTH)
-		buf_exit := make([]byte, MAX_LABEL_LENGTH)
+		statement.label_id = generate_branch_id()
 
-		entry_label := fmt.bprintf(buf_entry, "IF_%08d", branch_id)
-		else_label  := fmt.bprintf(buf_else, "ELSE_%08d", branch_id)
-		exit_label  := fmt.bprintf(buf_exit,  "ENDIF_%08d", branch_id)
+		entry_label, else_label, exit_label := make_branch_labels(statement.label_id)
 
 		// If not 'condition', jump to 'else' block (or exit if no else exists)
+		append(progbuf, Instruction { opcode = .Label, label = entry_label })
 		generate_expression_ir(progbuf, static_data, scope, statement.condition) or_return
 		append(progbuf, Instruction {
 			opcode = .BranchZero,
@@ -248,8 +268,7 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 		})
 
 		// 'if' body
-		append(progbuf, Instruction { opcode = .Label, label = entry_label })
-		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+		generate_scope_ir(progbuf, static_data, &statement.scope, innermost_loop) or_return
 		append(progbuf, Instruction {
 			opcode = .Jump,
 			label = exit_label,
@@ -258,7 +277,7 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 		// 'else' body
 		if statement.else_branch != nil {
 			append(progbuf, Instruction { opcode = .Label, label = else_label })
-			generate_statement_ir(progbuf, static_data, statement.else_branch, scope) or_return // WARN: I'm not sure if this scoping rule is correct
+			generate_statement_ir(progbuf, static_data, statement.else_branch, scope, innermost_loop) or_return // WARN: I'm not sure if this scoping rule is correct
 			append(progbuf, Instruction {
 				opcode = .Jump,
 				label = exit_label,
@@ -273,13 +292,9 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 
 	case For:
 		assert(statement.pre_stmt == nil, "Composite loops are not yet supported")
-		loop_id := generate_branch_id()
+		statement.label_id = generate_branch_id()
 
-		buf_loop := make([]byte, MAX_LABEL_LENGTH)
-		buf_exit := make([]byte, MAX_LABEL_LENGTH)
-
-		exit_label := fmt.bprintf(buf_exit, "ENDFOR_%08d", loop_id)
-		loop_label := fmt.bprintf(buf_loop, "FOR_%08d", loop_id)
+		loop_label, exit_label := make_loop_labels(statement.label_id)
 
 		append(progbuf, Instruction { opcode = .Label, label = loop_label })
 		// Check loop condition, if false, break out of it
@@ -289,7 +304,8 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 			label = exit_label,
 		})
 
-		generate_scope_ir(progbuf, static_data, &statement.scope) or_return
+		innermost_loop := statement.label_id
+		generate_scope_ir(progbuf, static_data, &statement.scope, innermost_loop) or_return
 		append(progbuf, Instruction {
 			opcode = .Jump,
 			label = loop_label,
@@ -308,18 +324,44 @@ generate_statement_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^Stat
 }
 
 @(require_results)
-generate_scope_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope) -> (err: Error) {
+generate_scope_ir :: proc(
+	progbuf: ^[dynamic]Instruction,
+	static_data: ^StaticDataTable,
+	scope: ^Scope,
+	innermost_loop: LabelId,
+) -> (err: Error) {
 	for &statement in scope.body {
-		generate_statement_ir(progbuf, static_data, &statement, scope) or_return
+		generate_statement_ir(progbuf, static_data, &statement, scope, innermost_loop) or_return
 	}
 	return
 }
 
-// WARN: This is **NOT** thread safe
-generate_branch_id :: proc() -> int {
-	@static id := 0
-	id += 1
+@(private)
+generate_branch_id :: proc() -> LabelId {
+	@static id := LabelId(0)
+	intrinsics.atomic_add(&id, 1)
 	return id
+}
+
+@(private)
+make_loop_labels :: proc(id: LabelId) -> (loop_label: string, exit_label: string){
+	buf_loop := make([]byte, MAX_LABEL_LENGTH)
+	buf_exit := make([]byte, MAX_LABEL_LENGTH)
+	exit_label = fmt.bprintf(buf_exit, "ENDFOR_%08d", id)
+	loop_label = fmt.bprintf(buf_loop, "FOR_%08d", id)
+	return
+}
+
+@(private)
+make_branch_labels :: proc(id: LabelId) -> (entry_label: string, else_label: string, exit_label: string){
+	buf_entry := make([]byte, MAX_LABEL_LENGTH)
+	buf_else := make([]byte, MAX_LABEL_LENGTH)
+	buf_exit := make([]byte, MAX_LABEL_LENGTH)
+
+	entry_label = fmt.bprintf(buf_entry, "IF_%08d", id)
+	else_label  = fmt.bprintf(buf_else, "ELSE_%08d", id)
+	exit_label  = fmt.bprintf(buf_exit,  "ENDIF_%08d", id)
+	return
 }
 
 generate_var_declaration_ir :: proc(progbuf: ^[dynamic]Instruction, static_data: ^StaticDataTable, scope: ^Scope, decl: VarDeclaration) -> (err: Error) {

@@ -38,6 +38,7 @@ Scope :: struct {
 If :: struct {
 	condition: ^Expression,
 	else_branch: ^Statement, // NOTE: Can only be Scope or If
+	label_id: LabelId, // NOTE: Populated by IR generator.
 
 	scope: Scope,
 }
@@ -46,6 +47,7 @@ For :: struct {
 	condition: ^Expression,
 	pre_stmt:  ^Statement,
 	post_stmt: ^Statement,
+	label_id: LabelId,
 
 	scope: Scope,
 }
