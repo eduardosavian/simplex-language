@@ -283,34 +283,54 @@ generate_statement_ir :: proc(
 				label = exit_label,
 			})
 		}
-
 		// Exit label
-		append(progbuf, Instruction {
-			opcode = .Label,
-			label = exit_label,
-		})
+		append(progbuf, Instruction { opcode = .Label, label = exit_label })
 
 	case For:
-		assert(statement.pre_stmt == nil, "Composite loops are not yet supported")
 		statement.label_id = generate_branch_id()
-
-		loop_label, exit_label := make_loop_labels(statement.label_id)
-
-		append(progbuf, Instruction { opcode = .Label, label = loop_label })
-		// Check loop condition, if false, break out of it
-		generate_expression_ir(progbuf, static_data, &statement.scope, statement.condition) or_return
-		append(progbuf, Instruction {
-			opcode = .BranchZero,
-			label = exit_label,
-		})
-
 		innermost_loop := statement.label_id
-		generate_scope_ir(progbuf, static_data, &statement.scope, innermost_loop) or_return
-		append(progbuf, Instruction {
-			opcode = .Jump,
-			label = loop_label,
-		})
-		append(progbuf, Instruction { opcode = .Label, label = exit_label })
+
+		// Composite loop
+		if statement.pre_stmt != nil {
+			scope := &statement.scope // Because loop variables are local to the loop scope, we must override it here.
+			init_label, check_label, body_label, exit_label := make_composite_loop_labels(statement.label_id)
+
+			// Init loop, if condition holds true jump straight to body on first iteration
+			append(progbuf, Instruction { opcode = .Label, label = init_label })
+			generate_statement_ir(progbuf, static_data, statement.pre_stmt, scope, innermost_loop) or_return
+			generate_expression_ir(progbuf, static_data, scope, statement.condition) or_return
+			append(progbuf, Instruction { opcode = .BranchNotZero, label = body_label })
+
+			// Main loop check, executes the post statement, then check if condition is false to skip to exit
+			append(progbuf, Instruction { opcode = .Label, label = check_label })
+			generate_statement_ir(progbuf, static_data, statement.post_stmt, scope, innermost_loop) or_return
+			generate_expression_ir(progbuf, static_data, scope, statement.condition) or_return
+			append(progbuf, Instruction { opcode = .BranchZero, label = exit_label })
+
+			// Loop body, goes back to check label
+			append(progbuf, Instruction { opcode = .Label, label = body_label })
+			generate_scope_ir(progbuf, static_data, scope, innermost_loop) or_return
+			append(progbuf, Instruction { opcode = .Jump, label = check_label })
+
+			// Exit
+			append(progbuf, Instruction { opcode = .Label, label = exit_label })
+		}
+		else {
+			loop_label, exit_label := make_loop_labels(statement.label_id)
+
+			// Loop init label
+			append(progbuf, Instruction { opcode = .Label, label = loop_label })
+
+			// Check loop condition, if false, break out of it
+			generate_expression_ir(progbuf, static_data, &statement.scope, statement.condition) or_return
+			append(progbuf, Instruction { opcode = .BranchZero, label = exit_label })
+
+			// Loop body
+			generate_scope_ir(progbuf, static_data, &statement.scope, innermost_loop) or_return
+			append(progbuf, Instruction { opcode = .Jump, label = loop_label })
+
+			append(progbuf, Instruction { opcode = .Label, label = exit_label })
+		}
 
 	case FunctionDef:
 		if builtin_function_name(statement.name){
@@ -347,8 +367,22 @@ generate_branch_id :: proc() -> LabelId {
 make_loop_labels :: proc(id: LabelId) -> (loop_label: string, exit_label: string){
 	buf_loop := make([]byte, MAX_LABEL_LENGTH)
 	buf_exit := make([]byte, MAX_LABEL_LENGTH)
-	exit_label = fmt.bprintf(buf_exit, "ENDFOR_%08d", id)
 	loop_label = fmt.bprintf(buf_loop, "FOR_%08d", id)
+	exit_label = fmt.bprintf(buf_exit, "ENDFOR_%08d", id)
+	return
+}
+
+@(private)
+make_composite_loop_labels :: proc(id: LabelId) -> (init_label: string, check_label: string, body_label: string, exit_label: string){
+	buf_init := make([]byte, MAX_LABEL_LENGTH)
+	buf_check := make([]byte, MAX_LABEL_LENGTH)
+	buf_body := make([]byte, MAX_LABEL_LENGTH)
+	buf_exit := make([]byte, MAX_LABEL_LENGTH)
+
+	init_label = fmt.bprintf(buf_init, "INITFOR_%08d", id)
+	check_label = fmt.bprintf(buf_check, "FOR_%08d", id) // WARN: This needs to match **exactly** to make_loop_labels!
+	body_label = fmt.bprintf(buf_body, "FORBODY_%08d", id)
+	exit_label = fmt.bprintf(buf_exit, "ENDFOR_%08d", id) // WARN: This needs to match **exactly** to make_loop_labels!
 	return
 }
 

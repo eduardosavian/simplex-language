@@ -5,13 +5,11 @@ __runtime.output: .string ">> "
 __runtime.newline: .string "\n"
 
 .align 2
-j_i_453880ea: .space 4
-.align 0
-_S_lit_00000004: .string "Done!"
-.align 0
-_S_lit_00000003: .string "X "
-.align 2
 i_i_ec0c35c4: .space 4
+.align 0
+_S_lit_00000002: .string " "
+.align 0
+_S_lit_00000003: .string "\nDone!"
 
 .text
 j __runtime.entry_point
@@ -78,14 +76,15 @@ __runtime.read_int:
 # Program entry point
 __runtime.entry_point:
 
+	INITFOR_00000001:
 	
 	# Push i_i_ec0c35c4
 	la s0, i_i_ec0c35c4
 	addi sp, sp, -4
 	sw s0, (sp)
 	
-	# Push 0
-	li s0, 0
+	# Push 1
+	li s0, 1
 	addi sp, sp, -4
 	sw s0, (sp)
 	
@@ -94,7 +93,6 @@ __runtime.entry_point:
 	lw s1, 4(sp)
 	sw s0, (s1)
 	addi sp, sp, 8
-	FOR_00000001:
 	
 	# Push i_i_ec0c35c4
 	la s0, i_i_ec0c35c4
@@ -106,8 +104,69 @@ __runtime.entry_point:
 	lw s1, (s0)
 	sw s1, (sp)
 	
-	# Push 4
-	li s0, 4
+	# Push 100
+	li s0, 100
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Lesser 
+	lw s0, (sp)
+	lw s1, 4(sp)
+	slt s0, s1, s0
+	addi sp, sp, 4
+	sw s0, (sp)
+	
+	# BranchNotZero 
+	lw s0, (sp)
+	addi sp, sp, 4
+	bnez s0, FORBODY_00000001
+	FOR_00000001:
+	
+	# Push i_i_ec0c35c4
+	la s0, i_i_ec0c35c4
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Push i_i_ec0c35c4
+	la s0, i_i_ec0c35c4
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Load
+	lw s0, (sp)
+	lw s1, (s0)
+	sw s1, (sp)
+	
+	# Push 2
+	li s0, 2
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Mul 
+	lw s0, (sp)
+	lw s1, 4(sp)
+	mul s0, s1, s0
+	addi sp, sp, 4
+	sw s0, (sp)
+	
+	# Store 
+	lw s0, (sp)
+	lw s1, 4(sp)
+	sw s0, (s1)
+	addi sp, sp, 8
+	
+	# Push i_i_ec0c35c4
+	la s0, i_i_ec0c35c4
+	addi sp, sp, -4
+	sw s0, (sp)
+	
+	# Load
+	lw s0, (sp)
+	lw s1, (s0)
+	sw s1, (sp)
+	
+	# Push 100
+	li s0, 100
 	addi sp, sp, -4
 	sw s0, (sp)
 	
@@ -122,26 +181,10 @@ __runtime.entry_point:
 	lw s0, (sp)
 	addi sp, sp, 4
 	beqz s0, ENDFOR_00000001
+	FORBODY_00000001:
 	
-	# Push j_i_453880ea
-	la s0, j_i_453880ea
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Push 0
-	li s0, 0
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Store 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	sw s0, (s1)
-	addi sp, sp, 8
-	FOR_00000002:
-	
-	# Push j_i_453880ea
-	la s0, j_i_453880ea
+	# Push i_i_ec0c35c4
+	la s0, i_i_ec0c35c4
 	addi sp, sp, -4
 	sw s0, (sp)
 	
@@ -150,150 +193,21 @@ __runtime.entry_point:
 	lw s1, (s0)
 	sw s1, (sp)
 	
-	# Push 3
-	li s0, 3
-	addi sp, sp, -4
-	sw s0, (sp)
+	# Call_Builtin __write_int
+	call __runtime.write_int
 	
-	# Lesser 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	slt s0, s1, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# BranchZero 
-	lw s0, (sp)
-	addi sp, sp, 4
-	beqz s0, ENDFOR_00000002
-	IF_00000003:
-	
-	# Push j_i_453880ea
-	la s0, j_i_453880ea
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Load
-	lw s0, (sp)
-	lw s1, (s0)
-	sw s1, (sp)
-	
-	# Push 1
-	li s0, 1
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Add 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	add s0, s1, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# Push 1
-	li s0, 1
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Equal 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	xor s0, s1, s0
-	seqz s0, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# BranchZero 
-	lw s0, (sp)
-	addi sp, sp, 4
-	beqz s0, ENDIF_00000003
-	j FOR_00000002
-	j ENDIF_00000003
-	ENDIF_00000003:
-	
-	# Push _S_lit_00000003
-	la s0, _S_lit_00000003
+	# Push _S_lit_00000002
+	la s0, _S_lit_00000002
 	addi sp, sp, -4
 	sw s0, (sp)
 	
 	# Call_Builtin __write_string
 	call __runtime.write_string
-	
-	# Push j_i_453880ea
-	la s0, j_i_453880ea
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Push j_i_453880ea
-	la s0, j_i_453880ea
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Load
-	lw s0, (sp)
-	lw s1, (s0)
-	sw s1, (sp)
-	
-	# Push 1
-	li s0, 1
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Add 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	add s0, s1, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# Store 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	sw s0, (s1)
-	addi sp, sp, 8
-	j FOR_00000002
-	ENDFOR_00000002:
-	
-	# Call_Builtin __write_newline
-	call __runtime.write_newline
-	
-	# Push i_i_ec0c35c4
-	la s0, i_i_ec0c35c4
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Push i_i_ec0c35c4
-	la s0, i_i_ec0c35c4
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Load
-	lw s0, (sp)
-	lw s1, (s0)
-	sw s1, (sp)
-	
-	# Push 1
-	li s0, 1
-	addi sp, sp, -4
-	sw s0, (sp)
-	
-	# Add 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	add s0, s1, s0
-	addi sp, sp, 4
-	sw s0, (sp)
-	
-	# Store 
-	lw s0, (sp)
-	lw s1, 4(sp)
-	sw s0, (s1)
-	addi sp, sp, 8
 	j FOR_00000001
 	ENDFOR_00000001:
 	
-	# Push _S_lit_00000004
-	la s0, _S_lit_00000004
+	# Push _S_lit_00000003
+	la s0, _S_lit_00000003
 	addi sp, sp, -4
 	sw s0, (sp)
 	

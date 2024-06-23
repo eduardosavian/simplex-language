@@ -1,4 +1,4 @@
-Clip='wl-copy'
+Clip='xsel -b'
 
 odin build . -o:none \
 	&& echo '' > source.asm \
