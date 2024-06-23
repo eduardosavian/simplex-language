@@ -144,7 +144,6 @@ compiler_main :: proc() -> (err: Error){
 	ir_begin := time.now()
 	prog, static_data, ir_error := generate_ir(&scope)
 	ir_time = time.since(ir_begin)
-	assert(ir_error == nil)
 
 
 	log.info("IR generation took:", ir_time)

@@ -176,7 +176,7 @@ look_for_var_declaration :: proc(parser: ^Parser) -> bool {
 		if tk.kind == .Colon {
 			return true
 		}
-		if tk.kind == .Semicolon {
+		if tk.kind == .Semicolon || tk.kind == .CurlyOpen {
 			break
 		}
 	}

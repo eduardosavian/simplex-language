@@ -6,13 +6,22 @@ func __write_newline(){}
 ///////////////////////////////////////////////////////////////////
 
 
+for i: int = 1; i < 100; i = i+1 {
+	ok: bool = false;
 
-for i: int = 1;
-	i < 100;
-	i = i * 2
-{
-	__write_int(i);
-	__write_string(" ");
+	if i % 3 == 0 {
+		__write_string("Fizz");
+		ok = true;
+	}
+	if i % 5 == 0 {
+		__write_string("Fizz");
+		ok = true;
+	}
+
+	if !ok {
+		__write_int(i);
+	}
+	__write_newline();
 }
 
-__write_string("\nDone!");
+__write_string("\nDone!\n");

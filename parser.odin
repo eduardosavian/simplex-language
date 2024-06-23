@@ -32,7 +32,7 @@ parse :: proc(tokens : []Token) -> (scope: Scope, err: Error) {
 		tokens = parser_tokens[:],
 	}
 
-	scope = parse_scope(&parser) or_return
+	scope, err = parse_scope(&parser)
 	return
 }
 
@@ -77,13 +77,13 @@ parser_match_consume :: proc(using parser: ^Parser, accept: ..TokenKind) -> (Tok
 	return tk, false
 }
 
-parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind) -> (Token, bool){
+parser_expect_consume :: proc(using parser: ^Parser, expect: TokenKind, loc := #caller_location) -> (Token, bool){
 	tk := parser_peek(parser, 0)
 	if tk.kind == expect {
 		parser_advance(parser)
 		return tk, true
 	}
-	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind)
+	emit_error(.NoExpectedToken, "Expected: `%v` Found: `%v`", expect, tk.kind, loc = loc)
 	return tk, false
 }
 

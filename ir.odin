@@ -115,8 +115,10 @@ mangle_variables :: proc(scope: ^Scope, seed: u32) -> u32 {
 	last_hash := seed
 	for id in scope.env {
 		info := scope.env[id]
-		if info.kind == .Variable {
-			defer scope.env[id] = info
+		defer scope.env[id] = info
+
+		switch info.kind {
+		case .Variable:
 			sb := strings.builder_make()
 			h := hash.fnv32a(transmute([]u8)string(id), seed = seed)
 
@@ -126,6 +128,15 @@ mangle_variables :: proc(scope: ^Scope, seed: u32) -> u32 {
 			shrink(&sb.buf)
 			info.static_section_name = mangled
 			last_hash = h
+
+		case .Function:
+			log.warn("No function")
+			continue
+		case .Parameter:
+			log.warn("No parameters")
+			continue
+		case .Type:
+			continue
 		}
 	}
 	return last_hash
@@ -176,6 +187,7 @@ init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
 	for id, info in scope.env {
 		if len(info.static_section_name) > 0 {
 			using info
+			// WARN: This is only simple because we currently have a super primitive type system
 			cur_table[static_section_name] = StaticData {
 				size = type_size(type),
 				align = .Word,
@@ -191,6 +203,7 @@ init_static_data_table_rec :: proc(cur_table: ^StaticDataTable, scope: ^Scope){
 		case For:
 			init_static_data_table_rec(cur_table, &statement.scope)
 		case FunctionDef:
+			// Init parameters + return value
 			log.warn("No function")
 		case Scope:
 			init_static_data_table_rec(cur_table, &statement)
