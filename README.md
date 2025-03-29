@@ -4,5 +4,14 @@ Made by Eduardo Savian and Marcos Fehlauer
 
 ## How to run
 
-go build -o simplex src/main.go src/scan.go
+```bash
+cd src/
+```
 
+```bash
+go build -o simplex ./cmd
+```
+
+```bash
+./simplex <file>.sp --function=lexer
+```

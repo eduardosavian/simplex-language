@@ -3,13 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+
+	"xyz.simplex-language/compiler"
+	_ "xyz.simplex-language/compiler"
+	_ "xyz.simplex-language/utils"
 )
 
-var flagVar string
-
-func init() {
-	flag.StringVar(&flagVar, "function", "", "Please use 'lexer'")
-}
+var (
+	flagFunction string
+)
 
 func main() {
 	fmt.Println("The Simplex Language")
@@ -23,6 +25,7 @@ func main() {
 	// switch funcArg {
 	// case lexer:
 
-	fmt.Println("flagvar has value", flagVar)
+	// file,err := os.ReadFile()
+	compiler.Scanner("a")
 
 }

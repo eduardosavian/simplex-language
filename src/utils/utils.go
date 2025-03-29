@@ -1,10 +1,7 @@
 package utils
 
-import (
-	"fmt"
-)
-
-func scanner(text string) {
-	fmt.Println("Scanner")
-	fmt.Println(text)
+func Check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
