@@ -2,8 +2,8 @@
 
 Made by Eduardo Savian and Marcos Fehlauer
 
-## How to run
-
+## How to run on Linux
+ 
 ```bash
 cd src/
 ```
